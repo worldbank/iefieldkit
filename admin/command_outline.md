@@ -1,4 +1,4 @@
-# Features, inputs, outputs
+# Features, inputs, outputs of the commands in iefieldkit
 
 ## Format
 
