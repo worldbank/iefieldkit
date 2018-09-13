@@ -9,7 +9,7 @@ When using this package of commands for the first time, we recommend that you re
 _Not sure what the most markdown friendly format for this work flow would be, let me know if you have suggestions, but for now it is a list_
 
 * Questionnaire design
-  * **ietestform** - command that tests the SurveyCTO questionnaire form for risky practices. This is not a substitute to the test SurveyCTO's servers do when uploading a form, but a complement. SurveyCTO's servers check that the syntax is correct, while **ieformtest** warns you and bring your attention to practices that are not incorrect from a strict syntax perspecitve, but are practices that are prone to errors, or should only be used in very specific cases.
+  * **ietestform** - command that tests the SurveyCTO questionnaire form for risky practices. This is not a substitute to the test SurveyCTO's servers do when uploading a form, but a complement. SurveyCTO's servers check that the syntax is correct, while **ietestform** warns you and bring your attention to practices that are not incorrect from a strict syntax perspecitve, but are practices that are prone to errors, or should only be used in very specific cases.
 * Data collection
   * **ieimport** - similar to ODK meta. Applies labels etc. Stores meta data from the form to the vars in the data set.
   * **ieduplicates** and **iecompdup** - already exists in **ietoolkit**, will be moved here in time for the first version of **iefieldkit**. Finds duplicates, assists in identifying why they are duplicates, and provides an easy way to correct them.
