@@ -29,3 +29,12 @@ This first section describes where to put what information in the bullet points 
 * features
 * input
 * output
+
+## Next commands to be developed
+
+### ieimport
+* features
+  * Option to delete calculate fields with a suboption to list which ones should be kept
+* input
+* output
+
