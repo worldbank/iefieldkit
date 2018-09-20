@@ -14,6 +14,7 @@ _Not sure what the most markdown friendly format for this work flow would be, le
   * **ieimport** - similar to ODK meta. Applies labels etc. Stores meta data from the form to the vars in the data set.
   * **ieduplicates** and **iecompdup** - already exists in **ietoolkit**, will be moved here in time for the first version of **iefieldkit**. Finds duplicates, assists in identifying why they are duplicates, and provides an easy way to correct them.
   * **iehfc** - set of commands with iehfc being the main command that runs high frequency checks
+  * **ieprogressreport** - Generates a table with number of interviews done. Exports in Excel form. First sheet is total, last day, last week. Then user can specify vars like district, data collection team, enumerator, etc. that this information is split by. Command should probably have a shorter name.
 * After data collection
   * **iebatchcorrection** - simplifies applying a lot of corrections on a large number of variables. It uses an Excel sheet as input and this sheet can then later function as a documentation better structured and more easily overviewed than a humongous do-file.
   * **ieappend** - helps document all the small edits needed when appending data sets from multiple rounds or from very similar surveys from different locations.
