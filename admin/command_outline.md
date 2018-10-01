@@ -5,13 +5,14 @@
 This first section describes where to put what information in the bullet points for each command below so that we can find what we are looking for once these list are well populated.
 
 ### commandname
+
 * features
   * What should this command do? Be specific if you can, but suggestions without details is ok too.
 * input
   * What is needed when specifying the command?
   * What format does those inputs need to be in and what format mustn't they be in?
   * What can be prepared by another command in iefieldkit?
-  * Naming conventions for options. Make sure to list all the option names used here and a breif description of what they do, and always check the other commands if there already is a naming practice you can copy to your command
+  * Naming conventions for options. Make sure to list all the option names used here and a brief description of what they do, and always check the other commands if there already is a naming practice you can copy to your command
 * output
   * what outputs do we expect? What modifications to data set in memory? What returned results? What files written to computer?
 
@@ -30,7 +31,13 @@ This command will make a difference between tests returning an error or a warnin
   * Test that there are no duplicates in the list options - error
   * Test that all list options are used at least once - warning
   * Test that there will be no name conflicts when making repeat group long to wide. For example if there is a field called _name_ in a repeat group it will be named *name_1*, *name_2*, *name_3* etc. in wide format, at the same time there is a variable outside the repeat group that is already named *name_1*, then there will be a naming conflict. - error
+  * All decimal/integer fields should have a ranges - warning
   * Required text field, this is sometimes what you want, but creates a big issue if it is not what you intended to do - warning that can be suppressed field by field
+  * Stata label Colum:
+    * If the Stata label column does not exist output that this is best practice to have this - warning
+    * If it exist, make sure that no label is longer than 80 characters - error
+  * Big high priority stuff that we would like to have but is not sure that they are easy to implement:
+    * What is the maximum number of variables that this form could output?
 * input
   * Data
     * The only input this command takes is the questionnaire form definition in Excel format
@@ -38,9 +45,10 @@ This command will make a difference between tests returning an error or a warnin
     * form() - File path to questionnaire form
     * suppress() - An option that takes a list of tests that the user want to skip
     * suppreqtext() - An option that takes a list of text fields that the user intended to be required and therefore should not yield a warning
+    * Output() - Where to output the logfile
 * output
   * Display all errors and warnings in the result window
-  * Save anything to file? Might be a bit overkill but it would also function as a log, so it can be shown at any point in the future that the form was tested with this command.
+  * Log file with output written to file.
 
 ### iehfc
 * features
