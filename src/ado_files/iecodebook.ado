@@ -186,7 +186,7 @@ cap program drop iecodebook_apply
 
 		// Loop over survey sheet and accumulate rename, relabel, recode, vallab
 
-			import excel `using' , clear first sheet(survey)
+			import excel `using' , clear first sheet(survey) allstring
 
 			keep if name != "" & name`survey' != ""
 
@@ -213,18 +213,18 @@ cap program drop iecodebook_apply
 
 				count
 				if `r(N)' == 1 {
-					local theValueLabels = vallab[1]
+					local theValueLabels = choices[1]
 				}
 				else {
 					forvalues i = 1/`r(N)' {
-						local theNextValLab  = vallab[`i']
+						local theNextValLab  = choices[`i']
 						local theValueLabels `theValueLabels' `theNextValLab'
 					}
 				}
 
 			// Prepare list of values for each value label.
 
-				import excel `using', first clear sheet(choices)
+				import excel `using', first clear sheet(choices) allstring
 					tempfile choices
 						save `choices', replace
 
@@ -241,6 +241,7 @@ cap program drop iecodebook_apply
 						}
 				}
 
+	// Back to original dataset to apply changes from codebook
 	restore
 
 		// Define value labels
@@ -249,19 +250,13 @@ cap program drop iecodebook_apply
 				label def `theValueLabel' `theLabelList_`theValueLabel'', replace
 				}
 
-				destring `theVarNames', replace
+		// Apply all changes
 
-				local n_labels : word count `theValueLabelNames'
-				if `n_labels' == 1 {
-					label val `theVarNames' `theValueLabelNames'
-					}
-				else {
-					forvalues i = 1/`n_labels' {
-						local theNextVarname : word `i' of `theVarNames'
-						local theNextValLab  : word `i' of `theValueLabelNames'
-						label val `theNextVarname' `theNextValLab'
-						}
-					}
+			foreach type in Recodes Choices Labels Renames {
+				foreach change in `all`type'' {
+					cap `change'
+				}
+			}
 
 end
 
