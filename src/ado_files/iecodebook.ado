@@ -160,7 +160,7 @@ cap program drop iecodebook_apply
 	program 	 iecodebook_apply
 
 	syntax [anything] [using] , [template] [survey(string asis)]
-
+qui {
 	// Setups
 
 		if "`survey'" == "" local survey "current"
@@ -257,7 +257,7 @@ cap program drop iecodebook_apply
 					cap `change'
 				}
 			}
-
+} // end qui
 end
 
 // Append subroutine –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
