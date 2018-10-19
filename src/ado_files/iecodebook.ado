@@ -267,7 +267,7 @@ cap program drop iecodebook_append
 	program 	 iecodebook_append
 
 	syntax [anything] [using] , surveys(string asis) [template]
-
+qui {
 	// Final dataset setup
 
 		clear
@@ -319,13 +319,13 @@ cap program drop iecodebook_append
 		iecodebook export `using'
 
 		use `final_data' , clear
-
+} // end qui
 end
 
 
 // TESTING
 
-	/* Create template
+	/* 1. Create template
 
 		sysuse auto.dta , clear
 			save "/users/bbdaniels/desktop/dta2.dta" , replace
@@ -342,7 +342,7 @@ end
 
 	*/
 
-	/* Apply codebook
+	/* 2. Apply codebook
 
 		use "/users/bbdaniels/desktop/dta2.dta" , clear
 
@@ -351,13 +351,15 @@ end
 			, survey(s1)
 	*/
 
-	// Do a big append!
+	/* 3. Do a big append!
 
 	iecodebook append ///
 		"/users/bbdaniels/desktop/dta.dta" ///
 		"/users/bbdaniels/desktop/dta2.dta" ///
 		using "/users/bbdaniels/desktop/test_meta.xlsx" ///
 		, surveys(s1 s2)
+
+	*/
 
 	-
 
