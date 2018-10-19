@@ -159,7 +159,7 @@ end
 cap program drop iecodebook_apply
 	program 	 iecodebook_apply
 
-	syntax [anything] [using] , [template] [survey(string asis)]
+	syntax [anything] [using] , [template] [drop] [survey(string asis)]
 qui {
 	// Setups
 
@@ -188,8 +188,6 @@ qui {
 
 			import excel `using' , clear first sheet(survey) allstring
 
-			keep if name != "" & name`survey' != ""
-
 			count
 			forvalues i = 1/`r(N)' {
 				local theName		= name`survey'[`i']
@@ -198,10 +196,11 @@ qui {
 				local theChoices	= choices[`i']
 				local theRecode		= recode`survey'[`i']
 
-				local allRenames 	= `"`allRenames' "rename `theName' `theRename'""'
-				local allLabels 	= `"`allLabels' "label var `theName' `theLabel'""'
-				local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
-				local allRecodes 	= `"`allRecodes' "recode `theName' `theRecode'""'
+				if "`drop'" != "" & "`theRename'" == "" local allDrops "`allDrops' `theName'"
+				if "`theRename'" != "" & "`theRename'" 	!= "" 	local allRenames 	= `"`allRenames' "rename `theName' `theRename'""'
+				if "`theRename'" != "" & "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' "label var `theName' `theLabel'""'
+				if "`theRename'" != "" & "`theChoices'" != "" 	local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
+				if "`theRename'" != "" & "`theRecode'" 	!= "" 	local allRecodes 	= `"`allRecodes' "recode `theName' `theRecode'""'
 			}
 
 		// Loop over choices sheet and accumulate vallab definitions
@@ -252,6 +251,8 @@ qui {
 
 		// Apply all changes
 
+			cap drop `allDrops'
+
 			foreach type in Recodes Choices Labels Renames {
 				foreach change in `all`type'' {
 					cap `change'
@@ -266,6 +267,12 @@ cap program drop iecodebook_append
 	program 	 iecodebook_append
 
 	syntax [anything] [using] , surveys(string asis) [template]
+
+	// Final dataset setup
+
+		clear
+		tempfile final_data
+			save `final_data' , replace emptyok
 
 	// Template setup
 
@@ -286,6 +293,32 @@ cap program drop iecodebook_append
 				iecodebook export `filepath' `using' , template(`survey')
 			}
 		}
+
+	// Loop over datasets and apply codebook
+
+		local x = 0
+		foreach dataset in `anything' {
+			local ++x
+			local survey : word `x' of `surveys'
+			use `dataset' , clear
+			iecodebook apply `using' , survey(`survey') drop
+
+			gen survey = `x'
+			tempfile next_data
+				save `next_data' , replace
+			use `final_data' , clear
+			append using `next_data'
+				label def survey `x' "`survey'" , add
+				label val survey survey
+				save `final_data' , replace emptyok
+		}
+
+	// Final codebook
+
+		local using = subinstr(`"`using'"',".xlsx","_appended.xlsx",.)
+		iecodebook export `using'
+
+		use `final_data' , clear
 
 end
 
@@ -309,13 +342,22 @@ end
 
 	*/
 
-	// Apply codebook
+	/* Apply codebook
 
 		use "/users/bbdaniels/desktop/dta2.dta" , clear
 
 		iecodebook apply ///
 			using "/users/bbdaniels/desktop/test_meta.xlsx" ///
 			, survey(s1)
+	*/
+
+	// Do a big append!
+
+	iecodebook append ///
+		"/users/bbdaniels/desktop/dta.dta" ///
+		"/users/bbdaniels/desktop/dta2.dta" ///
+		using "/users/bbdaniels/desktop/test_meta.xlsx" ///
+		, surveys(s1 s2)
 
 	-
 
