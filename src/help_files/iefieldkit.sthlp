@@ -1,29 +1,29 @@
 {smcl}
 {* 15 Dec 2017}{...}
 {hline}
-help for {hi:surveytoolkit}
+help for {hi:iefieldkit}
 {hline}
 
 {title:Title}
 
-{phang}{cmdab:surveytoolkit} {hline 2} Returns information on the version of surveytoolkit installed
+{phang}{cmdab:iefieldkit} {hline 2} Returns information on the version of iefieldkit installed
 
 {phang}For a more descriptive discussion on the intended usage and work flow of this
-command please see the {browse "https://dimewiki.worldbank.org/wiki/surveytoolkit":DIME Wiki}.
+command please see the {browse "https://dimewiki.worldbank.org/wiki/iefieldkit":DIME Wiki}.
 
 {title:Syntax}
 
 {phang}
-{cmdab:surveytoolkit}
+{cmdab:iefieldkit}
 
 {pstd}Note that this command takes no arguments at all.{p_end}
 
 {marker desc}
 {title:Description}
 
-{pstd}{cmdab:iegraph} This command returns the version of surveytoolkit installed. It
+{pstd}{cmdab:iegraph} This command returns the version of iefieldkit installed. It
 	can be used in the beginning of a Master Do-file that is intended to be used
-	by multiple users to programmatically test if surveytoolkit is not installed for
+	by multiple users to programmatically test if iefieldkit is not installed for
 	the user and therefore need to be installed, or if the version the user has
 	installed is too old and needs to be upgraded.
 
@@ -38,19 +38,19 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/surveytoolki
 {pstd}The code below is an example code that can be added to the top of any do-file.
 	the example code first test if the command is installed, and install it if not. If it is
 	installed, it test if the version is less than version 5.0. If it is, it
-	replaces the surveytoolkit file with the latest version. In your code you can skip
+	replaces the iefieldkit file with the latest version. In your code you can skip
 	the second part if you are not sure which version is required. But you should
 	always have the first part testing that {inp:r(version)} has a value before using
 	it in less than or greater than expressions.
 
-{inp}    cap surveytoolkit
+{inp}    cap iefieldkit
 {inp}    if "`r(version)'" == "" {
-{inp}      *surveytoolkit not installed, install it
-{inp}      ssc install surveytoolkit
+{inp}      *iefieldkit not installed, install it
+{inp}      ssc install iefieldkit
 {inp}    }
 {inp}    else if `r(version)' < 5.0 {
-{inp}      surveytoolkit version too old, install the latest version
-{inp}      ssc install surveytoolkit , replace
+{inp}      iefieldkit version too old, install the latest version
+{inp}      ssc install iefieldkit , replace
 {inp}    }{text}
 
 {title:Acknowledgements}
@@ -64,10 +64,10 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/surveytoolki
 {phang}Kristoffer Bjarkefur, The World Bank, DECIE
 
 {phang}Please send bug-reports, suggestions and requests for clarifications
-		 writing "surveytoolkit surveytoolkit" in the subject line to the email address
-		 found {browse "https://github.com/worldbank/ietoolkit":here}
+		 writing "iefieldkit iefieldkit" in the subject line to the email address
+		 found {browse "https://github.com/worldbank/iefieldkit":here}
 
 {phang}You can also see the code, make comments to the code, see the version
 		 history of the code, and submit additions or edits to the code through
-		 the github repository of surveytoolkit:{break}
-		 {browse "https://github.com/worldbank/surveytoolkit"}
+		 the github repository of iefieldkit:{break}
+		 {browse "https://github.com/worldbank/iefieldkit"}
