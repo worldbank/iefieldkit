@@ -5,6 +5,8 @@
 cap program drop iecodebook
 	program def  iecodebook
 
+	version 13.1 // Required due to use of long macros 
+
 	syntax anything using , [*]
 
 	// Select and execute subcommand
@@ -168,7 +170,7 @@ qui {
 	// Template setup
 
 		if "`template'" != "" {
-			// create empty codebook
+			// create empty codebook with "survey" variable
 				preserve
 					clear
 					set obs 1
@@ -176,6 +178,7 @@ qui {
 						label var survey "Survey"
 					iecodebook export `using'
 				restore
+			// append current datset
 			save current.temp , replace
 			iecodebook export "current.temp" `using' , template(`survey')
 			!rm current.temp
