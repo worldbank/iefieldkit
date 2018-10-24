@@ -95,12 +95,14 @@ that were made and how they correspond across datasets in the case of {bf:append
 {inp}    	save data2.dta , replace
 {inp}
 {inp}    // Create a harmonization template for iecodebook append
-{inp}    	iecodebook append data1.dta data2.dta ///
+{inp}    	iecodebook append ///
+{inp}    	  "data1.dta" "data2.dta" ///
 {inp}    	  using "codebook.xlsx" ///
 {inp}    	, surveys(First Second) template
 {inp}
 {inp}    // Read and apply the harmonization template (once filled out by user)
-{inp}    	iecodebook append data1.dta data2.dta ///
+{inp}    	iecodebook append ///
+{inp}    	  "data1.dta" "data2.dta" ///
 {inp}    	  using "codebook.xlsx" ///
 {inp}    	, surveys(First Second)
 {inp}

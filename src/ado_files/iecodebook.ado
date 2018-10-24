@@ -5,7 +5,7 @@
 cap program drop iecodebook
 	program def  iecodebook
 
-	version 13.1 // Required due to use of long macros 
+	version 13.1 // Required due to use of long macros
 
 	syntax anything using , [*]
 
@@ -170,7 +170,7 @@ qui {
 	// Template setup
 
 		if "`template'" != "" {
-			// create empty codebook with "survey" variable
+			// Create empty codebook with "survey" variable
 				preserve
 					clear
 					set obs 1
@@ -178,7 +178,7 @@ qui {
 						label var survey "Survey"
 					iecodebook export `using'
 				restore
-			// append current datset
+			// Append current dataset
 			save current.temp , replace
 			iecodebook export "current.temp" `using' , template(`survey')
 			!rm current.temp
@@ -324,47 +324,5 @@ qui {
 		use `final_data' , clear
 } // end qui
 end
-
-
-// TESTING
-
-	/* 1. Create template
-
-		sysuse auto.dta , clear
-			save "/users/bbdaniels/desktop/dta2.dta" , replace
-
-		gen check = (rnormal() > 0)
-			label def yesno 0 "No" 1 "Yes"
-			label val check yesno
-
-		iecodebook append ///
-			"/users/bbdaniels/desktop/dta.dta" ///
-			"/users/bbdaniels/desktop/dta2.dta" ///
-		using "/users/bbdaniels/desktop/test.xlsx" ///
-		, surveys(s1 s2) template
-
-	*/
-
-	/* 2. Apply codebook
-
-		use "/users/bbdaniels/desktop/dta2.dta" , clear
-
-		iecodebook apply ///
-			using "/users/bbdaniels/desktop/test_meta.xlsx" ///
-			, survey(s1)
-	*/
-
-	/* 3. Do a big append!
-
-	iecodebook append ///
-		"/users/bbdaniels/desktop/dta.dta" ///
-		"/users/bbdaniels/desktop/dta2.dta" ///
-		using "/users/bbdaniels/desktop/test_meta.xlsx" ///
-		, surveys(s1 s2)
-
-	*/
-
-	-
-
 
 // Have a lovely day!
