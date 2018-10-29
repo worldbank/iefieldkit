@@ -41,7 +41,20 @@ qui {
 		*Get a list with all the list names
 		levelsof list_name, clean local("all_list_names")
 
+		/*
+			TEST - Numeric name
+			Test that all variables in the name
+			variable are numeric
+		*/
+		cap confirm numeric variable name
 		if _rc {
+
+			*TODO: Find a way to list the non-numeric values identified
+
+			noi di as error "{phang}There are non numeric values in the [name] column in the choices sheet{p_end}"
+			error 198
+		}
+
 		
 		
 		//return local all_fields_used_as_labels 	"11"
