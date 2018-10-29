@@ -28,6 +28,9 @@ qui {
 		syntax , form(string) [statalanguage(string)]
 		noi di "importchoicesheet syntax ok"
 
+		*Gen the tempvars needed
+		tempvar item_dup label_dup
+
 		*Import the choices sheet
 		import excel "`form'", sheet("choices") clear first
 
@@ -52,6 +55,19 @@ qui {
 			*TODO: Find a way to list the non-numeric values identified
 
 			noi di as error "{phang}There are non numeric values in the [name] column in the choices sheet{p_end}"
+			error 198
+		}
+
+		/*
+			TEST - No duplicates combinations
+			Test that all combinations of
+			list_name and name is unique
+		*/
+		duplicates tag list_name name, gen(`item_dup')
+		count if `item_dup' != 0
+		if `r(N)' > 0 {
+			noi di as error "{phang}There are duplicates in the following list_names:{p_end}"
+			noi list list_name name if `item_dup' !=
 			error 198
 		}
 
