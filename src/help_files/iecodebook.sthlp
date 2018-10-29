@@ -114,7 +114,7 @@ that were made and how they correspond across datasets in the case of {bf:append
 
 {phang}We would like to acknowledge the help in testing and proofreading we received
  in relation to this command and help file from (in alphabetical order):{p_end}{break}
-{pmore}Kristoffer Bjarkefur{break}Luiza Cardoso De Andrade{break}Maria Ruth Jones{break}and all DIME Research Assistants {break}
+{pmore}Kristoffer Bjarkefur{break}Luiza Cardoso De Andrade{break}Maria Ruth Jones{break}{break}...and all DIME Research Assistants and Field Coordinators{break}
 
 {title:Authors}
 

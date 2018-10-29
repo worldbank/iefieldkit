@@ -5,14 +5,19 @@
 cap program drop iecodebook
 	program def  iecodebook
 
-	version 13.1 // Required due to use of long macros
+	version 13.1 // Required 13.1 due to use of long macros
 
-	syntax anything using , [*]
+	syntax [anything] [using] , [*]
 
+	// Give list of options if nothing specified
+	if (`"`anything'"' == "") | (`"`using'"' == "") {
+		di as err "{bf:iecodebook} requires [apply], [append], or [export] to be specified with a target codebook. Type {bf:help iecodebook} for details."
+	}
+	else {
 	// Select and execute subcommand
-
 		gettoken subcommand anything : anything
 		iecodebook_`subcommand' `anything' `using' , `options'
+	}
 
 end
 
@@ -21,11 +26,17 @@ end
 cap program drop iecodebook_export
 	program 	 iecodebook_export
 
-	syntax [anything] [using] , [template(string asis)]
+	syntax [anything] [using] [if] [in], [template(string asis)] [trim(string asis)]
 qui {
 
-	// Template Setup
+	// Store current data and apply if/in via [marksample]
+		tempfile allData
+		save `allData'
 
+		marksample touse
+		keep if `touse'
+
+	// Template Setup
 		if "`anything'" != "" {
 			use "`anything'" , clear
 		}
@@ -37,20 +48,71 @@ qui {
 		else local TEMPLATE = 0
 
 	// Set up temps
-
-		preserve
+	preserve
 		clear
 
 		tempfile theLabels
 
 		tempfile theCommands
 			save `theCommands' , replace emptyok
+	restore
 
+	// Option to [trim] variable set to variables specified in selected dofiles
+	if `"`trim'"' != `""' {
+		// Initialize datafile of variable names
+		unab theVarlist : *
+		preserve
+			clear
+
+			tempfile a
+				save `a' , replace emptyok
+
+		// Stack up all the lines of code from all the dofiles in a dataset
+		foreach dofile in `trim' {
+				import delimited "`dofile'" , clear delim("ß")
+				append using `a'
+				tempfile a
+					save `a' , replace
+		}
+
+		// Loop through every variable in the current dataset and put its name wherever it occurs
+		local x = 1
+		foreach item in `theVarlist' {
+			local ++x
+			gen v`x' = "`item'" if strpos(v1,"`item'")
+		}
+
+		// Collapse to one column to get every variable mentioned in any dofile
+		collapse (firstnm) v* , fast
+			gen n = 1
+			reshape long v , i(n) // Reshape to column of varnames
+			keep v
+			drop if v == ""
+			drop in 1
+
+		// Loop over variable names to build list of variables to keep
+		count
+		forvalues i = 1/`r(N)' {
+
+			local theNextVar = v[`i']
+			local theKeepList = "`theKeepList' `theNextVar'"
+
+		}
+
+		// Restore and keep variables
 		restore
+			if "`theKeepList'" == "" {
+				di as err "You are dropping all variables. This is not allowed. {bf:iecodebook} will now exit."
+				exit
+			}
+			keep `theKeepList' // Keep only variables mentioned in the dofiles
+			compress
+			local savedta = subinstr(`"`using'"',".xlsx",".dta",.)
+			local savedta = subinstr(`"`savedta'"',"using ","",.)
+			save `savedta' , replace
+	}
 
-	// TODO: trim variable set to variables specified in selected dofiles
-
-	// Create XLSX file with all current variable names and labels – use SurveyCTO syntax for sheet names and column names
+	// Create XLSX file with all current/remaining variable names and labels – use SurveyCTO syntax for sheet names and column names
 	preserve
 
 		// Record dataset info
@@ -105,30 +167,27 @@ qui {
 			}
 
 		// Export variable information to "survey" sheet
-
-			export excel `using' , sheet("survey") sheetreplace first(varl)
+		export excel `using' , sheet("survey") sheetreplace first(varl)
 	restore
 
 	// Create value labels sheet
 
 		// Fill temp dataset with value labels
+		foreach var of varlist * {
+			local theLabel : value label `var'
+			cap label save `theLabel' using `theLabels' ,replace
+			if _rc==0 {
+				preserve
+				import delimited using `theLabels' , clear delimit(", modify", asstring)
+				append using `theCommands'
+					save `theCommands' , replace emptyok
 
-			foreach var of varlist * {
-				local theLabel : value label `var'
-				cap label save `theLabel' using `theLabels' ,replace
-				if _rc==0 {
-					preserve
-					import delimited using `theLabels' , clear delimit(", modify", asstring)
-					append using `theCommands'
-						save `theCommands' , replace emptyok
-
-					restore
-				}
+				restore
 			}
+		}
 
 		// Clean up value labels for export – use SurveyCTO syntax for sheet names and column names
-
-			use `theCommands' , clear
+		use `theCommands' , clear
 
 			count
 			if `r(N)' > 0 {
@@ -150,8 +209,10 @@ qui {
 			}
 
 		// Export value labels to "choices" sheet
+		export excel `using' , sheet("choices`template'") sheetreplace first(var)
 
-			export excel `using' , sheet("choices`template'") sheetreplace first(var)
+	// Reload original data
+	use `allData' , clear
 
 } // end qui
 end
