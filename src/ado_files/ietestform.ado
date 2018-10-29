@@ -71,6 +71,32 @@ qui {
 			error 198
 		}
 
+		/*
+			TEST - No duplicates labels in list
+			Test that there are no duplicate
+			labels within a list
+		*/
+
+		** Loop over each list and each language for
+		*  that list and test if there are duplicate labels
+		foreach list of local all_list_names {
+			foreach labelvar of local labelvars {
+
+				**Test for duplicates in the label var and display
+				* errors if any observation do not have a unique,
+				* i.e. `label_dup' != 0, label
+				duplicates tag `labelvar', gen(`label_dup')
+				count if `label_dup' != 0
+				if `r(N)' > 0 {
+					noi di as error "{phang}There are duplicate labels in the column `labelvar' within the `list' list  in the following labels:{p_end}"
+					noi list list_name name `labelvar' if `label_dup' != 0
+					error 198
+				}
+				*Drop the tempvar so that it can be generated again by duplicates
+				drop `label_dup'
+			}
+		}
+
 		
 		
 		//return local all_fields_used_as_labels 	"11"
