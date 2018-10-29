@@ -43,6 +43,22 @@ qui {
 		*Create a list of all variables in the choice sheet
 		ds
 		local choicesheetvars `r(varlist)'
+		
+		*Test if old name "name" is used for value column
+		if `:list posof "name" in choicesheetvars' ! = 0 {
+			local valuevar "name"
+		}
+		*Test if new name "value" is used for value column
+		else if `:list posof "value" in choicesheetvars' ! = 0 {
+			local valuevar "value"
+		}
+		*Neither "name" or "value" is a name of a column, one must be used
+		else {
+			noi di as error "{phang}Either a column named [name] or a column named [value] is needed in the choice sheet.{p_end}"
+			error 198
+		}
+
+
 
 		*Create a list of the variables with labels (multiple in case of multiple languages)
 		foreach var of local choicesheetvars {
@@ -58,12 +74,12 @@ qui {
 			Test that all variables in the name
 			variable are numeric
 		*/
-		cap confirm numeric variable name
+		cap confirm numeric variable `valuevar'
 		if _rc {
 
 			*TODO: Find a way to list the non-numeric values identified
 
-			noi di as error "{phang}There are non numeric values in the [name] column in the choices sheet{p_end}"
+			noi di as error "{phang}There are non numeric values in the [`valuevar'] column in the choices sheet{p_end}"
 			error 198
 		}
 
@@ -72,11 +88,11 @@ qui {
 			Test that all combinations of
 			list_name and name is unique
 		*/
-		duplicates tag list_name name, gen(`item_dup')
+		duplicates tag list_name `valuevar', gen(`item_dup')
 		count if `item_dup' != 0
 		if `r(N)' > 0 {
 			noi di as error "{phang}There are duplicates in the following list_names:{p_end}"
-			noi list list_name name if `item_dup' !=
+			noi list list_name `valuevar' if `item_dup' != 0
 			error 198
 		}
 
@@ -98,7 +114,7 @@ qui {
 				count if `label_dup' != 0
 				if `r(N)' > 0 {
 					noi di as error "{phang}There are duplicate labels in the column `labelvar' within the `list' list  in the following labels:{p_end}"
-					noi list list_name name `labelvar' if `label_dup' != 0
+					noi list list_name `valuevar' `labelvar' if `label_dup' != 0
 					error 198
 				}
 				*Drop the tempvar so that it can be generated again by duplicates
