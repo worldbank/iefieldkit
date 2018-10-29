@@ -29,11 +29,17 @@ qui {
 		noi di "importchoicesheet syntax ok"
 
 		*Gen the tempvars needed
-		tempvar item_dup label_dup
+		tempvar countmissing item_dup label_dup
 
 		*Import the choices sheet
 		import excel "`form'", sheet("choices") clear first
 
+		
+		*Drop rows with all values missing
+		egen `countmissing' = rownonmiss(_all)
+		noi drop if `countmissing' == 0
+		
+		
 		*Create a list of all variables in the choice sheet
 		ds
 		local choicesheetvars `r(varlist)'
