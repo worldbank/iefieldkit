@@ -38,6 +38,9 @@ qui {
 		ds
 		local choicesheetvars `r(varlist)'
 
+		*Create a list of the variables with labels (multiple in case of multiple languages)
+		foreach var of local choicesheetvars {
+			if substr("`var'", 1, 5) == "label" local labelvars "`labelvars' `var'"
 		}
 
 
@@ -97,8 +100,35 @@ qui {
 			}
 		}
 
+		/*
+			TEST - Stata language for labels
+			Test that there is one column with labels formatted for stata
+		*/		
 		
+		*User specified stata label name thar is not simply stata
+		if "`statalanguage'" != "" {
+			local labelstata "label`statalanguage'"
+		}
+		*Otherwise use the default name
+		else {
+			local labelstata "labelstata"
+		}
 		
+		*Test if the Stata language 
+		if `:list labelstata in choicesheetvars' == 0 {
+			
+			*The user specified stata label language name does not exist. Throw error
+			if "`statalanguage'" != "" { 
+				noi di as error "{phang}The label langauge specified in {inp:statalanguage(`statalanguage')} does not exist in the choice sheet. A column in the choice sheet must have a name that is [label:`statalanguage'].{p_end}"
+				error 198
+			}
+			*The default stata label language name does not exist. Throw warning (error for now)
+			else {
+				noi di as error "{phang}There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read.{p_end}"
+				error 198			
+			}
+		}
+
 		//return local all_fields_used_as_labels 	"11"
 		return local all_list_names				"`all_list_names'"
 
