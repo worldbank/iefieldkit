@@ -36,8 +36,8 @@ qui {
 
 		
 		*Drop rows with all values missing
-		egen `countmissing' = rownonmiss(_all)
-		noi drop if `countmissing' == 0
+		egen `countmissing' = rownonmiss(_all), strok
+		drop if `countmissing' == 0
 		
 		
 		*Create a list of all variables in the choice sheet
