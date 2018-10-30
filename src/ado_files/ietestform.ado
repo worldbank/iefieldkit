@@ -108,25 +108,53 @@ qui {
 			Test that there are no duplicate
 			labels within a list
 		***********************************************/
+		
+		local throw_label_dup_error 0
+		
+		*Initialize the dummy that indicate if there are duplicates to 0. This is used to store errors on
+		gen `label_dup_all' = 0
 
 		** Loop over each list and each language for
 		*  that list and test if there are duplicate labels
-		foreach list of local all_list_names {
-			foreach labelvar of local labelvars {
+		foreach labelvar of local labelvars {
+		
+			replace `label_dup_all' = 0
+			local lists_with_dups ""
+			
+			foreach list of local all_list_names {
+			
 
 				**Test for duplicates in the label var and display
 				* errors if any observation do not have a unique,
 				* i.e. `label_dup' != 0, label
-				duplicates tag `labelvar', gen(`label_dup')
-				count if `label_dup' != 0
+				duplicates tag `labelvar' if list_name == "`list'", gen(`label_dup')
+				
+				*Was any duplicates found in this list
+				count if `label_dup' == 1
 				if `r(N)' > 0 {
-					noi di as error "{phang}There are duplicate labels in the column `labelvar' within the `list' list  in the following labels:{p_end}"
-					noi list list_name `valuevar' `labelvar' if `label_dup' != 0
-					error 198
+					*Copy duplicate values to main 
+					replace `label_dup_all' = 1 if `label_dup' == 1
+					
+					local lists_with_dups =trim("`lists_with_dups' `list'")
 				}
+				
 				*Drop the tempvar so that it can be generated again by duplicates
 				drop `label_dup'
 			}
+			
+			count if `label_dup_all' == 1
+			if `r(N)' > 0 {
+				noi di as error "{phang}There are duplicate labels in the column `labelvar' within the [`lists_with_dups'] list(s) in the following labels:{p_end}"
+				noi list list_name `valuevar' `labelvar' filter if `label_dup_all' == 1
+				
+				*Indicate that at least one error was thrown and that command should exit on error code.
+				local throw_label_dup_error 1
+			}
+		}
+		
+		*Throw error code if at least one lable duplicate was found
+		if `throw_label_dup_error' == 1 {
+			error 141
 		}
 
 		/***********************************************
@@ -172,4 +200,4 @@ end
 
 
 pause on
-ietestform , surveyform("C:\Users\kbrkb\Downloads\CTO_HHMidline_v2.xls")
+ietestform , surveyform("C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls")
