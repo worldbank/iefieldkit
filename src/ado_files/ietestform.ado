@@ -29,7 +29,7 @@ qui {
 		noi di "importchoicesheet syntax ok"
 
 		*Gen the tempvars needed
-		tempvar countmissing item_dup label_dup
+		tempvar countmissing item_dup label_dup label_dup_all
 
 		*Import the choices sheet
 		import excel "`form'", sheet("choices") clear first
@@ -38,6 +38,8 @@ qui {
 		*Drop rows with all values missing
 		egen `countmissing' = rownonmiss(_all), strok
 		drop if `countmissing' == 0
+		
+		local num_labels = _N
 		
 		
 		*Create a list of all variables in the choice sheet
@@ -58,8 +60,6 @@ qui {
 			error 198
 		}
 
-
-
 		*Create a list of the variables with labels (multiple in case of multiple languages)
 		foreach var of local choicesheetvars {
 			if substr("`var'", 1, 5) == "label" local labelvars "`labelvars' `var'"
@@ -69,11 +69,12 @@ qui {
 		*Get a list with all the list names
 		levelsof list_name, clean local("all_list_names")
 
-		/*
+		/***********************************************
 			TEST - Numeric name
 			Test that all variables in the name
 			variable are numeric
-		*/
+		***********************************************/
+		
 		cap confirm numeric variable `valuevar'
 		if _rc == 7 {
 
@@ -88,11 +89,12 @@ qui {
 		
 		}
 
-		/*
+		/***********************************************
 			TEST - No duplicates combinations
 			Test that all combinations of
 			list_name and name is unique
-		*/
+		***********************************************/
+		
 		duplicates tag list_name `valuevar', gen(`item_dup')
 		count if `item_dup' != 0
 		if `r(N)' > 0 {
@@ -101,11 +103,11 @@ qui {
 			error 198
 		}
 
-		/*
+		/***********************************************
 			TEST - No duplicates labels in list
 			Test that there are no duplicate
 			labels within a list
-		*/
+		***********************************************/
 
 		** Loop over each list and each language for
 		*  that list and test if there are duplicate labels
@@ -127,10 +129,10 @@ qui {
 			}
 		}
 
-		/*
+		/***********************************************
 			TEST - Stata language for labels
 			Test that there is one column with labels formatted for stata
-		*/		
+		***********************************************/		
 		
 		*User specified stata label name thar is not simply stata
 		if "`statalanguage'" != "" {
@@ -155,7 +157,13 @@ qui {
 				error 198			
 			}
 		}
-
+		
+		
+		/***********************************************
+			Return values
+		***********************************************/		
+		
+		
 		//return local all_fields_used_as_labels 	"11"
 		return local all_list_names				"`all_list_names'"
 
