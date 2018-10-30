@@ -75,12 +75,17 @@ qui {
 			variable are numeric
 		*/
 		cap confirm numeric variable `valuevar'
-		if _rc {
+		if _rc == 7 {
 
 			*TODO: Find a way to list the non-numeric values identified
 
 			noi di as error "{phang}There are non numeric values in the [`valuevar'] column in the choices sheet{p_end}"
 			error 198
+		} 
+		else if _rc != 0 {
+			noi di as error "{phang}ERROR IN CODE LOGIC [cap confirm numeric variable `valuevar']{p_end}"
+			error 198
+		
 		}
 
 		/*
@@ -158,5 +163,5 @@ qui {
 end
 
 
-
-ietestform , surveyform("C:\Users\kbrkb\Dropbox\iefieldkit\Survey CTO\moz_ag_survey.xlsx")
+pause on
+ietestform , surveyform("C:\Users\kbrkb\Downloads\CTO_HHMidline_v2.xls")
