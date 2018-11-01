@@ -1,4 +1,4 @@
-*! version 0.1 15DEC2017  DIME Analytics lcardosodeandrad@worldbank.org
+*! version 0.1 15DEC2017  DIME Analytics dimeanalytics@worldbank.org
 
 capture program drop ietestform
 		program ietestform , rclass
@@ -22,7 +22,7 @@ capture program drop ietestform
 end
 
 capture program drop importchoicesheet
-		program importchoicesheet , rclass
+		program 	 importchoicesheet , rclass
 qui {
 		//noi di "importchoicesheet command ok"
 		syntax , form(string) [statalanguage(string)]
@@ -32,21 +32,16 @@ qui {
 		tempvar countmissing item_dup label_dup label_dup_all
 
 		/***********************************************
-			Load choices sheet from file and 
-			delete empty row
+			Load choices sheet from form
 		***********************************************/		
 		
 		*Import the choices sheet
 		import excel "`form'", sheet("choices") clear first
 
-		*Drop rows with all values missing
-		egen `countmissing' = rownonmiss(_all), strok
-		drop if `countmissing' == 0		
-
 		
 		/***********************************************
-			Get list of variables, do tests on them, 
-			and creates locals to be used below
+			Get info from columns/variables and 
+			make tests on them
 		***********************************************/			
 		
 		*Create a list of all variables in the choice sheet
@@ -71,7 +66,17 @@ qui {
 		foreach var of local choicesheetvars {
 			if substr("`var'", 1, 5) == "label" local labelvars "`labelvars' `var'"
 		}
-
+		
+		
+		/***********************************************
+			Get info from rowa/labels and 
+			make tests on them
+		***********************************************/			
+		
+		*Drop rows with all values missing
+		egen `countmissing' = rownonmiss(_all), strok
+		drop if `countmissing' == 0	
+		
 		*Get a list with all the list names
 		levelsof list_name, clean local("all_list_names")
 
@@ -207,7 +212,6 @@ qui {
 			Return values
 		***********************************************/		
 		
-		//return local all_fields_used_as_labels 	"11"
 		return local all_list_names				"`all_list_names'"
 
 }
