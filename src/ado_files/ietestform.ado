@@ -232,6 +232,36 @@ qui {
 		drop if `countmissing' == 0		
 
 		
+		/***********************************************
+			Get list of variables, do tests on them, 
+			and creates locals to be used below
+		***********************************************/			
+		
+		*Create a list of all variables in the choice sheet
+		ds
+		local surveysheetvars `r(varlist)'
+		
+		*Create a list of the variables with labels (multiple in case of multiple languages)
+		foreach var of local choicesheetvars {
+			if substr("`var'", 1, 5) == "label" local labelvars "`labelvars' `var'"
+		}		
+		
+		*Variables that must be included every time
+		local name_vars 		"name"
+		local cmd_vars  		"type required readonly appearance"
+		local msg_vars  		"`labelvars' hint constraintmessage requiredmessage"
+		local code_vars 		"default constraint  relevance  calculation repeat_count choice_filter"
+
+		local surveysheetvars_required "`name_vars' `cmd_vars' `msg_vars' `code_vars'"		
+		
+		*Test that all required vars are actually in the survey sheets
+		if `: list surveysheetvars_required in surveysheetvars' == 0 {
+			
+			*Generate a list of the vars missing and display error
+			local missing_vars : list surveysheetvars_required - surveysheetvars
+			noi di as error "{phang}One or several variables required to run all the tests in this command are missing in this form. The following variable(s) are missing [`missing_vars'].{p_end}"
+			error 688
+		}
 
 }
 end
