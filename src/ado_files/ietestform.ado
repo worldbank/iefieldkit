@@ -59,7 +59,7 @@ qui {
 		*Neither "name" or "value" is a name of a column, one must be used
 		else {
 			noi di as error "{phang}Either a column named [name] or a column named [value] is needed in the choice sheet.{p_end}"
-			error 198
+			error 688
 		}
 
 		*Create a list of the variables with labels (multiple in case of multiple languages)
@@ -203,7 +203,7 @@ qui {
 			*The default stata label language name does not exist. Throw warning (error for now)
 			else {
 				noi di as error "{phang}There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read.{p_end}"
-				error 198			
+				error 688			
 			}
 		}
 		
