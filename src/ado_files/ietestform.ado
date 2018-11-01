@@ -5,17 +5,10 @@ capture program drop ietestform
 
 	syntax , surveyform(string) [csheetaliases(string) statalanguage(string)]
 
-	local SCTO_NAME_VARS  "name"
-	local SCTO_CMD_VARS  "type required readonly appearance"
-	local SCTO_MSG_VARS  "label hint constraintmessage requiredmessage"
-	local SCTO_CODE_VARS "default constraint  relevance  calculation repeat_count choice_filter"
-
-	local SCTO_VARS "`SCTO_NAME_VARS' `SCTO_CMD_VARS' `SCTO_MSG_VARS' `SCTO_CODE_VARS'"
-
 	importchoicesheet, form("`surveyform'") statalanguage(`statalanguage')
 	return list
 
-	//importsurveysheet, form("`surveyform'")
+	importsurveysheet, form("`surveyform'") statalanguage(`statalanguage')
 
 
 
@@ -217,6 +210,31 @@ qui {
 }
 end
 
+capture program drop importsurveysheet
+		program 	 importsurveysheet , rclass
+qui {
+		syntax , form(string) [statalanguage(string)]
+		
+
+		*Gen the tempvars needed
+		tempvar countmissing
+
+		/***********************************************
+			Load choices sheet from file and 
+			delete empty row
+		***********************************************/		
+		
+		*Import the choices sheet
+		import excel "`form'", sheet("survey") clear first
+
+		*Drop rows with all values missing
+		egen `countmissing' = rownonmiss(_all), strok
+		drop if `countmissing' == 0		
+
+		
+
+}
+end
 
 pause on
 ietestform , surveyform("C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls")
