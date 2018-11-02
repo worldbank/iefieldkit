@@ -49,13 +49,14 @@ When importing, this will also be used to create a variable identifying the sour
 {synoptline}
 
 
-{phang}{cmdab:iecodebook export} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
+{phang}{cmdab:iecodebook export} {help using} {it:"/path/to/codebook.xlsx"} , {bf:[}trim({it:"/path/to/dofile1.xlsx"} {it:"/path/to/dofile2.xlsx"}] [...]){bf:]}{p_end}
 {break}
 {synoptset}{...}
 {marker Options}{...}
 {synopthdr:Options}
 {synoptline}
-{synopt:{opt iecodebook export}} has no options.{p_end}
+{synopt:{opt trim()}} Takes one or more dofiles and trims the current dataset to only include variables used in those dofiles,
+and saves an identically named .dta file at the location specified in {it:"/path/to/codebook.xlsx"}.{p_end}
 {synoptline}
 
 {marker desc}
