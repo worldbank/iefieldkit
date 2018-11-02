@@ -16,7 +16,8 @@ renames, recodes, variable labels, and value labels, and applies them to the cur
 {phang}{cmdab:iecodebook append} reads an Excel codebook that specifies how variables should be harmonized across
 two or more datasets – rename, recode, variable labels, and value labels – applies the harmonization, and appends the datasets.{p_end}
 {break}
-{phang}{cmdab:iecodebook export} creates an Excel codebook that describes the current dataset.{p_end}
+{phang}{cmdab:iecodebook export} creates an Excel codebook that describes the current dataset,
+and optionally produces an export version of the dataset with only variables used in specified dofiles.{p_end}
 
 {title:Syntax}
 
@@ -49,7 +50,7 @@ When importing, this will also be used to create a variable identifying the sour
 {synoptline}
 
 
-{phang}{cmdab:iecodebook export} {help using} {it:"/path/to/codebook.xlsx"} , {bf:[}trim({it:"/path/to/dofile1.xlsx"} {it:"/path/to/dofile2.xlsx"}] [...]){bf:]}{p_end}
+{phang}{cmdab:iecodebook export} {help using} {it:"/path/to/codebook.xlsx"} , {bf:[}trim({it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]){bf:]}{p_end}
 {break}
 {synoptset}{...}
 {marker Options}{...}
