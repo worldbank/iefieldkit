@@ -10,6 +10,9 @@ help for {hi:iecodebook}
 
 {title:Functions}
 
+{phang}{cmdab:iecodebook template} creates an Excel codebook that describes the current dataset,
+with empty columns for you to specify the changes or harmonizations for the other {bf:iecodebook} commands.{p_end}
+{break}
 {phang}{cmdab:iecodebook apply} reads an Excel codebook that specifies
 renames, recodes, variable labels, and value labels, and applies them to the current dataset.{p_end}
 {break}
@@ -19,23 +22,30 @@ two or more datasets - rename, recode, variable labels, and value labels - appli
 {phang}{cmdab:iecodebook export} creates an Excel codebook that describes the current dataset,
 and optionally produces an export version of the dataset with only variables used in specified dofiles.{p_end}
 
-{title:Syntax}
+{title:Template Setup}
 
-{phang}{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"}, [template] [drop]{p_end}
+{phang}{cmdab:iecodebook template}
+{break}{cmdab:apply} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
+{break} {bf:OR}
+{phang}{cmdab:iecodebook template}
+{break}{cmdab:append} {it:"/path/to/survey1.dta" ["/path/to/survey2.dta"] [...]}
+{break} {help using} {it:"/path/to/codebook.xlsx"}, surveys(Survey1Name [Survey2Name] [...]){p_end}
+
+{title:Codebook Usage}
+
+{phang}{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"}, [drop]{p_end}
 {break}
 {synoptset}{...}
 {marker Options}{...}
 {synopthdr:Options}
 {synoptline}
-{synopt:{opt template}}Requests that {cmdab:iecodebook} create a codebook template based on the current dataset,
- for you then complete, at {it:"/path/to/codebook.xlsx"}.
- Otherwise, it will read from a codebook at that location.{p_end}{break}
 {synopt:{opt drop}}When applying a codebook from {it:"/path/to/codebook.xlsx"}, requests that {cmdab:iecodebook} drop any variables which are not given "final" names in the codebook.
 The default behavior is to retain "unselected" variables. {p_end}
 {synoptline}
 
 
-{phang}{cmdab:iecodebook append} {it:"/path/to/survey1.dta" ["/path/to/survey2.dta"] [...]} {break} {help using} {it:"/path/to/codebook.xlsx"}, surveys(Survey1Name [Survey2Name] [...]) [template]{p_end}
+{phang}{cmdab:iecodebook append} {it:"/path/to/survey1.dta" ["/path/to/survey2.dta"] [...]}
+{break} {help using} {it:"/path/to/codebook.xlsx"}, surveys(Survey1Name [Survey2Name] [...]) {p_end}
 {break}
 {synoptset}{...}
 {marker Options}{...}
@@ -43,10 +53,7 @@ The default behavior is to retain "unselected" variables. {p_end}
 {synoptline}
 {synopt:{opt surveys()}}{bf:This option is always required.} When creating a template {it:or} reading a codebook from {it:"/path/to/codebook.xlsx"}, {cmdab:iecodebook} will use this list of names
 to identify each survey in the codebook. These should be exactly one word for each survey, and they must come in the same order as the filepaths.
-When importing, this will also be used to create a variable identifying the source of each observation.{p_end}{break}
-{synopt:{opt template}}Requests that {cmdab:iecodebook} create a codebook template based on the specified datasets,
- for you to then complete, at {it:"/path/to/codebook.xlsx"}.
- Otherwise, it will read from a codebook at that location.{p_end}
+When importing, this will also be used to create a variable identifying the source of each observation.{p_end}
 {synoptline}
 
 

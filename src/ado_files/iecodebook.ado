@@ -11,13 +11,24 @@ cap program drop iecodebook
 
 	// Give list of options if nothing specified
 	if (`"`anything'"' == "") | (`"`using'"' == "") {
-		di as err "{bf:iecodebook} requires [apply], [append], or [export] to be specified with a target codebook. Type {bf:help iecodebook} for details."
+		di as err "{bf:iecodebook} requires [template], [apply], [append], or [export] to be specified with a target codebook. Type {bf:help iecodebook} for details."
 	}
 	else {
 	// Select and execute subcommand
 		gettoken subcommand anything : anything
 		iecodebook_`subcommand' `anything' `using' , `options'
 	}
+
+end
+
+// Template subroutine *********************************************************************************
+
+cap program drop iecodebook_template
+program iecodebook_template
+
+	syntax [anything] [using] , [*]
+
+	iecodebook `anything' `using' , `options' template
 
 end
 
