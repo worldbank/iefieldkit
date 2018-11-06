@@ -92,7 +92,7 @@ that were made and how they correspond across datasets in the case of {bf:append
 
 {inp}    // Create a codebook template for iecodebook apply
 {inp}    	sysuse auto.dta  , clear
-{inp}    	iecodebook apply using "codebook.xlsx" , template
+{inp}    	iecodebook template apply using "codebook.xlsx" 
 {inp}
 {inp}    // Read and apply the codebook (once filled out by user)
 {inp}    	sysuse auto.dta , clear
@@ -104,10 +104,10 @@ that were made and how they correspond across datasets in the case of {bf:append
 {inp}    	save data2.dta , replace
 {inp}
 {inp}    // Create a harmonization template for iecodebook append
-{inp}    	iecodebook append ///
+{inp}    	iecodebook template append ///
 {inp}    	  "data1.dta" "data2.dta" ///
 {inp}    	  using "codebook.xlsx" ///
-{inp}    	, surveys(First Second) template
+{inp}    	, surveys(First Second)
 {inp}
 {inp}    // Read and apply the harmonization template (once filled out by user)
 {inp}    	iecodebook append ///

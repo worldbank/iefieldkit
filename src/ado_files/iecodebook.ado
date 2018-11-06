@@ -251,9 +251,10 @@ qui {
 					iecodebook export `using'
 				restore
 			// Append current dataset
-			save current.temp , replace
-			iecodebook export "current.temp" `using' , template(`survey')
-			!rm current.temp
+			tempfile current
+			save `current' , replace
+			iecodebook export `current' `using' , template(`survey')
+		exit
 		}
 
 	// Apply codebook
@@ -367,6 +368,7 @@ qui {
 				local filepath : word `x' of `anything'
 				iecodebook export `filepath' `using' , template(`survey')
 			}
+		exit
 		}
 
 	// Loop over datasets and apply codebook
