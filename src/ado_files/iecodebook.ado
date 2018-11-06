@@ -29,6 +29,13 @@ cap program drop iecodebook_export
 	syntax [anything] [using] [if] [in], [template(string asis)] [trim(string asis)]
 qui {
 
+	// Store current data and apply if/in via [marksample]
+		tempfile allData
+		save `allData' , emptyok
+
+		marksample touse
+		keep if `touse'
+
 	// Template Setup
 		if "`anything'" != "" {
 			use "`anything'" , clear
@@ -39,13 +46,6 @@ qui {
 			local TEMPLATE = 1					// flag for template functions
 		}
 		else local TEMPLATE = 0
-
-	// Store current data and apply if/in via [marksample]
-		tempfile allData
-		save `allData'
-
-		marksample touse
-		keep if `touse'
 
 	// Set up temps
 	preserve
