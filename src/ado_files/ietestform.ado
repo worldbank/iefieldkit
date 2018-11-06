@@ -263,6 +263,33 @@ qui {
 		error 688
 	}
 
+	/***********************************************
+		Parse select_one, select_multiple values
+	***********************************************/	
+	
+	*********
+	*seperate choices lists from the select_one or select_many word
+	split type, gen(type)
+	*Makse sure that 3 variables were created even if not
+	forvalues i = 1/3 {
+		cap gen type`i' = ""
+	}
+	
+	*Order new vars after original var, drop original var, and then give them descriptive nams
+	order type?, after(type)
+	drop type
+	rename type1 type				//This stores field type, i.e. text, number, select_one, calculate, begin_group etc.
+	rename type2 choiceList			//If select_one or select_multiple this stores the choice list used
+	rename type3 choiceListOther	//If built in other option is used, it ends up here	
+	
+	*Get a list with all the list names
+	levelsof choiceList, clean local("all_lists_used")	
+	
+	/***********************************************
+		Return values
+	***********************************************/		
+	
+	return local all_lists_used				"`all_lists_used'"
 }
 end
 
