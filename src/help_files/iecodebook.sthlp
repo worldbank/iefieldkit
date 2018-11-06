@@ -75,46 +75,46 @@ and saves an identically named .dta file at the location specified in {it:"/path
 and {bf:append}, when two or more datasets need to be harmonized to have the same variable names, labels, and value labels ("choices")
 in order to be appended together.{p_end}
 
+{pstd}The purpose of {cmdab:iecodebook} is therefore to (1) make the coding much more compact
+for an arbitrary number of commands, usually to a single line of code; and (2) to leave a human-readable record of the adjustments
+that were made and how they correspond across datasets in the case of {bf:append}. {cmdab:iecodebook} also provides an {bf:export} utility so that a human-readable record of the variables and their labels in a dataset
+can be instantly created at any time.{p_end}
+
 {pstd}For the {bf:apply} and {bf:append} syntaxes, {cmdab:iecodebook} provides a {bf:template} command
 that will correctly set up a codebook or harmonization template
 designed to be both human- and machine-readable.
 In both cases, you will need to manually complete the template
 in order to tell the command the exact adjustments that you want to be made in the dataset.{p_end}
 
-{pstd}The purpose of {cmdab:iecodebook} is therefore to (1) make the coding much more compact
-for an arbitrary number of commands, usually to a single line of code; and (2) to leave a human-readable record of the adjustments
-that were made and how they correspond across datasets in the case of {bf:append}. {cmdab:iecodebook} also provides an {bf:export} utility so that a human-readable record of the variables and their labels in a dataset
-can be instantly created at any time.{p_end}
-
 {marker example}
 {title:Examples}
 
-{inp}    // Create a codebook template for iecodebook apply
+{inp}    {it:Create a codebook template for iecodebook apply}
 {inp}    	sysuse auto.dta  , clear
 {inp}    	iecodebook template using "codebook.xlsx"
 {inp}
-{inp}    // Read and apply the codebook (once filled out by user)
+{inp}    {it:Read and apply the codebook (once filled out by user)}
 {inp}    	sysuse auto.dta , clear
 {inp}    	iecodebook apply using "codebook.xlsx"
 {inp}
-{inp}    // Create two dummy datasets for testing iecodebook append
+{inp}    {it:Create two dummy datasets for testing iecodebook append}
 {inp}    	sysuse auto.dta , clear
 {inp}    	save data1.dta , replace
 {inp}    	save data2.dta , replace
 {inp}
-{inp}    // Create a harmonization template for iecodebook append
-{inp}    	iecodebook template ///
-{inp}    	  "data1.dta" "data2.dta" ///
-{inp}    	  using "codebook.xlsx" ///
+{inp}    {it:Create a harmonization template for iecodebook append}
+{inp}    	iecodebook template 		///
+{inp}    	  "data1.dta" "data2.dta" 	///
+{inp}    	  using "codebook.xlsx" 	///
 {inp}    	, surveys(First Second)
 {inp}
-{inp}    // Read and apply the harmonization template (once filled out by user)
-{inp}    	iecodebook append ///
-{inp}    	  "data1.dta" "data2.dta" ///
-{inp}    	  using "codebook.xlsx" ///
+{inp}    {it:Read and apply the harmonization template (once filled out by user)}
+{inp}    	iecodebook append 		/// {it:Note that the correct command is}
+{inp}    	  "data1.dta" "data2.dta" 	/// {it:created by replacing "template"}
+{inp}    	  using "codebook.xlsx" 	/// {it:with "append" after creating the template.}
 {inp}    	, surveys(First Second)
 {inp}
-{inp}    // Create a simple codebook
+{inp}    {it:Create a simple codebook}
 {inp}    	sysuse auto.dta , clear
 {inp}    	iecodebook export using "codebook.xlsx"
 
