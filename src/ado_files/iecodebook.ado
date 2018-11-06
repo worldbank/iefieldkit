@@ -1,6 +1,6 @@
 //! version 0.1 19OCT2018  DIME Analytics bdaniels@worldbank.org
 
-// Main syntax –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+// Main syntax *********************************************************************************
 
 cap program drop iecodebook
 	program def  iecodebook
@@ -21,7 +21,7 @@ cap program drop iecodebook
 
 end
 
-// Export subroutine –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+// Export subroutine *********************************************************************************
 
 cap program drop iecodebook_export
 	program 	 iecodebook_export
@@ -112,7 +112,7 @@ qui {
 			save `savedta' , replace
 	}
 
-	// Create XLSX file with all current/remaining variable names and labels – use SurveyCTO syntax for sheet names and column names
+	// Create XLSX file with all current/remaining variable names and labels * use SurveyCTO syntax for sheet names and column names
 	preserve
 
 		// Record dataset info
@@ -186,7 +186,7 @@ qui {
 			}
 		}
 
-		// Clean up value labels for export – use SurveyCTO syntax for sheet names and column names
+		// Clean up value labels for export * use SurveyCTO syntax for sheet names and column names
 		use `theCommands' , clear
 
 			count
@@ -217,7 +217,7 @@ qui {
 } // end qui
 end
 
-// Apply subroutine –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+// Apply subroutine *********************************************************************************
 
 cap program drop iecodebook_apply
 	program 	 iecodebook_apply
@@ -325,7 +325,7 @@ qui {
 } // end qui
 end
 
-// Append subroutine –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+// Append subroutine *********************************************************************************
 
 cap program drop iecodebook_append
 	program 	 iecodebook_append

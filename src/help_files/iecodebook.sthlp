@@ -14,7 +14,7 @@ help for {hi:iecodebook}
 renames, recodes, variable labels, and value labels, and applies them to the current dataset.{p_end}
 {break}
 {phang}{cmdab:iecodebook append} reads an Excel codebook that specifies how variables should be harmonized across
-two or more datasets – rename, recode, variable labels, and value labels – applies the harmonization, and appends the datasets.{p_end}
+two or more datasets - rename, recode, variable labels, and value labels - applies the harmonization, and appends the datasets.{p_end}
 {break}
 {phang}{cmdab:iecodebook export} creates an Excel codebook that describes the current dataset,
 and optionally produces an export version of the dataset with only variables used in specified dofiles.{p_end}
