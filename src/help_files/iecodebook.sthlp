@@ -10,7 +10,7 @@ help for {hi:iecodebook}
 
 {title:Functions}
 
-{phang}{cmdab:iecodebook template} creates an Excel codebook that describes the current dataset,
+{phang}{cmdab:iecodebook template} creates an Excel template that describes the current or targeted dataset(s),
 with empty columns for you to specify the changes or harmonizations for the other {bf:iecodebook} commands.{p_end}
 {break}
 {phang}{cmdab:iecodebook apply} reads an Excel codebook that specifies
@@ -24,7 +24,7 @@ and optionally produces an export version of the dataset with only variables use
 
 {title:Template Setup}
 {break}
-{break} {it:To change current dataset:}
+{break} {it:To apply to current dataset:}
 {phang}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
 {break}
 {break} {it:To append target datasets:}
@@ -71,13 +71,11 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {title:Description}
 
 {pstd}{cmdab:iecodebook} is designed to automate repetitive data cleaning tasks in two situations:
-{bf:apply}, where a large number of variables need to have arbitrary {help rename}, {help recode},or {help label} commands applied to them;
+{bf:apply}, where a large number of variables need to have arbitrary {help rename}, {help recode}, or {help label} commands applied to them;
 and {bf:append}, when two or more datasets need to be harmonized to have the same variable names, labels, and value labels ("choices")
-in order to be appended together.
-{cmdab:iecodebook} also provides an {bf:export} utility so that a human-readable record of the variables and their labels in a dataset
-can be instantly created at any time.{p_end}
+in order to be appended together.{p_end}
 
-{pstd}In the {bf:apply} and {bf:append} syntaxes, {cmdab:iecodebook} provides a {it:template} option
+{pstd}For the {bf:apply} and {bf:append} syntaxes, {cmdab:iecodebook} provides a {bf:template} command
 that will correctly set up a codebook or harmonization template
 designed to be both human- and machine-readable.
 In both cases, you will need to manually complete the template
@@ -85,7 +83,8 @@ in order to tell the command the exact adjustments that you want to be made in t
 
 {pstd}The purpose of {cmdab:iecodebook} is therefore to (1) make the coding much more compact
 for an arbitrary number of commands, usually to a single line of code; and (2) to leave a human-readable record of the adjustments
-that were made and how they correspond across datasets in the case of {bf:append}.{p_end}
+that were made and how they correspond across datasets in the case of {bf:append}. {cmdab:iecodebook} also provides an {bf:export} utility so that a human-readable record of the variables and their labels in a dataset
+can be instantly created at any time.{p_end}
 
 {marker example}
 {title:Examples}
@@ -137,3 +136,4 @@ that were made and how they correspond across datasets in the case of {bf:append
 		 history of the code, and submit additions or edits to the code through
 		 the GitHub repository of iefieldkit:{break}
 		 {browse "https://github.com/worldbank/iefieldkit"}
+		 {p_end}
