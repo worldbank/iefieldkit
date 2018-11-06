@@ -10,8 +10,8 @@ cap program drop iecodebook
 	syntax [anything] [using] , [*]
 
 	// Give list of options if nothing specified
-	if (`"`anything'"' == "") | (`"`using'"' == "") {
-		di as err "{bf:iecodebook} requires [apply], [append], or [export] to be specified with a target codebook. Type {bf:help iecodebook} for details."
+	if (!inlist(`"`anything'"', "apply", "append", "export")) | (`"`using'"' == "") {
+		di as err "{bf:iecodebook} requires subcommand [apply], [append], or [export] to be specified with a target codebook. Type {bf:help iecodebook} for details."
 	}
 	else {
 	// Select and execute subcommand
