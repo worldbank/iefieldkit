@@ -5,12 +5,38 @@ capture program drop ietestform
 
 	syntax , surveyform(string) [csheetaliases(string) statalanguage(string)]
 
+	
+	/***********************************************
+		Test the choice sheet inpependently
+	***********************************************/		
 	importchoicesheet, form("`surveyform'") statalanguage(`statalanguage')
-	return list
-
+	
+	*Get all choice lists actaually used
+	local all_list_names `r(all_list_names)'
+	
+	
+	/***********************************************
+		Test the survey sheet inpependently
+	***********************************************/	
 	importsurveysheet, form("`surveyform'") statalanguage(`statalanguage')
+	
+	*Get all choice lists actaually used
+	local all_lists_used `r(all_lists_used)'
+	
 
-
+	/***********************************************
+		Tests based on info from multiple sheets
+	***********************************************/		
+	
+	*Test that all lists in the choice sheet was actually used in the survey sheet
+	local unused_lists : list all_list_names - all_lists_used
+	if "`unused_lists'" != "" {
+		noi di as error "{phang}There are lists in the choices sheets that are not used in any field in the survey sheet. These are the unused list(s): [{inp:`unused_lists'}].{p_end}"
+		//error 688
+		noi di ""
+		noi di "end of error"
+		noi di ""
+	}
 
 end
 
