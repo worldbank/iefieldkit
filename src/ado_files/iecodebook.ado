@@ -28,7 +28,12 @@ program iecodebook_template
 
 	syntax [anything] [using] , [*]
 
-	iecodebook `anything' `using' , `options' template
+	if `"`anything'"' == `""' {
+		iecodebook apply `using' , `options' template
+	}
+	else {
+		iecodebook append `anything' `using' , `options' template
+	}
 
 end
 

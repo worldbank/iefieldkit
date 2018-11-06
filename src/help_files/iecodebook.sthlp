@@ -23,12 +23,12 @@ two or more datasets - rename, recode, variable labels, and value labels - appli
 and optionally produces an export version of the dataset with only variables used in specified dofiles.{p_end}
 
 {title:Template Setup}
-
-{phang}{cmdab:iecodebook template}
-{break}{cmdab:apply} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
-{break} {bf:OR}
-{phang}{cmdab:iecodebook template}
-{break}{cmdab:append} {it:"/path/to/survey1.dta" ["/path/to/survey2.dta"] [...]}
+{break}
+{break} {it:To change current dataset:}
+{phang}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
+{break}
+{break} {it:To append target datasets:}
+{phang}{cmdab:iecodebook template} {it:"/path/to/survey1.dta" ["/path/to/survey2.dta"] [...]}
 {break} {help using} {it:"/path/to/codebook.xlsx"}, surveys(Survey1Name [Survey2Name] [...]){p_end}
 
 {title:Codebook Usage}
@@ -92,7 +92,7 @@ that were made and how they correspond across datasets in the case of {bf:append
 
 {inp}    // Create a codebook template for iecodebook apply
 {inp}    	sysuse auto.dta  , clear
-{inp}    	iecodebook template apply using "codebook.xlsx" 
+{inp}    	iecodebook template using "codebook.xlsx"
 {inp}
 {inp}    // Read and apply the codebook (once filled out by user)
 {inp}    	sysuse auto.dta , clear
@@ -104,7 +104,7 @@ that were made and how they correspond across datasets in the case of {bf:append
 {inp}    	save data2.dta , replace
 {inp}
 {inp}    // Create a harmonization template for iecodebook append
-{inp}    	iecodebook template append ///
+{inp}    	iecodebook template ///
 {inp}    	  "data1.dta" "data2.dta" ///
 {inp}    	  using "codebook.xlsx" ///
 {inp}    	, surveys(First Second)
