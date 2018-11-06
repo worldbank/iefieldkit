@@ -288,6 +288,24 @@ qui {
 		noi di as error "{phang}One or several variables required to run all the tests in this command are missing in this form. The following variable(s) are missing [`missing_vars'].{p_end}"
 		error 688
 	}
+	
+	keep `surveysheetvars_required'
+	
+	*********
+	*make command vars that sometimes are not used and then loaded as numeric
+	foreach var of local cmd_vars  {
+		
+		tostring `var', replace 
+		replace `var' = lower(itrim(trim(`var')))
+		replace `var' = "" if `var' == "."
+	}		
+	
+	
+	
+
+
+}
+end
 
 	/***********************************************
 		Parse select_one, select_multiple values
