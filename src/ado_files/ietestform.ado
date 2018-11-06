@@ -298,14 +298,138 @@ qui {
 		tostring `var', replace
 		replace `var' = lower(itrim(trim(`var')))
 		replace `var' = "" if `var' == "."
+	}
+
+	/***********************************************
+		Test type column
+	***********************************************/
+
+	noi test_survey_type , string("string")
+
+	return local all_lists_used				"`r(all_lists_used)'"
+
+
 
 
 }
 end
 
+capture program drop test_survey_type
+		program 	 test_survey_type , rclass
+qui {
+
+
+	noi di "test_survey_type command ok"
+	syntax , string(string)
+	noi di "test_survey_type syntax ok"
+
 	/***********************************************
-		Parse select_one, select_multiple values
-	***********************************************/	
+		Standardizing name of type values
+	***********************************************/
+
+	replace type = "begin_group" 	if type == "begin group"
+	replace type = "begin_repeat" 	if type == "begin repeat"
+	replace type = "end_group" 		if type == "end group"
+	replace type = "end_repeat" 	if type == "end repeat"
+
+	replace type = "text_audit" 	if type == "text audit"
+	replace type = "audio_audit" 	if type == "audio audit"
+
+
+	/***********************************************
+		Test end and begin
+	***********************************************/
+
+	*********
+	*Short hand for begin_ or end_
+	gen typeBegin 		= (type == "begin_group" 	| type == "begin_repeat")
+	gen typeEnd 		= (type == "end_group" 		| type == "end_repeat")
+
+	gen typeBeginEnd 	= (typeBegin | typeEnd)
+
+	local begin_end_error = 0
+
+	*Loop over all rows
+	local num_rows = _N
+	gen rownumber = _n
+	order rownumber
+	forvalues row = 1/`num_rows' {
+
+		*This only applies to rows that end or begin a group or a repeat
+		if typeBeginEnd[`row'] == 1 {
+
+			* Get type and name for this row
+			local row_type = type[`row']
+			local row_name = name[`row']
+			local isBegin = typeBegin[`row']
+
+
+			* Test if any end_repeat or end_group has no name (begin are tested by server). This is not incorrect, but bad practice as it makes bug finding much more difficult.
+			if "`row_name'" == "" {
+
+				noi di as error "{phang}It is bad practice to leave the name column empty for end_group or end_repeat fields. While it is allowed in ODK it makes error finding harder and slower.{p_end}"
+				noi list rownumber type name if _n == `row'
+				error 688
+			}
+			
+			*Add begin group to stack if either begin_group or begin_repeat
+			if `isBegin' {
+
+				local type_and_name "`row_type'#`row_name' `type_and_name'"
+			
+			} 
+			
+			*If end_group or end_repeat, test that the corresponding group or repeat group was the most recent begin, otherwise throw an error.
+			else {
+
+				*Get the type and name of the end_group or end_repeat of this row
+				local endtype = substr("`row_type'", 5,6) //Remove the "end_" part of the type
+				local endname = "`row_name'"
+				
+				*Get the type and name of the most recent begin_group or begin_repeat
+				local lastbegin : word 1 of `type_and_name'			//the most recent is the first in the list
+				
+				*Get the begin type
+				local begintype = substr("`lastbegin'", 7,6)		//Remove the "begin_" part of the type
+				local begintype = subinstr("`begintype'","#","", .)	//Remove the # from "group" as it is one char shorter then "repeat"
+				
+				*Get the begin name
+				local beginname = substr("`lastbegin'", strpos("`lastbegin'","#")+ 1,.) //Everything that follows the #	
+				
+				//noi di "begintype `begintype'"
+				//noi di "beginname `beginname'"
+								
+				//noi di "endtype `row_type'"
+				//noi di "endname `endname'"
+
+				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed 
+				if "`endname'" != "`beginname'"  {
+				
+					noi di as error "{phang}The [{inp:end_`endtype' `endname'}] was found before [{inp:end_`begintype' `beginname'}]. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [{inp:`endname'}] and [{inp:`beginname'}], the [{inp:begin_`endtype' `endname'}] or the [{inp:end_`begintype' `beginname'}] are missing or the order of the begin and end of [{inp:`endname'}] and [{inp:`beginname'}] is incorrect.{p_end}"
+					noi di ""
+					local begin_end_error = 1 //Read all rows before throwing error code
+				}
+				
+				* If name are the same but types are differnt, then it is most likely a typo in type
+				else if "`endtype'" != "`begintype'" {
+				
+					noi di as error "{phang}The `begintype' [{inp:`endname'}] is ended with a [{inp:end_`begintype'}] which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'.{p_end}"	
+					noi di ""
+					local begin_end_error = 1 //Read all rows before throwing error code					
+				}
+				
+				*Name and type are the same, this is a correct ending of the group or repeat group
+				else {
+					* The begin_group or begin_repeat is no longer the most recent, so remove it from the string
+					local type_and_name = trim(substr("`type_and_name'", strlen("`lastbegin'")+1, .))
+				}
+			}
+		}
+	}
+	
+	*Throw error code if any errors were encountered above
+	if `begin_end_error' error 688
+	
 	
 
 
