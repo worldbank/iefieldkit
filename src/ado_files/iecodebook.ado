@@ -10,19 +10,16 @@ cap program drop iecodebook
 	syntax [anything] [using] , [*]
 
 	// Select subcommand
-
-		gettoken subcommand anything : anything
+	gettoken subcommand anything : anything
 
 	// Throw error if codebook exists
-
-		if ("`subcommand'" == "template") {
-			local file = subinstr(`"`using'"',"using","",.)
-			confirm new file `file'
-		}
+	if ("`subcommand'" == "template") {
+		local file = subinstr(`"`using'"',"using","",.)
+		confirm new file `file'
+	}
 
 	// Execute subcommand
-
-		cap iecodebook_`subcommand' `anything' `using' , `options'
+	cap iecodebook_`subcommand' `anything' `using' , `options'
 		if _rc != 0 di as err "{bf:iecodebook} requires [template], [apply], [append], or [export] to be specified with a target [using] codebook. Type {bf:help iecodebook} for details."
 
 end
@@ -34,6 +31,7 @@ program iecodebook_template
 
 	syntax [anything] [using] , [*]
 
+	// Select the right syntax and pass through to templating options
 	if `"`anything'"' == `""' {
 		iecodebook apply `using' , `options' template
 	}
