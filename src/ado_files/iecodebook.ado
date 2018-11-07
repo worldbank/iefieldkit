@@ -58,7 +58,7 @@ qui {
 
 		marksample touse
 		keep if `touse'
-			label var `touse' "Fill below:"
+			drop `touse'
 
 	// Template Setup
 		if "`anything'" != "" {
@@ -340,17 +340,18 @@ qui {
 				label def `theValueLabel' `theLabelList_`theValueLabel'', replace
 				}
 
-		// Apply all changes
+		// Drop leftovers if requested
+		cap drop `allDrops'
 
-			cap drop `allDrops'
-
-			foreach type in Recodes Choices Labels {
-				foreach change in `all`type'' {
-					cap `change'
-				}
+		// Apply all recodes, choices, and labels
+		foreach type in Recodes Choices Labels {
+			foreach change in `all`type'' {
+				cap `change'
 			}
+		}
 
-		 	cap rename (`allRenames1') (`allRenames2')
+		// Rename variables and catch errors
+		cap rename (`allRenames1') (`allRenames2')
 			if _rc != 0 {
 				di as err "That codebook contains a rename conflict. Please check and retry. iecodebook will exit."
 				rename (`allRenames1') (`allRenames2')

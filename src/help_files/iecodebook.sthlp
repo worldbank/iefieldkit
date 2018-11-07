@@ -57,7 +57,7 @@ When importing, this will also be used to create a variable identifying the sour
 {synoptline}
 
 
-{phang}{cmdab:iecodebook export} {help using} {it:"/path/to/codebook.xlsx"} , {bf:[}trim({it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]){bf:]}{p_end}
+{phang}{cmdab:iecodebook export} [{help if}] [{help in}] {help using} {it:"/path/to/codebook.xlsx"} , {bf:[}trim({it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]){bf:]}{p_end}
 {break}
 {synoptset}{...}
 {marker Options}{...}
@@ -89,8 +89,8 @@ in order to tell the command the exact adjustments that you want to be made in t
 {title:Example 1: Applying a codebook to current data}
 
 {p 2}{it:Step 1: Use the {bf:template} function to create a codebook template for the current dataset:}{p_end}
-{inp}    sysuse auto.dta  , clear
-{inp}    iecodebook template using "codebook.xlsx"
+{inp}    {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
+{inp}    {stata iecodebook template using "codebook.xlsx":iecodebook template using "codebook.xlsx"}
 
 {p 2}{it:Step 2: Fill out some instructions on the "survey" sheet.}{p_end}
 {break}{p 2}{it:The "name" column renames variables and the "label" column applies labels.}{p_end}
@@ -120,31 +120,49 @@ in order to tell the command the exact adjustments that you want to be made in t
 {col 3}{c BLC}{hline 27}{c BRC}
 {inp}
 {p 2}{it:Step 4: Use the {bf:apply} function to read the completed codebook:}{p_end}
-{inp}    sysuse auto.dta , clear
-{inp}    iecodebook apply using "codebook.xlsx"
+{inp}    {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
+{inp}    {stata iecodebook apply using "codebook.xlsx":iecodebook apply using "codebook.xlsx"}
+{inp}    {stata ta dom:ta dom}
 
 {title:Example 2: Appending multiple datasets using a codebook}
 {inp}
-{inp}    {it:Create two dummy datasets for testing iecodebook append}
-{inp}    	sysuse auto.dta , clear
-{inp}    	save data1.dta , replace
-{inp}    	save data2.dta , replace
+{p 2}{it:Step 0: Create two dummy datasets for testing iecodebook append}{p_end}
+{inp}    {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
+{inp}    {stata save data1.dta , replace:save data1.dta , replace}
+{inp}    {stata rename (price foreign mpg)(cost origin car_mpg):rename (price foreign mpg)(cost origin car_mpg)}
+{inp}    {stata save data2.dta , replace:save data2.dta , replace}
 {inp}
-{inp}    {it:Create a harmonization template for iecodebook append}
-{inp}    	iecodebook template 		///
-{inp}    	  "data1.dta" "data2.dta" 	///
-{inp}    	  using "codebook.xlsx" 	///
-{inp}    	, surveys(First Second)
+{p 2}{it:Step 1: Create a harmonization template for iecodebook append}{p_end}
+{inp}    iecodebook template 	///
+{inp}      "data1.dta" "data2.dta" 	/// {it: Note that this}
+{inp}      using "codebook.xlsx" 	/// {it: clears current data.}
+{inp}    , surveys(First Second)
+{inp}    {stata iecodebook template "data1.dta" "data2.dta" using "codebook.xlsx" , surveys(First Second):(Run)}
+
+{p 2}{it:Step 2: Fill out some instructions on the "survey" sheet.}{p_end}
+{break}{p 2}{it:The survey sheet is designed to be rearranged so that stacked variables are placed in the same row.}{p_end}
+{break}{p 2}{it:There will also be one extra "choices" sheet per survey with existing value labels for your reference.}{p_end}
+{col 3}{c TLC}{hline 91}{c TRC}
+{col 3}{c |}{col 4} name{col 12}label{col 22}choices{col 31}name:First{col 45}recode:First{col 60}name:Second{col 80}recode:Second{col 95}{c |}
+{col 3}{c LT}{hline 91}{c RT}
+{col 3}{c |}{col 4} cost{col 12}Cost{col 22}{col 31}price{col 45}{col 60}cost{col 80}{col 95}{c |} ← {it:align old}
+{col 3}{c |}{col 4}  ↑{col 12}  ↑{col 22}{it:value}{col 31}{col 45}{col 60} {col 80}{col 95}{c |}   {it:names}
+{col 3}{c |}{col 4}{it:rename}{col 12}{it:label}{col 22}{it:labels}{col 31}{it:"Survey" names, labels, and value labels are here for reference}{col 45}{col 60} {col 80}{col 95}{c |}   {it:and new}
+{col 3}{c |}{col 4}  ↓{col 12}  ↓{col 22}  ↓{col 31}{col 45}{col 60} {col 80}{col 95}{c |}   {it:recode}
+{col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}(0=1)(1=0){col 60}origin{col 80}(0=1)(1=0){col 95}{c |} ← {it:commands}
+{col 3}{c BLC}{hline 91}{c BRC}
+
+{p 2}{it:Step 3: Read and apply the harmonization template:}{p_end}
+{inp}    iecodebook append 		/// {it:Note that the correct command is}
+{inp}      "data1.dta" "data2.dta" 	/// {it:created by replacing "template"}
+{inp}      using "codebook.xlsx" 	/// {it:with "append" after creating the template.}
+{inp}    , surveys(First Second)
+{inp}    {stata iecodebook append "data1.dta" "data2.dta" using "codebook.xlsx" , surveys(First Second):(Run)}
 {inp}
-{inp}    {it:Read and apply the harmonization template (once filled out by user)}
-{inp}    	iecodebook append 		/// {it:Note that the correct command is}
-{inp}    	  "data1.dta" "data2.dta" 	/// {it:created by replacing "template"}
-{inp}    	  using "codebook.xlsx" 	/// {it:with "append" after creating the template.}
-{inp}    	, surveys(First Second)
-{inp}
-{inp}    {it:Create a simple codebook}
-{inp}    	sysuse auto.dta , clear
-{inp}    	iecodebook export using "codebook.xlsx"
+{title:Example 3: Creating a simple codebook}
+{break}
+{inp}    {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
+{inp}    {stata iecodebook export using "codebook.xlsx":iecodebook export using "codebook.xlsx"}
 
 {title:Acknowledgements}
 
