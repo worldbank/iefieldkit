@@ -87,15 +87,36 @@ In both cases, you will need to manually complete the template
 in order to tell the command the exact adjustments that you want to be made in the dataset.{p_end}
 
 {marker example}
-{title:Examples}
+{title:Example 1: Creating and applying a codebook}
 
-{inp}    {it:Create a codebook template for iecodebook apply}
+{inp}    {it:Create a codebook template for iecodebook apply:}
 {inp}    	sysuse auto.dta  , clear
 {inp}    	iecodebook template using "codebook.xlsx"
+
+{inp}    {it:Fill out some instructions on the "survey" tab:}
+{col 3}{c TLC}{hline 91}{c TRC}
+{col 3}{c |}{col 4}name{col 12}label{col 22}choices{col 31}name:current{col 45}label:current{col 60}choices:current{col 80}recode:current{col 95}{c |}
+{col 3}{c LT}{hline 91}{c RT}
+{col 3}{c |}{col 4}car{col 12}Name{col 22}{col 31}make{col 45}Make and Model{col 60} {col 80} {col 95}{c |}
+{col 3}{c |}{col 4}.{col 95}{c |}
+{col 3}{c |}{col 4}.{col 95}{c |}
+{col 3}{c |}{col 4}.{col 95}{c |}
+{col 3}{c |}{col 4}dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}Car type{col 60}origin{col 80}(2=0){col 95}{c |}
+{col 3}{c BLC}{hline 91}{c BRC}
+
+{inp}    {it:Then, in the "choices" tab:}
+{col 3}{c TLC}{hline 27}{c TRC}
+{col 3}{c |}{col 4}list_name{col 15}value{col 22}label{col 31}{c |}
+{col 3}{c LT}{hline 27}{c RT}
+{col 3}{c |}{col 4}yesno{col 15}0{col 22}No{col 31}{c |}
+{col 3}{c |}{col 4}yesno{col 15}1{col 22}Yes{col 31}{c |}
+{col 3}{c BLC}{hline 27}{c BRC}
 {inp}
-{inp}    {it:Read and apply the codebook (once filled out by user)}
+{inp}    {it:Read and apply the completed codebook:}
 {inp}    	sysuse auto.dta , clear
 {inp}    	iecodebook apply using "codebook.xlsx"
+
+{title:Example 2: Setting up and executing an append}
 {inp}
 {inp}    {it:Create two dummy datasets for testing iecodebook append}
 {inp}    	sysuse auto.dta , clear
