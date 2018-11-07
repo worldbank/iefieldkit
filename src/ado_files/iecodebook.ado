@@ -1,27 +1,50 @@
 //! version 0.1 19OCT2018  DIME Analytics bdaniels@worldbank.org
 
-// Main syntax –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+// Main syntax *********************************************************************************
 
 cap program drop iecodebook
 	program def  iecodebook
 
 	version 13.1 // Required 13.1 due to use of long macros
 
+	syntax [anything] using , [*]
+
+	// Select subcommand
+	gettoken subcommand anything : anything
+
+	// Throw error if codebook exists
+	if ("`subcommand'" == "template") {
+		local file = subinstr(`"`using'"',"using","",.)
+		confirm new file `file'
+	}
+
+	if !inlist("`subcommand'","template","apply","append","export") {
+		di as err "{bf:iecodebook} requires [template], [apply], [append], or [export] to be specified with a target [using] codebook. Type {bf:help iecodebook} for details."
+	}
+
+	// Execute subcommand
+	iecodebook_`subcommand' `anything' `using' , `options'
+
+end
+
+// Template subroutine *********************************************************************************
+
+cap program drop iecodebook_template
+program iecodebook_template
+
 	syntax [anything] [using] , [*]
 
-	// Give list of options if nothing specified
-	if (`"`anything'"' == "") | (`"`using'"' == "") {
-		di as err "{bf:iecodebook} requires [apply], [append], or [export] to be specified with a target codebook. Type {bf:help iecodebook} for details."
+	// Select the right syntax and pass through to templating options
+	if `"`anything'"' == `""' {
+		iecodebook apply `using' , `options' template
 	}
 	else {
-	// Select and execute subcommand
-		gettoken subcommand anything : anything
-		iecodebook_`subcommand' `anything' `using' , `options'
+		iecodebook append `anything' `using' , `options' template
 	}
 
 end
 
-// Export subroutine –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+// Export subroutine *********************************************************************************
 
 cap program drop iecodebook_export
 	program 	 iecodebook_export
@@ -31,10 +54,11 @@ qui {
 
 	// Store current data and apply if/in via [marksample]
 		tempfile allData
-		save `allData'
+		save `allData' , emptyok
 
 		marksample touse
 		keep if `touse'
+			drop `touse'
 
 	// Template Setup
 		if "`anything'" != "" {
@@ -43,6 +67,7 @@ qui {
 
 		if "`template'" != "" {
 			local template_colon ":`template'" 	// colon for titles
+			local template_us "_`template'" 	// underscore for sheet names
 			local TEMPLATE = 1					// flag for template functions
 		}
 		else local TEMPLATE = 0
@@ -112,7 +137,7 @@ qui {
 			save `savedta' , replace
 	}
 
-	// Create XLSX file with all current/remaining variable names and labels – use SurveyCTO syntax for sheet names and column names
+	// Create XLSX file with all current/remaining variable names and labels * use SurveyCTO syntax for sheet names and column names
 	preserve
 
 		// Record dataset info
@@ -186,7 +211,7 @@ qui {
 			}
 		}
 
-		// Clean up value labels for export – use SurveyCTO syntax for sheet names and column names
+		// Clean up value labels for export * use SurveyCTO syntax for sheet names and column names
 		use `theCommands' , clear
 
 			count
@@ -209,7 +234,7 @@ qui {
 			}
 
 		// Export value labels to "choices" sheet
-		export excel `using' , sheet("choices`template'") sheetreplace first(var)
+		export excel `using' , sheet("choices`template_us'") sheetreplace first(var)
 
 	// Reload original data
 	use `allData' , clear
@@ -217,7 +242,7 @@ qui {
 } // end qui
 end
 
-// Apply subroutine –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+// Apply subroutine *********************************************************************************
 
 cap program drop iecodebook_apply
 	program 	 iecodebook_apply
@@ -240,9 +265,10 @@ qui {
 					iecodebook export `using'
 				restore
 			// Append current dataset
-			save current.temp , replace
-			iecodebook export "current.temp" `using' , template(`survey')
-			!rm current.temp
+			tempfile current
+			save `current' , replace
+			iecodebook export `current' `using' , template(`survey')
+		exit
 		}
 
 	// Apply codebook
@@ -261,7 +287,8 @@ qui {
 				local theRecode		= recode`survey'[`i']
 
 				if "`drop'" != "" & "`theRename'" == "" local allDrops "`allDrops' `theName'"
-				if "`theRename'" != "" & "`theRename'" 	!= "" 	local allRenames 	= `"`allRenames' "rename `theName' `theRename'""'
+				if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames1 	= `"`allRenames1' `theName'"'
+				if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames2 	= `"`allRenames2' `theRename'"'
 				if "`theRename'" != "" & "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' "label var `theName' `theLabel'""'
 				if "`theRename'" != "" & "`theChoices'" != "" 	local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
 				if "`theRename'" != "" & "`theRecode'" 	!= "" 	local allRecodes 	= `"`allRecodes' "recode `theName' `theRecode'""'
@@ -313,19 +340,27 @@ qui {
 				label def `theValueLabel' `theLabelList_`theValueLabel'', replace
 				}
 
-		// Apply all changes
+		// Drop leftovers if requested
+		cap drop `allDrops'
 
-			cap drop `allDrops'
+		// Apply all recodes, choices, and labels
+		foreach type in Recodes Choices Labels {
+			foreach change in `all`type'' {
+				cap `change'
+			}
+		}
 
-			foreach type in Recodes Choices Labels Renames {
-				foreach change in `all`type'' {
-					cap `change'
-				}
+		// Rename variables and catch errors
+		cap rename (`allRenames1') (`allRenames2')
+			if _rc != 0 {
+				di as err "That codebook contains a rename conflict. Please check and retry. iecodebook will exit."
+				rename (`allRenames1') (`allRenames2')
+			exit
 			}
 } // end qui
 end
 
-// Append subroutine –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+// Append subroutine *********************************************************************************
 
 cap program drop iecodebook_append
 	program 	 iecodebook_append
@@ -356,6 +391,7 @@ qui {
 				local filepath : word `x' of `anything'
 				iecodebook export `filepath' `using' , template(`survey')
 			}
+		exit
 		}
 
 	// Loop over datasets and apply codebook
