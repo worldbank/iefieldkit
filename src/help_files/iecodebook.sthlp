@@ -21,7 +21,25 @@ two or more datasets - rename, recode, variable labels, and value labels - appli
 {break}
 {phang}{cmdab:iecodebook export} creates an Excel codebook that describes the current dataset,
 and optionally produces an export version of the dataset with only variables used in specified dofiles.{p_end}
+{marker desc}
+{title:Description}
 
+{pstd}{cmdab:iecodebook} is designed to automate repetitive data cleaning tasks in two situations:
+{bf:apply}, where a large number of variables need to have arbitrary {help rename}, {help recode}, or {help label} commands applied to them;
+and {bf:append}, when two or more datasets need to be harmonized to have the same variable names, labels, and value labels ("choices")
+in order to be appended together.{p_end}
+
+{pstd}The purpose of {cmdab:iecodebook} is therefore to (1) make the coding much more compact
+for an arbitrary number of commands, usually to a single line of code; and (2) to leave a human-readable record of the adjustments
+that were made and how they correspond across datasets in the case of {bf:append}. {cmdab:iecodebook} also provides an {bf:export} utility so that a human-readable record of the variables and their labels in a dataset
+can be instantly created at any time.{p_end}
+
+{pstd}For the {bf:apply} and {bf:append} syntaxes, {cmdab:iecodebook} provides a {bf:template} command
+that will correctly set up a codebook or harmonization template
+designed to be both human- and machine-readable.
+In both cases, you will need to manually complete the template
+in order to tell the command the exact adjustments that you want to be made in the dataset.{p_end}
+{marker example}
 {title:Syntax: Template Setup}
 {break}
 {break} {it:To apply to current dataset:}
@@ -67,25 +85,6 @@ When importing, this will also be used to create a variable identifying the sour
 and saves an identically named .dta file at the location specified in {it:"/path/to/codebook.xlsx"}.{p_end}
 {synoptline}
 
-{marker desc}
-{title:Description}
-
-{pstd}{cmdab:iecodebook} is designed to automate repetitive data cleaning tasks in two situations:
-{bf:apply}, where a large number of variables need to have arbitrary {help rename}, {help recode}, or {help label} commands applied to them;
-and {bf:append}, when two or more datasets need to be harmonized to have the same variable names, labels, and value labels ("choices")
-in order to be appended together.{p_end}
-
-{pstd}The purpose of {cmdab:iecodebook} is therefore to (1) make the coding much more compact
-for an arbitrary number of commands, usually to a single line of code; and (2) to leave a human-readable record of the adjustments
-that were made and how they correspond across datasets in the case of {bf:append}. {cmdab:iecodebook} also provides an {bf:export} utility so that a human-readable record of the variables and their labels in a dataset
-can be instantly created at any time.{p_end}
-
-{pstd}For the {bf:apply} and {bf:append} syntaxes, {cmdab:iecodebook} provides a {bf:template} command
-that will correctly set up a codebook or harmonization template
-designed to be both human- and machine-readable.
-In both cases, you will need to manually complete the template
-in order to tell the command the exact adjustments that you want to be made in the dataset.{p_end}
-{marker example}
 {title:Example 1: Applying a codebook to current data}
 
 {p 2}{it:Step 1: Use the {bf:template} function to create a codebook template for the current dataset:}{p_end}
