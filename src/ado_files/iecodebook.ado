@@ -7,7 +7,7 @@ cap program drop iecodebook
 
 	version 13.1 // Required 13.1 due to use of long macros
 
-	syntax [anything] [using] , [*]
+	syntax [anything] using , [*]
 
 	// Select subcommand
 	gettoken subcommand anything : anything
@@ -18,9 +18,12 @@ cap program drop iecodebook
 		confirm new file `file'
 	}
 
+	if !inlist("`subcommand'","template","apply","append","export") {
+		di as err "{bf:iecodebook} requires [template], [apply], [append], or [export] to be specified with a target [using] codebook. Type {bf:help iecodebook} for details."
+	}
+
 	// Execute subcommand
-	cap iecodebook_`subcommand' `anything' `using' , `options'
-		if _rc != 0 di as err "{bf:iecodebook} requires [template], [apply], [append], or [export] to be specified with a target [using] codebook. Type {bf:help iecodebook} for details."
+	iecodebook_`subcommand' `anything' `using' , `options'
 
 end
 
@@ -55,6 +58,7 @@ qui {
 
 		marksample touse
 		keep if `touse'
+			label var `touse' "Fill below:"
 
 	// Template Setup
 		if "`anything'" != "" {
@@ -63,6 +67,7 @@ qui {
 
 		if "`template'" != "" {
 			local template_colon ":`template'" 	// colon for titles
+			local template_us "_`template'" 	// underscore for sheet names
 			local TEMPLATE = 1					// flag for template functions
 		}
 		else local TEMPLATE = 0
@@ -229,7 +234,7 @@ qui {
 			}
 
 		// Export value labels to "choices" sheet
-		export excel `using' , sheet("choices`template'") sheetreplace first(var)
+		export excel `using' , sheet("choices`template_us'") sheetreplace first(var)
 
 	// Reload original data
 	use `allData' , clear
@@ -282,7 +287,8 @@ qui {
 				local theRecode		= recode`survey'[`i']
 
 				if "`drop'" != "" & "`theRename'" == "" local allDrops "`allDrops' `theName'"
-				if "`theRename'" != "" & "`theRename'" 	!= "" 	local allRenames 	= `"`allRenames' "rename `theName' `theRename'""'
+				if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames1 	= `"`allRenames1' `theName'"'
+				if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames2 	= `"`allRenames2' `theRename'"'
 				if "`theRename'" != "" & "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' "label var `theName' `theLabel'""'
 				if "`theRename'" != "" & "`theChoices'" != "" 	local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
 				if "`theRename'" != "" & "`theRecode'" 	!= "" 	local allRecodes 	= `"`allRecodes' "recode `theName' `theRecode'""'
@@ -338,10 +344,17 @@ qui {
 
 			cap drop `allDrops'
 
-			foreach type in Recodes Choices Labels Renames {
+			foreach type in Recodes Choices Labels {
 				foreach change in `all`type'' {
 					cap `change'
 				}
+			}
+
+		 	cap rename (`allRenames1') (`allRenames2')
+			if _rc != 0 {
+				di as err "That codebook contains a rename conflict. Please check and retry. iecodebook will exit."
+				rename (`allRenames1') (`allRenames2')
+			exit
 			}
 } // end qui
 end

@@ -22,16 +22,16 @@ two or more datasets - rename, recode, variable labels, and value labels - appli
 {phang}{cmdab:iecodebook export} creates an Excel codebook that describes the current dataset,
 and optionally produces an export version of the dataset with only variables used in specified dofiles.{p_end}
 
-{title:Template Setup}
+{title:Syntax: Template Setup}
 {break}
 {break} {it:To apply to current dataset:}
 {phang}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
 {break}
 {break} {it:To append target datasets:}
-{phang}{cmdab:iecodebook template} {it:"/path/to/survey1.dta" ["/path/to/survey2.dta"] [...]}
-{break} {help using} {it:"/path/to/codebook.xlsx"}, surveys(Survey1Name [Survey2Name] [...]){p_end}
+{phang}{cmdab:iecodebook template} {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]}
+{break} {help using} {it:"/path/to/codebook.xlsx"}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}{p_end}
 
-{title:Codebook Usage}
+{title:Syntax: Codebook Usage}
 
 {phang}{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"}, [drop]{p_end}
 {break}
@@ -44,8 +44,8 @@ The default behavior is to retain "unselected" variables. {p_end}
 {synoptline}
 
 
-{phang}{cmdab:iecodebook append} {it:"/path/to/survey1.dta" ["/path/to/survey2.dta"] [...]}
-{break} {help using} {it:"/path/to/codebook.xlsx"}, surveys(Survey1Name [Survey2Name] [...]) {p_end}
+{phang}{cmdab:iecodebook append} {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]}
+{break} {help using} {it:"/path/to/codebook.xlsx"}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}{p_end}
 {break}
 {synoptset}{...}
 {marker Options}{...}
@@ -85,38 +85,45 @@ that will correctly set up a codebook or harmonization template
 designed to be both human- and machine-readable.
 In both cases, you will need to manually complete the template
 in order to tell the command the exact adjustments that you want to be made in the dataset.{p_end}
-
 {marker example}
-{title:Example 1: Creating and applying a codebook}
+{title:Example 1: Applying a codebook to current data}
 
-{inp}    {it:Create a codebook template for iecodebook apply:}
-{inp}    	sysuse auto.dta  , clear
-{inp}    	iecodebook template using "codebook.xlsx"
+{p 2}{it:Step 1: Use the {bf:template} function to create a codebook template for the current dataset:}{p_end}
+{inp}    sysuse auto.dta  , clear
+{inp}    iecodebook template using "codebook.xlsx"
 
-{inp}    {it:Fill out some instructions on the "survey" tab:}
+{p 2}{it:Step 2: Fill out some instructions on the "survey" sheet.}{p_end}
+{break}{p 2}{it:The "name" column renames variables and the "label" column applies labels.}{p_end}
+{break}{p 2}{it:The "choices" column applies value labels (defined on the "choices" sheet in Step 3):}{p_end}
 {col 3}{c TLC}{hline 91}{c TRC}
-{col 3}{c |}{col 4}name{col 12}label{col 22}choices{col 31}name:current{col 45}label:current{col 60}choices:current{col 80}recode:current{col 95}{c |}
+{col 3}{c |}{col 4} name{col 12}label{col 22}choices{col 31}name:current{col 45}label:current{col 60}choices:current{col 80}recode:current{col 95}{c |}
 {col 3}{c LT}{hline 91}{c RT}
-{col 3}{c |}{col 4}car{col 12}Name{col 22}{col 31}make{col 45}Make and Model{col 60} {col 80} {col 95}{c |}
-{col 3}{c |}{col 4}.{col 95}{c |}
-{col 3}{c |}{col 4}.{col 95}{c |}
-{col 3}{c |}{col 4}.{col 95}{c |}
-{col 3}{c |}{col 4}dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}Car type{col 60}origin{col 80}(2=0){col 95}{c |}
+{col 3}{c |}{col 4} car{col 12}Name{col 22}{col 31}make{col 45}Make and Model{col 60} {col 80} {col 95}{c |}
+{col 3}{c |}{col 4}  ↑{col 12}  ↑{col 22}{it:value}{col 31}{col 45}{col 60} {col 80}{it:recode}{col 95}{c |}
+{col 3}{c |}{col 4}{it:rename}{col 12}{it:label}{col 22}{it:labels}{col 31}{it:"Current" names, labels, and value labels}{col 45}{col 60} {col 80}{it:commands}{col 95}{c |}
+{col 3}{c |}{col 4}  ↓{col 12}  ↓{col 22}  ↓{col 31}{col 45}{col 60} {col 80}  ↓{col 95}{c |}
+{col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}Car type{col 60}origin{col 80}(0=1)(1=0){col 95}{c |}
 {col 3}{c BLC}{hline 91}{c BRC}
 
-{inp}    {it:Then, in the "choices" tab:}
+{p 2}{it:Step 3: Use the "choices" sheet to define variable labels according to the following syntax:}{p_end}
 {col 3}{c TLC}{hline 27}{c TRC}
-{col 3}{c |}{col 4}list_name{col 15}value{col 22}label{col 31}{c |}
+{col 3}{c |}{col 4} list_name{col 15} value{col 22} label{col 31}{c |}
 {col 3}{c LT}{hline 27}{c RT}
-{col 3}{c |}{col 4}yesno{col 15}0{col 22}No{col 31}{c |}
-{col 3}{c |}{col 4}yesno{col 15}1{col 22}Yes{col 31}{c |}
+{col 3}{c |}{col 4} yesno{col 15} 0{col 22} No{col 31}{c |}
+{col 3}{c |}{col 4} yesno{col 15} 1{col 22} Yes{col 31}{c |}
+{col 3}{c |}{col 4}  {col 31}{c |}
+{col 3}{c |}{col 4} {it:Each individual label}{col 31}{c |}
+{col 3}{c |}{col 4} {it:gets an entry, grouped}{col 31}{c |}
+{col 3}{c |}{col 4} {it:by the "list_name"}{col 31}{c |}
+{col 3}{c |}{col 4} {it:corresponding to those}{col 31}{c |}
+{col 3}{c |}{col 4} {it:on the "survey" sheet.}{col 31}{c |}
 {col 3}{c BLC}{hline 27}{c BRC}
 {inp}
-{inp}    {it:Read and apply the completed codebook:}
-{inp}    	sysuse auto.dta , clear
-{inp}    	iecodebook apply using "codebook.xlsx"
+{p 2}{it:Step 4: Use the {bf:apply} function to read the completed codebook:}{p_end}
+{inp}    sysuse auto.dta , clear
+{inp}    iecodebook apply using "codebook.xlsx"
 
-{title:Example 2: Setting up and executing an append}
+{title:Example 2: Appending multiple datasets using a codebook}
 {inp}
 {inp}    {it:Create two dummy datasets for testing iecodebook append}
 {inp}    	sysuse auto.dta , clear
