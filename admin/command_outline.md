@@ -26,8 +26,8 @@ This command will make a difference between tests returning an error or a warnin
 
 * features
   * -[ ] Test for too long names - error
-  * -[ ] Test for not matching begin/end group/repeat, and provide a helpful error message to find which group/repeat field is causing the error - error
-  * -[ ] Not giving a name to end repeat/group - warning
+  * -[x] Test for not matching begin/end group/repeat, and provide a helpful error message to find which group/repeat field is causing the error - error
+  * -[x] Not giving a name to end repeat/group - warning
   * -[x] Test that there are no duplicates in the list options - error
   * -[x] Test that all list options are used at least once - warning
   * -[ ] Test that there will be no name conflicts when making repeat group long to wide. For example if there is a field called _name_ in a repeat group it will be named *name_1*, *name_2*, *name_3* etc. in wide format, at the same time there is a variable outside the repeat group that is already named *name_1*, then there will be a naming conflict. - error
