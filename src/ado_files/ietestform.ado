@@ -371,53 +371,53 @@ qui {
 				noi list rownumber type name if _n == `row'
 				error 688
 			}
-			
+
 			*Add begin group to stack if either begin_group or begin_repeat
 			if `isBegin' {
 
 				local type_and_name "`row_type'#`row_name' `type_and_name'"
-			
-			} 
-			
+
+			}
+
 			*If end_group or end_repeat, test that the corresponding group or repeat group was the most recent begin, otherwise throw an error.
 			else {
 
 				*Get the type and name of the end_group or end_repeat of this row
 				local endtype = substr("`row_type'", 5,6) //Remove the "end_" part of the type
 				local endname = "`row_name'"
-				
+
 				*Get the type and name of the most recent begin_group or begin_repeat
 				local lastbegin : word 1 of `type_and_name'			//the most recent is the first in the list
-				
+
 				*Get the begin type
 				local begintype = substr("`lastbegin'", 7,6)		//Remove the "begin_" part of the type
 				local begintype = subinstr("`begintype'","#","", .)	//Remove the # from "group" as it is one char shorter then "repeat"
-				
+
 				*Get the begin name
-				local beginname = substr("`lastbegin'", strpos("`lastbegin'","#")+ 1,.) //Everything that follows the #	
-				
+				local beginname = substr("`lastbegin'", strpos("`lastbegin'","#")+ 1,.) //Everything that follows the #
+
 				//noi di "begintype `begintype'"
 				//noi di "beginname `beginname'"
-								
+
 				//noi di "endtype `row_type'"
 				//noi di "endname `endname'"
 
-				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed 
+				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed
 				if "`endname'" != "`beginname'"  {
-				
+
 					noi di as error "{phang}The [{inp:end_`endtype' `endname'}] was found before [{inp:end_`begintype' `beginname'}]. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [{inp:`endname'}] and [{inp:`beginname'}], the [{inp:begin_`endtype' `endname'}] or the [{inp:end_`begintype' `beginname'}] are missing or the order of the begin and end of [{inp:`endname'}] and [{inp:`beginname'}] is incorrect.{p_end}"
 					noi di ""
 					local begin_end_error = 1 //Read all rows before throwing error code
 				}
-				
+
 				* If name are the same but types are differnt, then it is most likely a typo in type
 				else if "`endtype'" != "`begintype'" {
-				
-					noi di as error "{phang}The `begintype' [{inp:`endname'}] is ended with a [{inp:end_`begintype'}] which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'.{p_end}"	
+
+					noi di as error "{phang}The `begintype' [{inp:`endname'}] is ended with a [{inp:end_`begintype'}] which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'.{p_end}"
 					noi di ""
-					local begin_end_error = 1 //Read all rows before throwing error code					
+					local begin_end_error = 1 //Read all rows before throwing error code
 				}
-				
+
 				*Name and type are the same, this is a correct ending of the group or repeat group
 				else {
 					* The begin_group or begin_repeat is no longer the most recent, so remove it from the string
@@ -426,11 +426,11 @@ qui {
 			}
 		}
 	}
-	
+
 	*Throw error code if any errors were encountered above
 	if `begin_end_error' error 688
-	
-	
+
+
 
 
 	/***********************************************
@@ -460,6 +460,12 @@ qui {
 	***********************************************/
 
 	return local all_lists_used				"`all_lists_used'"
+}
+end
+
+capture program drop test_survey_name
+		program 	 test_survey_name , rclass
+qui {
 }
 end
 
