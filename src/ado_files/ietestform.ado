@@ -558,7 +558,77 @@ qui {
 		//error 198
 	}
 
+	/***********************************************
+		Test for name conflict afterlong to wide
+	***********************************************/
+
+	**List all field names and test if there is a risk that any fieldnames
+	* have name conlicts when repeat field goes from long to wide and
+	* number are suffixed to the end.
+	qui levelsof name if will_be_feild == 1 , local(listofnames) clean
+	wide_name_conflicts, fieldnames("`listofnames'")
+
 }
+end
+
+capture program drop wide_name_conflicts
+	program wide_name_conflicts , rclass
+
+		syntax , fieldnames(string)
+
+		//Loop over all field names
+		foreach field of local fieldnames {
+
+			**The regular expression starts with the field
+			* name, this is modified in each loop
+			local regexpress "`field'"
+
+			**Names are unique so this is to get the number of nested repeat
+			* groups deep this field is. If it is zero the name loop below is
+			* skipped as this only relates to field inside loops
+			qui sum num_nested_repeats if name == "`field'"
+			local numNestThisField = `r(mean)'
+
+			**Loop over each level of nesting and add the _# regular
+			* expression for each level of nesting
+			forvalues nest = 1/`numNestThisField' {
+
+				*Add one more level of _# to the regular expresison
+				local regexpress "`regexpress'_[0-9]+"
+
+				*Start the recursive regression that looks for potential conflicts
+				wide_name_conflicts_rec, field("`field'") fieldnames("`fieldnames'") regexpress("`regexpress'")
+			}
+		}
+end
+
+capture program drop wide_name_conflicts_rec
+	program wide_name_conflicts_rec , rclass
+
+		syntax , field(string) fieldnames(string) regexpress(string)
+
+		*Is there at least one match to the regular expression
+		local isFieldFound 	= regexm("`fieldnames'" ," `regexpress' ")
+
+		*If there is a match, write error and test if there are more matches
+		if `isFieldFound'  == 1 {
+
+			*Get the name of the matched field
+			local fieldFound	= trim(regexs(0))
+
+			*Display error
+			noi di as error "{phang}There is a potential name conflict between field [`field'] and [`fieldFound'] as `field' is in a repeat group. When variables in repeat groups are imported to Stata they will be given the suffix `field'_1, `field'_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is.{p_end}"
+
+			**Prepare the string to recurse on. Remove eveything up to the matched
+			* field [strpos("`fieldnames'","`fieldFound'")] and the field
+			* itself [strlen("`fieldFound'")] and use only everything after
+			* that [substr("`fieldnames'",`stringCut', .)]
+			local stringCut = strpos("`fieldnames'","`fieldFound'") + strlen("`fieldFound'")
+			local newFieldnames = substr("`fieldnames'",`stringCut', .)
+
+			*Make the recursive call
+			wide_name_conflicts_rec, field("`field'") fieldnames("`newFieldnames'") regexpress("`regexpress'")
+		}
 end
 
 pause on
