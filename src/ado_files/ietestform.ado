@@ -323,7 +323,7 @@ qui {
 	return local all_lists_used				"`r(all_lists_used)'"
 
 
-
+	noi test_survey_name
 
 }
 end
@@ -482,6 +482,18 @@ end
 capture program drop test_survey_name
 		program 	 test_survey_name , rclass
 qui {
+
+	noi di "test_survey_name command ok"
+
+	/***********************************************
+		Gen value needed in tests
+	***********************************************/
+
+	gen namelen = strlen(name)
+	order namelen, after(name) //jsut to make dev easier
+
+	gen will_be_feild = !((inlist(type, "start", "end" )) | (typeBeginEnd == 1))
+
 }
 end
 
