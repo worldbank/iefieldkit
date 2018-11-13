@@ -78,7 +78,8 @@ qui {
 	*Neither "name" or "value" is a name of a column, one must be used
 	else {
 		noi di as error "{phang}Either a column named [name] or a column named [value] is needed in the choice sheet.{p_end}"
-		error 688
+		noi di ""
+		//error 688
 	}
 
 	*Create a list of the variables with labels (multiple in case of multiple languages)
@@ -115,11 +116,13 @@ qui {
 		*TODO: Find a way to list the non-numeric values identified
 
 		noi di as error "{phang}There are non numeric values in the [`valuevar'] column in the choices sheet{p_end}"
-		error 198
+		noi di ""
+		//error 198
 	}
 	else if _rc != 0 {
 		noi di as error "{phang}ERROR IN CODE LOGIC [cap confirm numeric variable `valuevar']{p_end}"
-		error 198
+		noi di ""
+		//error 198
 	}
 
 
@@ -135,7 +138,8 @@ qui {
 	if `r(N)' > 0 {
 		noi di as error "{phang}There are duplicates in the following list_names:{p_end}"
 		noi list list_name `valuevar' if `item_dup' != 0
-		error 198
+		noi di ""
+		//error 198
 	}
 
 
@@ -193,7 +197,8 @@ qui {
 
 	*Throw error code if at least one lable duplicate was found
 	if `throw_label_dup_error' == 1 {
-		error 141
+		noi di ""
+		//error 141
 	}
 
 
@@ -217,12 +222,14 @@ qui {
 		*The user specified stata label language name does not exist. Throw error
 		if "`statalanguage'" != "" {
 			noi di as error "{phang}The label langauge specified in {inp:statalanguage(`statalanguage')} does not exist in the choice sheet. A column in the choice sheet must have a name that is [label:`statalanguage'].{p_end}"
-			error 198
+			noi di ""
+			//error 198
 		}
 		*The default stata label language name does not exist. Throw warning (error for now)
 		else {
 			noi di as error "{phang}There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read.{p_end}"
-			error 688
+			noi di ""
+			//error 688
 		}
 	}
 
@@ -286,7 +293,8 @@ qui {
 		*Generate a list of the vars missing and display error
 		local missing_vars : list surveysheetvars_required - surveysheetvars
 		noi di as error "{phang}One or several variables required to run all the tests in this command are missing in this form. The following variable(s) are missing [`missing_vars'].{p_end}"
-		error 688
+		noi di ""
+		//error 688
 	}
 
 	keep `surveysheetvars_required'
@@ -299,6 +307,8 @@ qui {
 		replace `var' = lower(itrim(trim(`var')))
 		replace `var' = "" if `var' == "."
 	}
+
+
 
 	/***********************************************
 		Test type column
@@ -368,8 +378,9 @@ qui {
 			if "`row_name'" == "" {
 
 				noi di as error "{phang}It is bad practice to leave the name column empty for end_group or end_repeat fields. While it is allowed in ODK it makes error finding harder and slower.{p_end}"
-				noi list rownumber type name if _n == `row'
-				error 688
+				noi list _excel_row_number type name if _n == `row'
+				noi di ""
+				//error 688
 			}
 
 			*Add begin group to stack if either begin_group or begin_repeat
@@ -428,7 +439,10 @@ qui {
 	}
 
 	*Throw error code if any errors were encountered above
-	if `begin_end_error' error 688
+	if `begin_end_error' {
+		noi di ""
+		//error 688
+	}
 
 
 
