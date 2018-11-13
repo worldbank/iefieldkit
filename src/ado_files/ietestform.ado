@@ -260,6 +260,10 @@ qui {
 	*Import the choices sheet
 	import excel "`form'", sheet("survey") clear first
 
+	*Gen
+	gen _excel_row_number = _n
+	order _excel_row_number
+
 	*Drop rows with all values missing
 	egen `countmissing' = rownonmiss(_all), strok
 	drop if `countmissing' == 0
@@ -297,7 +301,7 @@ qui {
 		//error 688
 	}
 
-	keep `surveysheetvars_required'
+	keep `surveysheetvars_required' _excel_row_number
 
 	*********
 	*make command vars that sometimes are not used and then loaded as numeric
@@ -359,10 +363,8 @@ qui {
 
 	local begin_end_error = 0
 
-	*Loop over all rows
+	*Loop over all rows to test if begin and end match perfectly and give helpful error if not
 	local num_rows = _N
-	gen rownumber = _n
-	order rownumber
 	forvalues row = 1/`num_rows' {
 
 		*This only applies to rows that end or begin a group or a repeat
