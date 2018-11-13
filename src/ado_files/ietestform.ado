@@ -494,6 +494,34 @@ qui {
 
 	gen will_be_feild = !((inlist(type, "start", "end" )) | (typeBeginEnd == 1))
 
+	/***********************************************
+		Create vars that require going over
+		all loops
+	***********************************************/
+
+	gen num_nested_repeats = 0
+
+	*Loop over all rows
+	local num_rows = _N
+
+	forvalues row = 1/`num_rows' {
+
+		if `row' > 1 {
+
+			local lastrow = `row' -1
+
+			if type[`row'] == "begin_repeat" {
+				replace num_nested_repeats = num_nested_repeats[`lastrow'] + 1 if _n == `row'
+			}
+			else if type[`row'] == "end_repeat" {
+				replace num_nested_repeats = num_nested_repeats[`lastrow'] - 1 if _n == `row'
+			}
+			else {
+				replace num_nested_repeats = num_nested_repeats[`lastrow'] if _n == `row'
+			}
+		}
+	}
+
 }
 end
 
