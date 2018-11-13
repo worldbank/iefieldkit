@@ -94,7 +94,7 @@ qui {
 
 		// Stack up all the lines of code from all the dofiles in a dataset
 		foreach dofile in `trim' {
-				import delimited "`dofile'" , clear delim("ß")
+				import delimited "`dofile'" , clear
 				append using `a'
 				tempfile a
 					save `a' , replace
