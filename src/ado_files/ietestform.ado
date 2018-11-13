@@ -314,7 +314,7 @@ qui {
 		Test type column
 	***********************************************/
 
-	noi test_survey_type , string("string")
+	noi test_survey_type
 
 	return local all_lists_used				"`r(all_lists_used)'"
 
@@ -330,7 +330,7 @@ qui {
 
 
 	noi di "test_survey_type command ok"
-	syntax , string(string)
+	//syntax , string(string) - No syntax needed at this point but likely to come later
 	noi di "test_survey_type syntax ok"
 
 	/***********************************************
