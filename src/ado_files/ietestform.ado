@@ -522,6 +522,42 @@ qui {
 		}
 	}
 
+	/***********************************************
+		Test for long names
+	***********************************************/
+
+	gen namelen_repeat1 = namelen + num_nested_repeats * 2 //Adding "_1" for each loop
+	gen namelen_repeat2 = namelen + num_nested_repeats * 3 //Adding "_10" for each loop
+
+	*Names that are always too long
+	gen longname	= (namelen > 32)
+	gen longname1	= (namelen_repeat1 > 32)
+	gen longname2	= (namelen_repeat2 > 32)
+
+	cap assert longname == 0
+	if _rc {
+		noi di as error "{phang}These variable names are longer then 32 characters. That is allowed in the data formats used in SurveyCTO - and is therefore allowed in their test - but will cause an error when the data is imported to Stata. The following names should be shortened:{p_end}"
+		noi list _excel_row_number type name if longname == 1
+		noi di ""
+		//error 198
+	}
+
+	cap assert longname1 == 0
+	if _rc {
+		noi di as error "{phang}These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_x} to the variable name for each repeat group this variable is in, where {it:x} is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ({it:_x}) are needed. The following varaibles are are longer then 32 characters if two characters will be adeed per repeat group and should therefore be shortened:{p_end}"
+		noi list _excel_row_number type name num_nested_repeats if longname1 == 1
+		noi di ""
+		//error 198
+	}
+
+	cap assert longname2 == 0
+	if _rc {
+		noi di as error "{phang}These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_xx} to the variable name for each repeat group this variable is in, where {it:xx} is the repeat count for that repeat. This test assumed that the repeat count is between 10 and 99 so that up to three characters ({it:_xx}) are needed. The following variables are are longer then 32 characters if two characters will be added per repeat group and should therefore be shortened:{p_end}"
+		noi list _excel_row_number type name num_nested_repeats if longname2 == 1
+		noi di ""
+		//error 198
+	}
+
 }
 end
 
