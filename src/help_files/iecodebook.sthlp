@@ -144,11 +144,11 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c TLC}{hline 91}{c TRC}
 {col 3}{c |}{col 4} name{col 12}label{col 22}choices{col 31}name:First{col 45}recode:First{col 60}name:Second{col 80}recode:Second{col 95}{c |}
 {col 3}{c LT}{hline 91}{c RT}
-{col 3}{c |}{col 4} cost{col 12}Cost{col 22}{col 31}price{col 45}{col 60}cost{col 80}{col 95}{c |} ← {it:align old}
-{col 3}{c |}{col 4}  ↑{col 12}  ↑{col 22}{it:value}{col 31}{col 45}{col 60} {col 80}{col 95}{c |}   {it:names}
+{col 3}{c |}{col 4} cost{col 12}Cost{col 22}{col 31}price{col 45}{col 60}cost{col 80}{col 95}{c |}<- {it:align old}
+{col 3}{c |}{col 4}  |{col 12}  |{col 22}{it:value}{col 31}{col 45}{col 60} {col 80}{col 95}{c |}   {it:names}
 {col 3}{c |}{col 4}{it:rename}{col 12}{it:label}{col 22}{it:labels}{col 31}{it:"Survey" names, labels, and value labels are here for reference}{col 45}{col 60} {col 80}{col 95}{c |}   {it:and new}
-{col 3}{c |}{col 4}  ↓{col 12}  ↓{col 22}  ↓{col 31}{col 45}{col 60} {col 80}{col 95}{c |}   {it:recode}
-{col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}(0=1)(1=0){col 60}origin{col 80}(0=1)(1=0){col 95}{c |} ← {it:commands}
+{col 3}{c |}{col 4}  |{col 12}  |{col 22}  |{col 31}{col 45}{col 60} {col 80}{col 95}{c |}   {it:recode}
+{col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}(0=1)(1=0){col 60}origin{col 80}(0=1)(1=0){col 95}{c |}<- {it:commands}
 {col 3}{c BLC}{hline 91}{c BRC}
 
 {p 2}{it:Step 3: Read and apply the harmonization template:}{p_end}
