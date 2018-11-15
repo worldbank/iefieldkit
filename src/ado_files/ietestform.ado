@@ -312,18 +312,27 @@ qui {
 		replace `var' = "" if `var' == "."
 	}
 
-
-
 	/***********************************************
 		Test type column
 	***********************************************/
 
+	*Do tests related to the type column
 	noi test_survey_type
 
+	*Ruturn the list of used choice lists to be compared with list of all lists
 	return local all_lists_used				"`r(all_lists_used)'"
 
+	/***********************************************
+		Test name column
+	***********************************************/
 
 	noi test_survey_name
+
+	/***********************************************
+		Test label column
+	***********************************************/
+
+	noi test_survey_label
 
 }
 end
@@ -630,6 +639,12 @@ capture program drop wide_name_conflicts_rec
 			wide_name_conflicts_rec, field("`field'") fieldnames("`newFieldnames'") regexpress("`regexpress'")
 		}
 end
+
+capture program drop test_survey_label
+		program 	 test_survey_label , rclass
+qui {
+
+}
 
 pause on
 ietestform , surveyform("C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls")
