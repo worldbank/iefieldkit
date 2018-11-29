@@ -12,7 +12,24 @@ help for {hi:iecodebook}
 
 {title:Syntax: Codebook Usage}
 
-{phang}{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"}, [drop]{p_end}
+
+{phang}{bf: 1) template setup }{p_end}
+
+{phang2}1-1) To apply to current dataset: {p_end}
+
+{phang2}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
+
+{phang2}1-2) To use other datasets:{p_end} 
+{phang2}{cmdab:iecodebook template} {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {help using} {it:"/path/to/codebook.xlsx"} ///{break}
+, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}{p_end}
+
+{phang}whereas {bf:surveys() is always required} for using other datasets. {bf:surveys()} sepcifies the name for each dataset to used in excel spreadsheet, in order the datasets are listed in command. The names must be in one word. {p_end}
+
+
+
+{phang}{bf: 2) using spreadsheep}{p_end}
+
+{phang2}{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"}, [drop]{p_end}
 {break}
 {synoptset}{...}
 {marker Options}{...}
@@ -23,7 +40,7 @@ The default behavior is to retain "unselected" variables. {p_end}
 {synoptline}
 
 
-{phang}{cmdab:iecodebook append} {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]}
+{phang2}{cmdab:iecodebook append} {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]}
 {break} {help using} {it:"/path/to/codebook.xlsx"}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}{p_end}
 {break}
 {synoptset}{...}
@@ -36,7 +53,9 @@ When importing, this will also be used to create a variable identifying the sour
 {synoptline}
 
 
-{phang}{cmdab:iecodebook export} [{help if}] [{help in}] {help using} {it:"/path/to/codebook.xlsx"} , {bf:[}trim({it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]){bf:]}{p_end}
+{phang}{bf: 3) exporting codebook}{p_end}
+
+{phang2}{cmdab:iecodebook export} [{help if}] [{help in}] {help using} {it:"/path/to/codebook.xlsx"} , {bf:[}trim({it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]){bf:]}{p_end}
 {break}
 {synoptset}{...}
 {marker Options}{...}
@@ -67,14 +86,7 @@ designed to be both human- and machine-readable.
 In both cases, you will need to manually complete the template
 in order to tell the command the exact adjustments that you want to be made in the dataset.{p_end}
 {marker example}
-{title:Syntax: Template Setup}
-{break}
-{break} {it:To apply to current dataset:}
-{phang}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
-{break}
-{break} {it:To append target datasets:}
-{phang}{cmdab:iecodebook template} {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]}
-{break} {help using} {it:"/path/to/codebook.xlsx"}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}{p_end}
+
 
 {title:Functions}
 
@@ -89,7 +101,7 @@ two or more datasets - rename, recode, variable labels, and value labels - appli
 {break}
 {phang}{cmdab:iecodebook export} creates an Excel codebook that describes the current dataset,
 and optionally produces an export version of the dataset with only variables used in specified dofiles.{p_end}
-{marker desc}
+
 
 {title:Example 1: Applying a codebook to current data}
 
@@ -98,8 +110,9 @@ and optionally produces an export version of the dataset with only variables use
 {inp}    {stata iecodebook template using "codebook.xlsx":iecodebook template using "codebook.xlsx"}
 
 {p 2}{it:Step 2: Fill out some instructions on the "survey" sheet.}{p_end}
-{break}{p 2}{it:The "name" column renames variables and the "label" column applies labels.}{p_end}
-{break}{p 2}{it:The "choices" column applies value labels (defined on the "choices" sheet in Step 3):}{p_end}
+{p 2}{it:The "name" column renames variables and the "label" column applies labels.}{p_end}
+{p 2}{it:The "choices" column applies value labels (defined on the "choices" sheet in Step 3):}{p_end}
+
 {col 3}{c TLC}{hline 91}{c TRC}
 {col 3}{c |}{col 4} name{col 12}label{col 22}choices{col 31}name:current{col 45}label:current{col 60}choices:current{col 80}recode:current{col 95}{c |}
 {col 3}{c LT}{hline 91}{c RT}
