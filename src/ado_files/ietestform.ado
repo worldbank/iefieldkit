@@ -501,7 +501,7 @@ qui {
 	gen namelen = strlen(name)
 	order namelen, after(name) //jsut to make dev easier
 
-	gen will_be_feild = !((inlist(type, "start", "end" )) | (typeBeginEnd == 1))
+	gen will_be_field = !((inlist(type, "start", "end" )) | (typeBeginEnd == 1))
 
 	/***********************************************
 		Create vars that require going over
@@ -574,7 +574,7 @@ qui {
 	**List all field names and test if there is a risk that any fieldnames
 	* have name conlicts when repeat field goes from long to wide and
 	* number are suffixed to the end.
-	qui levelsof name if will_be_feild == 1 , local(listofnames) clean
+	qui levelsof name if will_be_field == 1 , local(listofnames) clean
 	wide_name_conflicts, fieldnames("`listofnames'")
 
 }
@@ -582,7 +582,7 @@ end
 
 capture program drop wide_name_conflicts
 	program wide_name_conflicts , rclass
-
+qui {
 		syntax , fieldnames(string)
 
 		//Loop over all field names
@@ -609,11 +609,12 @@ capture program drop wide_name_conflicts
 				wide_name_conflicts_rec, field("`field'") fieldnames("`fieldnames'") regexpress("`regexpress'")
 			}
 		}
+}
 end
 
 capture program drop wide_name_conflicts_rec
 	program wide_name_conflicts_rec , rclass
-
+qui {
 		syntax , field(string) fieldnames(string) regexpress(string)
 
 		*Is there at least one match to the regular expression
@@ -638,6 +639,7 @@ capture program drop wide_name_conflicts_rec
 			*Make the recursive call
 			wide_name_conflicts_rec, field("`field'") fieldnames("`newFieldnames'") regexpress("`regexpress'")
 		}
+}
 end
 
 capture program drop test_survey_label
