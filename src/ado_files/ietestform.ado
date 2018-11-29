@@ -332,7 +332,7 @@ qui {
 		Test label column
 	***********************************************/
 
-	noi test_survey_label
+	noi test_survey_label, surveysheetvars(`surveysheetvars') statalanguage(`statalanguage')
 
 }
 end
@@ -646,7 +646,55 @@ capture program drop test_survey_label
 		program 	 test_survey_label , rclass
 qui {
 
+		syntax , surveysheetvars(varlist) [statalanguage(string)]
+
+		/***********************************************
+			TEST - Stata language for labels
+			Test that there is one column with labels formatted for stata
+		***********************************************/
+
+		*User specified stata label name thar is not simply stata
+		if "`statalanguage'" != "" {
+			local labelstata "label`statalanguage'"
+		}
+		*Otherwise use the default name
+		else {
+			local labelstata "labelstata"
+		}
+
+		*Test if the Stata language column exists
+		if `:list labelstata in surveysheetvars' == 0 {
+
+			*The user specified stata label language name does not exist. Throw error
+			if "`statalanguage'" != "" {
+				noi di as error "{phang}The label langauge specified in {inp:statalanguage(`statalanguage')} does not exist in the choice sheet. A column in the choice sheet must have a name that is [label:`statalanguage'].{p_end}"
+				noi di ""
+				//error 198
+			}
+			*The default stata label language name does not exist. Throw warning (error for now)
+			else {
+				noi di as error "{phang}There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read.{p_end}"
+				noi di ""
+				//error 688
+			}
+		}
+		
+		*Test the length of the Stata label
+		gen labellength = strlen(`labelstata')
+		
+		*Names that are always too long
+		gen longlabel	= (labellength > 80)
+
+		cap assert longlabel == 0
+		if _rc {
+			noi di as error "{phang}These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:{p_end}"
+			noi list _excel_row_number type name `labelstata' if longlabel == 1
+			noi di ""
+			//error 198
+		}	
+
 }
+end
 
 pause on
 ietestform , surveyform("C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls")
