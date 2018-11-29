@@ -1,5 +1,5 @@
 {smcl}
-{* 28 Nov 2018}{...}
+{* 29 Nov 2018}{...}
 {hline}
 help for {hi:iecodebook}
 {hline}
@@ -106,8 +106,8 @@ and optionally produces an export version of the dataset with only variables use
 {title:Example 1: Applying a codebook to current data}
 
 {p 2}{it:Step 1: Use the {bf:template} function to create a codebook template for the current dataset:}{p_end}
-{inp}    {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
-{inp}    {stata iecodebook template using "codebook.xlsx":iecodebook template using "codebook.xlsx"}
+    {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
+    {stata iecodebook template using "codebook.xlsx":iecodebook template using "codebook.xlsx"}
 
 {p 2}{it:Step 2: Fill out some instructions on the "survey" sheet.}{p_end}
 {p 2}{it:The "name" column renames variables and the "label" column applies labels.}{p_end}
@@ -117,9 +117,9 @@ and optionally produces an export version of the dataset with only variables use
 {col 3}{c |}{col 4} name{col 12}label{col 22}choices{col 31}name:current{col 45}label:current{col 60}choices:current{col 80}recode:current{col 95}{c |}
 {col 3}{c LT}{hline 91}{c RT}
 {col 3}{c |}{col 4} car{col 12}Name{col 22}{col 31}make{col 45}Make and Model{col 60} {col 80} {col 95}{c |}
-{col 3}{c |}{col 4}  ↑{col 12}  ↑{col 22}{it:value}{col 31}{col 45}{col 60} {col 80}{it:recode}{col 95}{c |}
+{col 3}{c |}{col 4}  |{col 12}  |{col 22}{it:value}{col 31}{col 45}{col 60} {col 80}{it:recode}{col 95}{c |}
 {col 3}{c |}{col 4}{it:rename}{col 12}{it:label}{col 22}{it:labels}{col 31}{it:"Current" names, labels, and value labels}{col 45}{col 60} {col 80}{it:commands}{col 95}{c |}
-{col 3}{c |}{col 4}  ↓{col 12}  ↓{col 22}  ↓{col 31}{col 45}{col 60} {col 80}  ↓{col 95}{c |}
+{col 3}{c |}{col 4}  |{col 12}  |{col 22}  |{col 31}{col 45}{col 60} {col 80}  |{col 95}{c |}
 {col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}Car type{col 60}origin{col 80}(0=1)(1=0){col 95}{c |}
 {col 3}{c BLC}{hline 91}{c BRC}
 
@@ -136,26 +136,26 @@ and optionally produces an export version of the dataset with only variables use
 {col 3}{c |}{col 4} {it:corresponding to those}{col 31}{c |}
 {col 3}{c |}{col 4} {it:on the "survey" sheet.}{col 31}{c |}
 {col 3}{c BLC}{hline 27}{c BRC}
-{inp}
+
 {p 2}{it:Step 4: Use the {bf:apply} function to read the completed codebook:}{p_end}
-{inp}    {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
-{inp}    {stata iecodebook apply using "codebook.xlsx":iecodebook apply using "codebook.xlsx"}
-{inp}    {stata ta dom:ta dom}
+    {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
+    {stata iecodebook apply using "codebook.xlsx":iecodebook apply using "codebook.xlsx"}
+    {stata ta dom:tab dom}
 
 {title:Example 2: Appending multiple datasets using a codebook}
-{inp}
+
 {p 2}{it:Step 0: Create two dummy datasets for testing iecodebook append}{p_end}
-{inp}    {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
-{inp}    {stata save data1.dta , replace:save data1.dta , replace}
-{inp}    {stata rename (price foreign mpg)(cost origin car_mpg):rename (price foreign mpg)(cost origin car_mpg)}
-{inp}    {stata save data2.dta , replace:save data2.dta , replace}
-{inp}
-{p 2}{it:Step 1: Create a harmonization template for iecodebook append}{p_end}
-{inp}    iecodebook template 	///
-{inp}      "data1.dta" "data2.dta" 	/// {it: Note that this}
-{inp}      using "codebook.xlsx" 	/// {it: clears current data.}
-{inp}    , surveys(First Second)
-{inp}    {stata iecodebook template "data1.dta" "data2.dta" using "codebook.xlsx" , surveys(First Second):(Run)}
+    {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
+    {stata save data1.dta , replace:save data1.dta , replace}
+    {stata rename (price foreign mpg)(cost origin car_mpg):rename (price foreign mpg)(cost origin car_mpg)}
+    {stata save data2.dta , replace:save data2.dta , replace}
+
+{p 2}{it:Step 1: Create a harmonization template for iecodebook append}{p_end}    
+	{inp:iecodebook template} ///
+	{inp:"data1.dta" "data2.dta"} /// {it: Note that this}
+	{inp: using "codebook.xlsx"} 	/// {it: clears current data.}
+	{inp: , surveys(First Second)}
+	{stata iecodebook template "data1.dta" "data2.dta" using "codebook.xlsx" , surveys(First Second):(Run)}
 
 {p 2}{it:Step 2: Fill out some instructions on the "survey" sheet.}{p_end}
 {break}{p 2}{it:The survey sheet is designed to be rearranged so that stacked variables are placed in the same row.}{p_end}
@@ -171,16 +171,16 @@ and optionally produces an export version of the dataset with only variables use
 {col 3}{c BLC}{hline 91}{c BRC}
 
 {p 2}{it:Step 3: Read and apply the harmonization template:}{p_end}
-{inp}    iecodebook append 		/// {it:Note that the correct command is}
-{inp}      "data1.dta" "data2.dta" 	/// {it:created by replacing "template"}
-{inp}      using "codebook.xlsx" 	/// {it:with "append" after creating the template.}
-{inp}    , surveys(First Second)
-{inp}    {stata iecodebook append "data1.dta" "data2.dta" using "codebook.xlsx" , surveys(First Second):(Run)}
-{inp}
+	{inp:iecodebook append} 		/// {it:Note that the correct command is}
+	{inp:"data1.dta" "data2.dta"} 	/// {it:created by replacing "template"}
+	{inp: using "codebook.xlsx"} 	/// {it:with "append" after creating the template.}
+	{inp: , surveys(First Second)}
+	{stata iecodebook append "data1.dta" "data2.dta" using "codebook.xlsx" , surveys(First Second):(Run)}
+
 {title:Example 3: Creating a simple codebook}
 {break}
-{inp}    {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
-{inp}    {stata iecodebook export using "codebook.xlsx":iecodebook export using "codebook.xlsx"}
+    {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
+    {stata iecodebook export using "codebook.xlsx":iecodebook export using "codebook.xlsx"}
 
 {title:Acknowledgements}
 
