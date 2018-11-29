@@ -31,7 +31,7 @@ This command will make a difference between tests returning an error or a warnin
 * features
   * Survey Sheet
     * type column
-      * -[x] Test for not matching begin/end group/repeat, and provide a helpful error message to find which group/repeat field is causing the error - error
+      * -[x] Test for not matching begin/end group/repeat, and provide a helpful error message to find which group/repeat field is causing the error, the SCTO server does this as well, but do not provide helpful error message. The helpful error message requires that _end_group_ and _end_repeat_ has names
     * name column
       * -[x] Test for too long names - error
       * -[x] Test for too long names in repeat groups when going from long to wide and one or many suffixes like \_1 are added - error
@@ -49,7 +49,10 @@ This command will make a difference between tests returning an error or a warnin
       * -[ ] Big high priority stuff that we would like to have but is not sure that they are easy to implement:
         * -[ ] What is the maximum number of variables that this form could output?
    * Choice sheet
+     * -[x] test that the value/name column is numeric
      * -[x] Test that there are no duplicates in the list options - error
+       * -[x] duplicated combinations of value/name and list named
+       * -[x] duplicated labels inside a list
      * -[x] Test that all list options are used at least once - warning
      * -[x] Test that there is a Stata label column
   * Options
