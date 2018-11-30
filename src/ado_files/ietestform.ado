@@ -11,7 +11,7 @@ capture program drop ietestform
 		return list
 
 	}
-pause
+//pause
 
 	/***********************************************
 		Test the choice sheet inpependently
@@ -43,10 +43,10 @@ pause
 
 		if "`txt_tempfile'" != "" report_file add , format("txt") tempfile("`txt_tempfile'") message("`error_msg'")
 
-		noi di as error "{phang}`error_msg'{p_end}"
-		noi di ""
-		noi di "end of error"
-		noi di ""
+		// noi di as error "{phang}`error_msg'{p_end}"
+		// noi di ""
+		// noi di "end of error"
+		// noi di ""
 	}
 
 
@@ -58,9 +58,9 @@ end
 capture program drop importchoicesheet
 		program 	 importchoicesheet , rclass
 qui {
-	//noi di "importchoicesheet command ok"
+	noi di "importchoicesheet command ok"
 	syntax , form(string) [statalanguage(string) txtfile(string)]
-	//noi di "importchoicesheet syntax ok"
+	noi di "importchoicesheet syntax ok"
 
 	*Gen the tempvars needed
 	tempvar countmissing item_dup label_dup label_dup_all
@@ -745,8 +745,8 @@ qui {
 
 				if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
 
-				noi di as error "{phang}`error_msg'{p_end}"
-				noi di ""
+				// noi di as error "{phang}`error_msg'{p_end}"
+				// noi di ""
 
 			}
 		}
@@ -760,9 +760,15 @@ qui {
 		*Report if a label is too long and will be truncated
 		cap assert longlabel == 0
 		if _rc {
-			noi di as error "{phang}These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:{p_end}"
-			noi list _excel_row_number type name `labelstata' if longlabel == 1
-			noi di ""
+
+
+			local error_msg "}These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:"
+
+			if "`txtfile'" != "" report_file add , format("txt") report_handler("`txtfile'") message("`error_msg'")
+
+			// noi di as error "{phang}`error_msg'{p_end}"
+			// noi list _excel_row_number type name `labelstata' if longlabel == 1
+			// noi di ""
 			//error 198
 		}
 
@@ -805,10 +811,10 @@ qui {
 
 
 		*test that tempfile is not passed for setup but passed in all other tasks
-		if ("`task'" == "setup" & "`tempfile'" != "") | (("`task'" == "write" | "`task'" == "add") & "`tempfile'" == "") {
-			noi di as error "{phang}In command report_file tempfile option must be used when task is write or add and must not be used when task is write.{p_end}"
-			error 198
-		}
+		// if ("`task'" == "setup" & "`tempfile'" != "") | (("`task'" == "write" | "`task'" == "add") & "`tempfile'" == "") {
+		// 	noi di as error "{phang}In command report_file tempfile option must be used when task is write or add and must not be used when task is write.{p_end}"
+		// 	error 198
+		// }
 
 		*Test that the tempfile passed exists
 		if ("`task'" == "write" | "`task'" == "add") {
@@ -845,12 +851,7 @@ qui {
 
 		}
 
-/*
-		_n ///
-		"Use either of these lings to read more about this command:" _n ///
-		"https://github.com/worldbank/iefieldkit" _n ///
-		"https://dimewiki.worldbank.org/wiki/Ietestform" _n _n _n
-*/
+
 
 		*Add item to report
 		if "`task'" == "add" {
@@ -860,8 +861,8 @@ qui {
 				*Add item to report
 				cap file close 	`setupfile_handler'
 				file open  		`setupfile_handler' using "`tempfile'", text write append
-				file write  	`setupfile_handler' ///
-									"**************************************************************************************" _n ///
+				file write  	`report_handler' ///
+									"**************************************************************************************" _n _n ///
 									"`message'" _n _n
 				file close 		`setupfile_handler'
 			}
@@ -885,7 +886,12 @@ qui {
 }
 end
 
-
+/*
+		_n ///
+		"Use either of these lings to read more about this command:" _n ///
+		"https://github.com/worldbank/iefieldkit" _n ///
+		"https://dimewiki.worldbank.org/wiki/Ietestform" _n _n _n
+*/
 
 pause on
 set trace off
