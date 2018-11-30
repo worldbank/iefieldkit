@@ -279,7 +279,7 @@ qui {
 	local surveysheetvars `r(varlist)'
 
 	*Create a list of the variables with labels (multiple in case of multiple languages)
-	foreach var of local choicesheetvars {
+	foreach var of local surveysheetvars {
 		if substr("`var'", 1, 5) == "label" local labelvars "`labelvars' `var'"
 	}
 
@@ -332,7 +332,7 @@ qui {
 		Test label column
 	***********************************************/
 
-	noi test_survey_label, surveysheetvars(`surveysheetvars') statalanguage(`statalanguage')
+	noi test_survey_label, surveysheetvars(`surveysheetvars_required') statalanguage(`statalanguage')
 
 }
 end
@@ -678,13 +678,14 @@ qui {
 				//error 688
 			}
 		}
-		
+
 		*Test the length of the Stata label
 		gen labellength = strlen(`labelstata')
-		
+
 		*Names that are always too long
 		gen longlabel	= (labellength > 80)
 
+		*Report if a label is too long and will be truncated
 		cap assert longlabel == 0
 		if _rc {
 			noi di as error "{phang}These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:{p_end}"
@@ -697,4 +698,4 @@ qui {
 end
 
 pause on
-ietestform , surveyform("C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls")
+ietestform , surveyform("C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls") statalanguage(text)
