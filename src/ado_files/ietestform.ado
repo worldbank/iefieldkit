@@ -9,12 +9,11 @@ capture program drop ietestform
 		tempfile txt_tempfile
 		noi report_file setup , format("txt") report_tempfile("`txt_tempfile'")
 	}
-//pause
 
 	/***********************************************
 		Test the choice sheet inpependently
 	***********************************************/
-	importchoicesheet, form("`surveyform'") statalanguage(`statalanguage') txtfile("`txt_tempfile'")
+	noi importchoicesheet, form("`surveyform'") statalanguage(`statalanguage') txtfile("`txt_tempfile'")
 
 	*Get all choice lists actaually used
 	local all_list_names `r(all_list_names)'
@@ -23,7 +22,7 @@ capture program drop ietestform
 	/***********************************************
 		Test the survey sheet inpependently
 	***********************************************/
-	importsurveysheet, form("`surveyform'") statalanguage(`statalanguage') txtfile("`txt_tempfile'")
+	noi importsurveysheet, form("`surveyform'") statalanguage(`statalanguage') txtfile("`txt_tempfile'")
 
 	*Get all choice lists actaually used
 	local all_lists_used `r(all_lists_used)'
@@ -39,17 +38,15 @@ capture program drop ietestform
 
 		local error_msg "There are lists in the choices sheets that are not used in any field in the survey sheet. These are the unused list(s): [`unused_lists']"
 
-		if "`txt_tempfile'" != "" report_file add , format("txt") tempfile("`txt_tempfile'") message("`error_msg'")
+		if "`txtreport'" != "" report_file add , format("txt") report_tempfile("`txt_tempfile'") message("`error_msg'")
 
 		// noi di as error "{phang}`error_msg'{p_end}"
-		// noi di ""
-		// noi di "end of error"
 		// noi di ""
 	}
 
 
 	*Write the file to disk
-	if "`txtreport'" != "" report_file write , format("txt") tempfile("`txt_tempfile'") filepath("`txtreport'")
+	if "`txtreport'" != "" report_file write , format("txt") report_tempfile("`txt_tempfile'") filepath("`txtreport'")
 
 end
 
@@ -107,7 +104,7 @@ qui {
 	***********************************************/
 
 	*Drop rows with all values missing
-	egen `countmissing' = rownonmiss(_all), strok
+	egen 	`countmissing' = rownonmiss(_all), strok
 	drop if `countmissing' == 0
 
 	*Get a list with all the list names
@@ -130,10 +127,10 @@ qui {
 
 		local error_msg "There are non numeric values in the [`valuevar'] column in the choices sheet"
 
-		if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 		// noi di as error "{phang}`error_msg'{p_end}"
-		// noi di ""
+
 
 	}
 	else if _rc != 0 {
@@ -156,7 +153,7 @@ qui {
 
 		local error_msg "There are duplicates in the following list_names:"
 
-		if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 		// noi di as error "{phang}`error_msg'{p_end}"
 		// noi list list_name `valuevar' if `item_dup' != 0
@@ -212,7 +209,7 @@ qui {
 
 			local error_msg "There are duplicate labels in the column `labelvar' within the [`lists_with_dups'] list(s) in the following labels:"
 
-			if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 			// noi di as error "{phang}`error_msg'{p_end}"
 			// noi list list_name `valuevar' `labelvar' filter if `label_dup_all' == 1
@@ -257,11 +254,10 @@ qui {
 
 			local error_msg "There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read."
 
-			if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 			// noi di as error "{phang}`error_msg'{p_end}"
 			// noi di ""
-			//error 688
 		}
 	}
 
@@ -422,7 +418,7 @@ qui {
 
 				local error_msg "It is bad practice to leave the name column empty for end_group or end_repeat fields. While it is allowed in ODK it makes error finding harder and slower."
 
-				if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+				if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 				// noi di as error "{phang}`error_msg'{p_end}"
 				// noi list _excel_row_number type name if _n == `row'
@@ -465,7 +461,7 @@ qui {
 
 					local error_msg "The [{inp:end_`endtype' `endname'}] was found before [{inp:end_`begintype' `beginname'}]. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [{inp:`endname'}] and [{inp:`beginname'}], the [{inp:begin_`endtype' `endname'}] or the [{inp:end_`begintype' `beginname'}] are missing or the order of the begin and end of [{inp:`endname'}] and [{inp:`beginname'}] is incorrect."
 
-					if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+					if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 					// noi di as error "{phang}`error_msg'{p_end}"
 					// noi di ""
@@ -476,7 +472,7 @@ qui {
 
 					local error_msg "The `begintype' [{inp:`endname'}] is ended with a [{inp:end_`begintype'}] which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'."
 
-					if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+					if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 					// noi di as error "{phang}`error_msg'{p_end}"
 					// noi di ""
@@ -593,7 +589,7 @@ qui {
 
 		local error_msg "These variable names are longer then 32 characters. That is allowed in the data formats used in SurveyCTO - and is therefore allowed in their test - but will cause an error when the data is imported to Stata. The following names should be shortened:"
 
-		if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 		// noi di as error "{phang}`error_msg'{p_end}"
 		// noi list _excel_row_number type name if longname == 1
@@ -606,7 +602,7 @@ qui {
 
 		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_x} to the variable name for each repeat group this variable is in, where {it:x} is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ({it:_x}) are needed. The following varaibles are are longer then 32 characters if two characters will be adeed per repeat group and should therefore be shortened:"
 
-		if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 		// noi di as error "{phang}`error_msg'{p_end}"
 		// noi list _excel_row_number type name num_nested_repeats if longname1 == 1
@@ -619,7 +615,7 @@ qui {
 
 		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_xx} to the variable name for each repeat group this variable is in, where {it:xx} is the repeat count for that repeat. This test assumed that the repeat count is between 10 and 99 so that up to three characters ({it:_xx}) are needed. The following variables are are longer then 32 characters if two characters will be added per repeat group and should therefore be shortened:"
 
-		if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 		// noi di as error "{phang}`error_msg'{p_end}"
 		// noi list _excel_row_number type name num_nested_repeats if longname2 == 1
@@ -690,7 +686,7 @@ qui {
 
 			local error_msg "There is a potential name conflict between field [`field'] and [`fieldFound'] as `field' is in a repeat group. When variables in repeat groups are imported to Stata they will be given the suffix `field'_1, `field'_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is."
 
-			if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 			//noi di as error "{phang}`error_msg'{p_end}"
 
@@ -741,7 +737,7 @@ qui {
 
 				local error_msg "}There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read."
 
-				if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+				if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 				// noi di as error "{phang}`error_msg'{p_end}"
 				// noi di ""
@@ -762,7 +758,7 @@ qui {
 
 			local error_msg "}These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:"
 
-			if "`txtfile'" != "" report_file add , format("txt") report_handler("`txtfile'") message("`error_msg'")
+			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 			// noi di as error "{phang}`error_msg'{p_end}"
 			// noi list _excel_row_number type name `labelstata' if longlabel == 1
@@ -776,7 +772,6 @@ end
 capture program drop report_file
 		program 	 report_file , rclass
 qui {
-
 
 		noi di "report_file command ok"
 		syntax anything , format(string) report_tempfile(string) [message(string) filepath(string)]
@@ -827,37 +822,39 @@ qui {
 			}
 		}
 
-
-
 		*Add item to report
 		if "`task'" == "add" {
 
-			if "`format'" == "txt" & 0  {
+			*.txt format
+			if "`format'" == "txt"  {
 
 				*Add item to report
-				cap file close 	`setupfile_handler'
-				file open  		`setupfile_handler' using "`tempfile'", text write append
+				cap file close 	`report_handler'
+				file open  		`report_handler' using "`report_tempfile'", text write append
 				file write  	`report_handler' ///
 									"**************************************************************************************" _n _n ///
-									"`message'" _n _n
-				file close 		`setupfile_handler'
+									`"`message'"' _n _n
+				file close 		`report_handler'
 			}
 		}
 
 		*Write final file to disk
 		if "`task'" == "write" {
 
-			if "`format'" == "txt" & 0  {
+			*.txt format
+			if "`format'" == "txt"  {
 
 				*Write and save report
-				cap file close 	`setupfile_handler'
-				file open  		`setupfile_handler' using "`tempfile'", text write append
-				file write  	`setupfile_handler' ///
+				cap file close 	`report_handler'
+				file open  		`report_handler' using "`report_tempfile'", text write append
+				file write  	`report_handler' ///
 									"REplace this with A FOOTER WHEN DONE" _n
-				file close 		`setupfile_handler'
+				file close 		`report_handler'
+
 			}
 
-			copy "`tempfile'" "`filepath'", replace
+			*Write temporary file to disk
+			copy "`report_tempfile'" "`filepath'", replace
 		}
 }
 end
