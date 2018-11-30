@@ -806,25 +806,6 @@ qui {
 			error 198
 		}
 
-
-
-		*test that tempfile is not passed for setup but passed in all other tasks
-		// if ("`task'" == "setup" & "`tempfile'" != "") | (("`task'" == "write" | "`task'" == "add") & "`tempfile'" == "") {
-		// 	noi di as error "{phang}In command report_file tempfile option must be used when task is write or add and must not be used when task is write.{p_end}"
-		// 	error 198
-		// }
-
-		*Test that the tempfile passed exists
-		if ("`task'" == "write" | "`task'" == "add") {
-/*
-			cap confirm file `tempfile'
-			if _rc {
-				noi di as error "{phang}In command report_file the tempfile [`tempfile'] does not exist{p_end}"
-				error 198
-			}
-*/
-		}
-
 		*No matter task you need a handler
 		tempname report_handler
 
