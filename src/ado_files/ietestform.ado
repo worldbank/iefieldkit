@@ -3,13 +3,20 @@
 capture program drop ietestform
 		program ietestform , rclass
 
-	syntax , surveyform(string) [csheetaliases(string) statalanguage(string)]
+	syntax , surveyform(string) [csheetaliases(string) statalanguage(string) txtreport(string)]
 
+	if "`txtreport'" != "" {
+		report_file setup , format("txt")
+		local txt_tempfile "`r(reportfile)'"
+		return list
+
+	}
+pause
 
 	/***********************************************
 		Test the choice sheet inpependently
 	***********************************************/
-	importchoicesheet, form("`surveyform'") statalanguage(`statalanguage')
+	importchoicesheet, form("`surveyform'") statalanguage(`statalanguage') txtfile("`txt_tempfile'")
 
 	*Get all choice lists actaually used
 	local all_list_names `r(all_list_names)'
@@ -18,7 +25,7 @@ capture program drop ietestform
 	/***********************************************
 		Test the survey sheet inpependently
 	***********************************************/
-	importsurveysheet, form("`surveyform'") statalanguage(`statalanguage')
+	importsurveysheet, form("`surveyform'") statalanguage(`statalanguage') txtfile("`txt_tempfile'")
 
 	*Get all choice lists actaually used
 	local all_lists_used `r(all_lists_used)'
@@ -31,12 +38,20 @@ capture program drop ietestform
 	*Test that all lists in the choice sheet was actually used in the survey sheet
 	local unused_lists : list all_list_names - all_lists_used
 	if "`unused_lists'" != "" {
-		noi di as error "{phang}There are lists in the choices sheets that are not used in any field in the survey sheet. These are the unused list(s): [{inp:`unused_lists'}].{p_end}"
-		//error 688
+
+		local error_msg "There are lists in the choices sheets that are not used in any field in the survey sheet. These are the unused list(s): [`unused_lists']"
+
+		if "`txt_tempfile'" != "" report_file add , format("txt") tempfile("`txt_tempfile'") message("`error_msg'")
+
+		noi di as error "{phang}`error_msg'{p_end}"
 		noi di ""
 		noi di "end of error"
 		noi di ""
 	}
+
+
+	*Write the file to disk
+	if "`txtreport'" != "" report_file write , format("txt") tempfile("`txt_tempfile'") filepath("`txtreport'")
 
 end
 
@@ -44,7 +59,7 @@ capture program drop importchoicesheet
 		program 	 importchoicesheet , rclass
 qui {
 	//noi di "importchoicesheet command ok"
-	syntax , form(string) [statalanguage(string)]
+	syntax , form(string) [statalanguage(string) txtfile(string)]
 	//noi di "importchoicesheet syntax ok"
 
 	*Gen the tempvars needed
@@ -79,7 +94,7 @@ qui {
 	else {
 		noi di as error "{phang}Either a column named [name] or a column named [value] is needed in the choice sheet.{p_end}"
 		noi di ""
-		//error 688
+		error 688
 	}
 
 	*Create a list of the variables with labels (multiple in case of multiple languages)
@@ -115,9 +130,13 @@ qui {
 
 		*TODO: Find a way to list the non-numeric values identified
 
-		noi di as error "{phang}There are non numeric values in the [`valuevar'] column in the choices sheet{p_end}"
-		noi di ""
-		//error 198
+		local error_msg "There are non numeric values in the [`valuevar'] column in the choices sheet"
+
+		if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+
+		// noi di as error "{phang}`error_msg'{p_end}"
+		// noi di ""
+
 	}
 	else if _rc != 0 {
 		noi di as error "{phang}ERROR IN CODE LOGIC [cap confirm numeric variable `valuevar']{p_end}"
@@ -136,10 +155,15 @@ qui {
 	duplicates tag list_name `valuevar', gen(`item_dup')
 	count if `item_dup' != 0
 	if `r(N)' > 0 {
-		noi di as error "{phang}There are duplicates in the following list_names:{p_end}"
-		noi list list_name `valuevar' if `item_dup' != 0
-		noi di ""
-		//error 198
+
+		local error_msg "There are duplicates in the following list_names:"
+
+		if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+
+		// noi di as error "{phang}`error_msg'{p_end}"
+		// noi list list_name `valuevar' if `item_dup' != 0
+		// noi di ""
+
 	}
 
 
@@ -187,8 +211,13 @@ qui {
 		* label column, display error and list those cases
 		count if `label_dup_all' == 1
 		if `r(N)' > 0 {
-			noi di as error "{phang}There are duplicate labels in the column `labelvar' within the [`lists_with_dups'] list(s) in the following labels:{p_end}"
-			noi list list_name `valuevar' `labelvar' filter if `label_dup_all' == 1
+
+			local error_msg "There are duplicate labels in the column `labelvar' within the [`lists_with_dups'] list(s) in the following labels:"
+
+			if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+
+			// noi di as error "{phang}`error_msg'{p_end}"
+			// noi list list_name `valuevar' `labelvar' filter if `label_dup_all' == 1
 
 			*Indicate that at least one error was thrown and that command should exit on error code.
 			local throw_label_dup_error 1
@@ -223,12 +252,17 @@ qui {
 		if "`statalanguage'" != "" {
 			noi di as error "{phang}The label langauge specified in {inp:statalanguage(`statalanguage')} does not exist in the choice sheet. A column in the choice sheet must have a name that is [label:`statalanguage'].{p_end}"
 			noi di ""
-			//error 198
+			error 198
 		}
 		*The default stata label language name does not exist. Throw warning (error for now)
 		else {
-			noi di as error "{phang}There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read.{p_end}"
-			noi di ""
+
+			local error_msg "There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read."
+
+			if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+
+			// noi di as error "{phang}`error_msg'{p_end}"
+			// noi di ""
 			//error 688
 		}
 	}
@@ -246,7 +280,7 @@ end
 capture program drop importsurveysheet
 		program 	 importsurveysheet , rclass
 qui {
-	syntax , form(string) [statalanguage(string)]
+	syntax , form(string) [statalanguage(string) txtfile(string)]
 
 
 	*Gen the tempvars needed
@@ -298,7 +332,7 @@ qui {
 		local missing_vars : list surveysheetvars_required - surveysheetvars
 		noi di as error "{phang}One or several variables required to run all the tests in this command are missing in this form. The following variable(s) are missing [`missing_vars'].{p_end}"
 		noi di ""
-		//error 688
+		error 688
 	}
 
 	keep `surveysheetvars_required' _excel_row_number
@@ -317,7 +351,7 @@ qui {
 	***********************************************/
 
 	*Do tests related to the type column
-	noi test_survey_type
+	noi test_survey_type, txtfile("`txtfile'")
 
 	*Ruturn the list of used choice lists to be compared with list of all lists
 	return local all_lists_used				"`r(all_lists_used)'"
@@ -326,13 +360,13 @@ qui {
 		Test name column
 	***********************************************/
 
-	noi test_survey_name
+	noi test_survey_name, txtfile("`txtfile'")
 
 	/***********************************************
 		Test label column
 	***********************************************/
 
-	noi test_survey_label, surveysheetvars(`surveysheetvars_required') statalanguage(`statalanguage')
+	noi test_survey_label, surveysheetvars(`surveysheetvars_required') statalanguage(`statalanguage') txtfile("`txtfile'")
 
 }
 end
@@ -343,7 +377,7 @@ qui {
 
 
 	noi di "test_survey_type command ok"
-	//syntax , string(string) - No syntax needed at this point but likely to come later
+	syntax ,  [txtfile(string)]
 	noi di "test_survey_type syntax ok"
 
 	/***********************************************
@@ -388,9 +422,13 @@ qui {
 			* Test if any end_repeat or end_group has no name (begin are tested by server). This is not incorrect, but bad practice as it makes bug finding much more difficult.
 			if "`row_name'" == "" {
 
-				noi di as error "{phang}It is bad practice to leave the name column empty for end_group or end_repeat fields. While it is allowed in ODK it makes error finding harder and slower.{p_end}"
-				noi list _excel_row_number type name if _n == `row'
-				noi di ""
+				local error_msg "It is bad practice to leave the name column empty for end_group or end_repeat fields. While it is allowed in ODK it makes error finding harder and slower."
+
+				if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+
+				// noi di as error "{phang}`error_msg'{p_end}"
+				// noi list _excel_row_number type name if _n == `row'
+				// noi di ""
 				//error 688
 			}
 
@@ -427,17 +465,24 @@ qui {
 				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed
 				if "`endname'" != "`beginname'"  {
 
-					noi di as error "{phang}The [{inp:end_`endtype' `endname'}] was found before [{inp:end_`begintype' `beginname'}]. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [{inp:`endname'}] and [{inp:`beginname'}], the [{inp:begin_`endtype' `endname'}] or the [{inp:end_`begintype' `beginname'}] are missing or the order of the begin and end of [{inp:`endname'}] and [{inp:`beginname'}] is incorrect.{p_end}"
-					noi di ""
-					local begin_end_error = 1 //Read all rows before throwing error code
+					local error_msg "The [{inp:end_`endtype' `endname'}] was found before [{inp:end_`begintype' `beginname'}]. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [{inp:`endname'}] and [{inp:`beginname'}], the [{inp:begin_`endtype' `endname'}] or the [{inp:end_`begintype' `beginname'}] are missing or the order of the begin and end of [{inp:`endname'}] and [{inp:`beginname'}] is incorrect."
+
+					if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+
+					// noi di as error "{phang}`error_msg'{p_end}"
+					// noi di ""
 				}
 
 				* If name are the same but types are differnt, then it is most likely a typo in type
 				else if "`endtype'" != "`begintype'" {
 
-					noi di as error "{phang}The `begintype' [{inp:`endname'}] is ended with a [{inp:end_`begintype'}] which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'.{p_end}"
-					noi di ""
-					local begin_end_error = 1 //Read all rows before throwing error code
+					local error_msg "The `begintype' [{inp:`endname'}] is ended with a [{inp:end_`begintype'}] which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'."
+
+					if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+
+					// noi di as error "{phang}`error_msg'{p_end}"
+					// noi di ""
+
 				}
 
 				*Name and type are the same, this is a correct ending of the group or repeat group
@@ -493,6 +538,8 @@ capture program drop test_survey_name
 qui {
 
 	noi di "test_survey_name command ok"
+	syntax ,  [txtfile(string)]
+	noi di "test_survey_name syntax ok"
 
 	/***********************************************
 		Gen value needed in tests
@@ -545,26 +592,41 @@ qui {
 
 	cap assert longname == 0
 	if _rc {
-		noi di as error "{phang}These variable names are longer then 32 characters. That is allowed in the data formats used in SurveyCTO - and is therefore allowed in their test - but will cause an error when the data is imported to Stata. The following names should be shortened:{p_end}"
-		noi list _excel_row_number type name if longname == 1
-		noi di ""
-		//error 198
+
+		local error_msg "These variable names are longer then 32 characters. That is allowed in the data formats used in SurveyCTO - and is therefore allowed in their test - but will cause an error when the data is imported to Stata. The following names should be shortened:"
+
+		if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+
+		// noi di as error "{phang}`error_msg'{p_end}"
+		// noi list _excel_row_number type name if longname == 1
+		// noi di ""
+
 	}
 
 	cap assert longname1 == 0
 	if _rc {
-		noi di as error "{phang}These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_x} to the variable name for each repeat group this variable is in, where {it:x} is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ({it:_x}) are needed. The following varaibles are are longer then 32 characters if two characters will be adeed per repeat group and should therefore be shortened:{p_end}"
-		noi list _excel_row_number type name num_nested_repeats if longname1 == 1
-		noi di ""
-		//error 198
+
+		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_x} to the variable name for each repeat group this variable is in, where {it:x} is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ({it:_x}) are needed. The following varaibles are are longer then 32 characters if two characters will be adeed per repeat group and should therefore be shortened:"
+
+		if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+
+		// noi di as error "{phang}`error_msg'{p_end}"
+		// noi list _excel_row_number type name num_nested_repeats if longname1 == 1
+		// noi di ""
+
 	}
 
 	cap assert longname2 == 0
 	if _rc {
-		noi di as error "{phang}These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_xx} to the variable name for each repeat group this variable is in, where {it:xx} is the repeat count for that repeat. This test assumed that the repeat count is between 10 and 99 so that up to three characters ({it:_xx}) are needed. The following variables are are longer then 32 characters if two characters will be added per repeat group and should therefore be shortened:{p_end}"
-		noi list _excel_row_number type name num_nested_repeats if longname2 == 1
-		noi di ""
-		//error 198
+
+		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_xx} to the variable name for each repeat group this variable is in, where {it:xx} is the repeat count for that repeat. This test assumed that the repeat count is between 10 and 99 so that up to three characters ({it:_xx}) are needed. The following variables are are longer then 32 characters if two characters will be added per repeat group and should therefore be shortened:"
+
+		if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+
+		// noi di as error "{phang}`error_msg'{p_end}"
+		// noi list _excel_row_number type name num_nested_repeats if longname2 == 1
+		// noi di ""
+
 	}
 
 	/***********************************************
@@ -627,7 +689,12 @@ qui {
 			local fieldFound	= trim(regexs(0))
 
 			*Display error
-			noi di as error "{phang}There is a potential name conflict between field [`field'] and [`fieldFound'] as `field' is in a repeat group. When variables in repeat groups are imported to Stata they will be given the suffix `field'_1, `field'_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is.{p_end}"
+
+			local error_msg "There is a potential name conflict between field [`field'] and [`fieldFound'] as `field' is in a repeat group. When variables in repeat groups are imported to Stata they will be given the suffix `field'_1, `field'_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is."
+
+			if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+
+			//noi di as error "{phang}`error_msg'{p_end}"
 
 			**Prepare the string to recurse on. Remove eveything up to the matched
 			* field [strpos("`fieldnames'","`fieldFound'")] and the field
@@ -646,7 +713,7 @@ capture program drop test_survey_label
 		program 	 test_survey_label , rclass
 qui {
 
-		syntax , surveysheetvars(varlist) [statalanguage(string)]
+		syntax , surveysheetvars(varlist) [statalanguage(string) txtfile(string)]
 
 		/***********************************************
 			TEST - Stata language for labels
@@ -669,13 +736,18 @@ qui {
 			if "`statalanguage'" != "" {
 				noi di as error "{phang}The label langauge specified in {inp:statalanguage(`statalanguage')} does not exist in the choice sheet. A column in the choice sheet must have a name that is [label:`statalanguage'].{p_end}"
 				noi di ""
-				//error 198
+				error 198
 			}
 			*The default stata label language name does not exist. Throw warning (error for now)
 			else {
-				noi di as error "{phang}There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read.{p_end}"
+
+				local error_msg "}There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read."
+
+				if "`txtfile'" != "" report_file add , format("txt") tempfile("`txtfile'") message("`error_msg'")
+
+				noi di as error "{phang}`error_msg'{p_end}"
 				noi di ""
-				//error 688
+
 			}
 		}
 
@@ -692,10 +764,129 @@ qui {
 			noi list _excel_row_number type name `labelstata' if longlabel == 1
 			noi di ""
 			//error 198
-		}	
+		}
 
 }
 end
 
+capture program drop report_file
+		program 	 report_file , rclass
+qui {
+
+
+		noi di "report_file command ok"
+		syntax anything , format(string) [tempfile(string) message(string) filepath(string)]
+		noi di "report_file syntax ok [`anything']"
+
+		local allowed_formats 	"txt"
+		local allowed_tasks		"setup add write"
+
+		*Get task subcommand
+		gettoken task anything : anything
+
+		*test that task is allowed
+		if `:list task in allowed_tasks' == 0 {
+			noi di as error "{phang}In command report_file tasks [`tasks'] is not in allowed_tasks [`allowed_tasks'].{p_end}"
+			error 198
+		}
+
+		*test that only one word is used for task
+		if "`anything'" != "" {
+			noi di as error "{phang}In command report_file multiple words used for tasks.{p_end}"
+			error 198
+		}
+
+		*test that format is allowed
+		if `:list format in allowed_formats' == 0 {
+			noi di as error "{phang}In command report_file format [`format'] is not in allowed_formats [`allowed_formats'].{p_end}"
+			error 198
+		}
+
+
+
+		*test that tempfile is not passed for setup but passed in all other tasks
+		if ("`task'" == "setup" & "`tempfile'" != "") | (("`task'" == "write" | "`task'" == "add") & "`tempfile'" == "") {
+			noi di as error "{phang}In command report_file tempfile option must be used when task is write or add and must not be used when task is write.{p_end}"
+			error 198
+		}
+
+		*Test that the tempfile passed exists
+		if ("`task'" == "write" | "`task'" == "add") {
+/*
+			cap confirm file `tempfile'
+			if _rc {
+				noi di as error "{phang}In command report_file the tempfile [`tempfile'] does not exist{p_end}"
+				error 198
+			}
+*/
+		}
+
+		*No matter task you need a handler
+		tempname setupfile_handler
+
+		*Setup files
+		if "`task'" == "setup" {
+
+			tempfile setupfile
+
+			*Raw text .txt file
+			if "`format'" == "txt"  {
+
+				*Write the title rows defined above
+				cap file close 	`setupfile_handler'
+				file open  		`setupfile_handler' using "`setupfile'", text write replace
+				file write  	`setupfile_handler' "This report is created by the Stata command ietestform" _n
+				file close 		`setupfile_handler'
+
+			}
+
+			*Return the tempfile name so that it can be added to
+			return local reportfile `setupfile'
+
+		}
+
+/*
+		_n ///
+		"Use either of these lings to read more about this command:" _n ///
+		"https://github.com/worldbank/iefieldkit" _n ///
+		"https://dimewiki.worldbank.org/wiki/Ietestform" _n _n _n
+*/
+
+		*Add item to report
+		if "`task'" == "add" {
+
+			if "`format'" == "txt" & 0  {
+
+				*Add item to report
+				cap file close 	`setupfile_handler'
+				file open  		`setupfile_handler' using "`tempfile'", text write append
+				file write  	`setupfile_handler' ///
+									"**************************************************************************************" _n ///
+									"`message'" _n _n
+				file close 		`setupfile_handler'
+			}
+		}
+
+		*Write final file to disk
+		if "`task'" == "write" {
+
+			if "`format'" == "txt" & 0  {
+
+				*Write and save report
+				cap file close 	`setupfile_handler'
+				file open  		`setupfile_handler' using "`tempfile'", text write append
+				file write  	`setupfile_handler' ///
+									"REplace this with A FOOTER WHEN DONE" _n
+				file close 		`setupfile_handler'
+			}
+
+			copy "`tempfile'" "`filepath'", replace
+		}
+}
+end
+
+
+
 pause on
-ietestform , surveyform("C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls") statalanguage(text)
+set trace off
+ietestform , surveyform("C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls") statalanguage(text) txtreport("C:\Users\kbrkb\Documents\GitHub\iefieldkit\test\ietestform\outputtest\txttest.txt")
