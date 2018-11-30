@@ -6,10 +6,8 @@ capture program drop ietestform
 	syntax , surveyform(string) [csheetaliases(string) statalanguage(string) txtreport(string)]
 
 	if "`txtreport'" != "" {
-		report_file setup , format("txt")
-		local txt_tempfile "`r(reportfile)'"
-		return list
-
+		tempfile txt_tempfile
+		noi report_file setup , format("txt") report_tempfile("`txt_tempfile'")
 	}
 //pause
 
@@ -781,7 +779,7 @@ qui {
 
 
 		noi di "report_file command ok"
-		syntax anything , format(string) [tempfile(string) message(string) filepath(string)]
+		syntax anything , format(string) report_tempfile(string) [message(string) filepath(string)]
 		noi di "report_file syntax ok [`anything']"
 
 		local allowed_formats 	"txt"
@@ -828,27 +826,24 @@ qui {
 		}
 
 		*No matter task you need a handler
-		tempname setupfile_handler
+		tempname report_handler
 
 		*Setup files
 		if "`task'" == "setup" {
-
-			tempfile setupfile
 
 			*Raw text .txt file
 			if "`format'" == "txt"  {
 
 				*Write the title rows defined above
-				cap file close 	`setupfile_handler'
-				file open  		`setupfile_handler' using "`setupfile'", text write replace
-				file write  	`setupfile_handler' "This report is created by the Stata command ietestform" _n
-				file close 		`setupfile_handler'
+				cap file close 	`report_handler'
+				file open  		`report_handler' using "`report_tempfile'", text write replace
+				file write  	`report_handler' "This report is created by the Stata command ietestform" _n _n ///
+					"Use either of these lings to read more about this command:" _n ///
+					"https://github.com/worldbank/iefieldkit" _n ///
+					"https://dimewiki.worldbank.org/wiki/Ietestform" _n _n _n
+				file close 		`report_handler'
 
 			}
-
-			*Return the tempfile name so that it can be added to
-			return local reportfile `setupfile'
-
 		}
 
 
@@ -886,12 +881,6 @@ qui {
 }
 end
 
-/*
-		_n ///
-		"Use either of these lings to read more about this command:" _n ///
-		"https://github.com/worldbank/iefieldkit" _n ///
-		"https://dimewiki.worldbank.org/wiki/Ietestform" _n _n _n
-*/
 
 pause on
 set trace off
