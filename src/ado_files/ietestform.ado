@@ -11,7 +11,7 @@ capture program drop ietestform
 	}
 
 	/***********************************************
-		Test the choice sheet inpependently
+		Test the choice sheet independently
 	***********************************************/
 	noi importchoicesheet, form("`surveyform'") statalanguage(`statalanguage') txtfile("`txt_tempfile'")
 
@@ -20,7 +20,7 @@ capture program drop ietestform
 
 
 	/***********************************************
-		Test the survey sheet inpependently
+		Test the survey sheet independently
 	***********************************************/
 	noi importsurveysheet, form("`surveyform'") statalanguage(`statalanguage') txtfile("`txt_tempfile'")
 
@@ -245,7 +245,7 @@ qui {
 
 		*The user specified stata label language name does not exist. Throw error
 		if "`statalanguage'" != "" {
-			noi di as error "{phang}The label langauge specified in {inp:statalanguage(`statalanguage')} does not exist in the choice sheet. A column in the choice sheet must have a name that is [label:`statalanguage'].{p_end}"
+			noi di as error "{phang}The label language specified in {inp:statalanguage(`statalanguage')} does not exist in the choice sheet. A column in the choice sheet must have a name that is [label:`statalanguage'].{p_end}"
 			noi di ""
 			error 198
 		}
@@ -573,7 +573,7 @@ qui {
 	}
 
 	/***********************************************
-		Test for long names
+		TEST - Long variable names
 	***********************************************/
 
 	gen namelen_repeat1 = namelen + num_nested_repeats * 2 //Adding "_1" for each loop
@@ -624,7 +624,7 @@ qui {
 	}
 
 	/***********************************************
-		Test for name conflict afterlong to wide
+		TEST - Name conflict after long to wide
 	***********************************************/
 
 	**List all field names and test if there is a risk that any fieldnames
@@ -862,4 +862,9 @@ end
 
 pause on
 set trace off
-ietestform , surveyform("C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls") statalanguage(text) txtreport("C:\Users\kbrkb\Documents\GitHub\iefieldkit\test\ietestform\outputtest\txttest.txt")
+
+if c(username) == "WB501238" {
+	global sheet 	"C:\Users\WB501238\Dropbox\WB\Mozambique SLWRMP\Data\DataWork\HouseholdMidline\Questionnaire\CTO\HH\v1\CTO_HHMidline_v1.xlsx"
+	global text 	"C:\Users\WB501238\Downloads\text.txt"
+}
+ietestform , surveyform("$sheet") statalanguage(text) txtreport("$text")
