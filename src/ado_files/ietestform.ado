@@ -535,7 +535,7 @@ qui {
 				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed
 				if "`endname'" != "`beginname'"  {
 
-					local error_msg "The [{inp:end_`endtype' `endname'}] was found before [{inp:end_`begintype' `beginname'}]. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [{inp:`endname'}] and [{inp:`beginname'}], the [{inp:begin_`endtype' `endname'}] or the [{inp:end_`begintype' `beginname'}] are missing or the order of the begin and end of [{inp:`endname'}] and [{inp:`beginname'}] is incorrect."
+					local error_msg "The [end_`endtype' `endname'] was found before [end_`begintype' `beginname']. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [`endname'] and [`beginname'], the [begin_`endtype' `endname'] or the [end_`begintype' `beginname'] are missing or the order of the begin and end of [`endname'] and [`beginname'] is incorrect."
 
 					noi report_file add ,  report_tempfile("`report_tempfile'") message("`error_msg'")
 
@@ -544,7 +544,7 @@ qui {
 				* If name are the same but types are differnt, then it is most likely a typo in type
 				else if "`endtype'" != "`begintype'" {
 
-					local error_msg "The `begintype' [{inp:`endname'}] is ended with a [{inp:end_`begintype'}] which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'."
+					local error_msg "The `begintype' [`endname'] is ended with a [end_`begintype'] which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'."
 
 					noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
 
