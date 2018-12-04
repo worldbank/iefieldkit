@@ -79,7 +79,7 @@ qui {
 	local unused_lists : list all_list_names - all_lists_used
 	if "`unused_lists'" != "" {
 
-		local error_msg "There are lists in the choices sheets that are not used in any field in the survey sheet. These are the unused list(s): [`unused_lists']"
+		local error_msg "There are lists in the choice sheet that are not used by any field of the survey sheet. These are the unused list(s): [`unused_lists']"
 		report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
 	}
 
@@ -202,7 +202,7 @@ qui {
 
 		*TODO: Find a way to list the non-numeric values identified
 
-		local error_msg "There are non numeric values in the [`valuevar'] column in the choices sheet"
+		local error_msg "There are non numeric values in the [`valuevar'] column of the choice sheet"
 
 		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
 
@@ -244,7 +244,7 @@ qui {
 	count if lable_with_missvalue != 0
 	if `r(N)' > 0 {
 
-		local error_msg "There non-missing values in the label column for rows that have missing value in the `valuevar' column:"
+		local error_msg "There non-missing values in the [label] column of the choice sheet for rows that have missing value in the [`valuevar'] column:"
 
 		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list list_name `valuevar' `labelvars' if lable_with_missvalue != 0")
 	}
@@ -259,7 +259,7 @@ qui {
 	count if unlabelled != 0
 	if `r(N)' > 0 {
 
-		local error_msg "There non-missing values in the `valuevar' column without a label in the label colum:"
+		local error_msg "There non-missing values in the [`valuevar'] column of the choice sheet without a label in the [label] colum:"
 
 		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list list_name `valuevar' `labelvars' if unlabelled != 0")
 	}
@@ -306,7 +306,7 @@ qui {
 		count if label_all_cols_dup == 1
 		if `r(N)' > 0 {
 
-			local error_msg "There are duplicate labels in the column `labelvar' within the [`lists_with_dups'] list(s) in the following labels:"
+			local error_msg "There are duplicated entries in the [`labelvar'] column of the choice sheet within the [`lists_with_dups'] list(s) for the following labels:"
 
 			noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list list_name `valuevar' `labelvar' filter if label_all_cols_dup == 1")
 
@@ -340,7 +340,7 @@ qui {
 		*The default stata label language name does not exist. Throw warning (error for now)
 		else {
 
-			local error_msg "There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read."
+			local error_msg "There is no column in the choice sheet with the name [label:stata]. This is best practice as it allows you to automatically import choice list labels optimized for Stata's value labels, making the data set easier to read."
 			
 			noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
 
@@ -503,7 +503,7 @@ qui {
 			* Test if any end_repeat or end_group has no name (begin are tested by server). This is not incorrect, but bad practice as it makes bug finding much more difficult.
 			if "`row_name'" == "" {
 
-				local error_msg "It is bad practice to leave the name column empty for end_group or end_repeat fields. While it is allowed in ODK it makes error finding harder and slower."
+				local error_msg "It is bad practice to leave the name column empty for end_group or end_repeat fields. While this is allowed in ODK, it makes error finding harder and slower. The following repeat or end groups have empty name columns:"
 
 				noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list row type name if _n == `row'")
 			}
@@ -658,7 +658,7 @@ qui {
 	cap assert longname1 == 0
 	if _rc {
 
-		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_x} to the variable name for each repeat group this variable is in, where {it:x} is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ({it:_x}) are needed. The following varaibles are are longer then 32 characters if two characters will be adeed per repeat group and should therefore be shortened:"
+		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_x} to the variable name for each repeat group this variable is in, where {it:x} is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ({it:_x}) are needed. The following variables's name will be longer then 32 characters if two characters are added per repeat group and should therefore be shortened:"
 
 		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list row type name num_nested_repeats if longname1 == 1")
 
@@ -810,7 +810,7 @@ qui {
 			if _rc {
 
 
-				local error_msg "These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:"
+				local error_msg "These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the variables in the data set makes sense to a human reader. The following labels should be shortened:"
 
 				noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list row type name labellength `labelstata' if longlabel == 1")
 
@@ -861,7 +861,7 @@ qui {
 				"######################################################################" _n ///
 				"######################################################################" _n ///
 				_n ///
-				"This report was created by user `user' on `date' by the Stata command ietestform" _n ///
+				"This report was created by user `user' on `date' using the Stata command ietestform" _n ///
 				_n ///
 				"Use either of these links to read more about this command:" _n ///
 				",https://github.com/worldbank/iefieldkit" _n ///
@@ -886,7 +886,7 @@ qui {
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' ///
 								"######################################################################" _n ///
-								"Read more about this test and why this is an error or does not follow the best practices we recommend here: https://dimewiki.worldbank.org/wiki/Ietestform##insertanchorhere" _n ///
+								"Read more about this test and why this is an error or does not follow the best practices we recommend in https://dimewiki.worldbank.org/wiki/Ietestform##insertanchorhere" _n ///
 								_n ///
 								`""`message'""' _n ///
 								_n ///
