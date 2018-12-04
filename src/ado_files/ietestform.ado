@@ -24,6 +24,10 @@ qui {
 		error _rc
 	}
 	
+	*TODO: add test for form file is xls or xsls
+	*TODO: add test for report file
+		* folder exists
+		* file type is cvs or file type where we will add csv to name
 	
 	/***********************************************
 		Get form meta data and set up report file
