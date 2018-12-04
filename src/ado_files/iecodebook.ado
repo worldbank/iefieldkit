@@ -15,7 +15,13 @@ cap program drop iecodebook
 	// Throw error if codebook exists
 	if ("`subcommand'" == "template") {
 		local file = subinstr(`"`using'"',"using","",.)
-		confirm new file `file'
+		cap confirm new file `file'
+		if _rc != 0 {
+			noi noi noi di as err "That template already exists. iecodebook does not allow you to overwrite an existing template,"
+			di as err " since you may already have set it up. If you are {bf:sure} that you want to delete this template,"
+			di as err `" you need to manually remove it from`file'. iecodebook will now exit."'
+			exit
+		}
 	}
 
 	if !inlist("`subcommand'","template","apply","append","export") {
