@@ -824,6 +824,8 @@ qui {
 			*Write temporary file to disk
 			noi copy "`report_tempfile'" "`filepath'", replace
 			
+			noi di as result `"{phang}Report saved to: {browse "`filepath'":`filepath'} "'
+			
 		}
 		
 		*Just for programming purposes, should never show
