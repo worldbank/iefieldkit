@@ -385,8 +385,7 @@ qui {
 
 
 	/***********************************************
-		TEST - Naming groups and repeats
-		Test that groups and repeats are named
+		Test end and begin
 	***********************************************/
 
 	*********
