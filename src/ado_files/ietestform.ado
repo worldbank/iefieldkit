@@ -32,7 +32,11 @@ capture program drop ietestform
 		Tests based on info from multiple sheets
 	***********************************************/
 
-	*Test that all lists in the choice sheet was actually used in the survey sheet
+	/***********************************************
+		TEST - No unused lists
+		Test that all lists in the choice sheet were
+		actually used in the survey sheet
+	***********************************************/
 	local unused_lists : list all_list_names - all_lists_used
 	if "`unused_lists'" != "" {
 
@@ -107,7 +111,7 @@ qui {
 	*Get a list with all the list names
 	levelsof list_name, clean local("all_list_names")
 
-	*Count number of non-missing 
+	*Count number of non-missing
 	egen 	labelmiss	 = rowmiss(`labelvars')
 	egen 	labelnonmiss = rownonmiss(`labelvars'), strok
 
@@ -146,9 +150,9 @@ qui {
 
 	*Test for duplicates and return error if not all combinations are unique
 	duplicates tag list_name `valuevar', gen(list_item_dup)
-	
+
 	replace list_item_dup = 0 if missing(`valuevar')	//If value var is missing, it is not a duplicate, it will be tested for later.
-	
+
 	count if list_item_dup != 0
 	if `r(N)' > 0 {
 
@@ -172,7 +176,7 @@ qui {
 
 		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list list_name `valuevar' `labelvars' if lable_with_missvalue != 0")
 	}
-	
+
 
 	/***********************************************
 		TEST - No duplicates labels in list
@@ -229,7 +233,7 @@ qui {
 		Test that there is one column with labels formatted for stata
 	***********************************************/
 
-	*User specified stata label name thar is not simply stata
+	*User specified stata label name that is not simply stata
 	if "`statalanguage'" != "" {
 		local labelstata "label`statalanguage'"
 	}
@@ -253,7 +257,7 @@ qui {
 			local error_msg "There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read."
 
 			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
-			
+
 		}
 	}
 
@@ -335,7 +339,7 @@ qui {
 		replace `var' = "" if `var' == "."
 	}
 
-	
+
 	/***********************************************
 		TEST - Type column
 		Test for not matching begin/end group/repeat
@@ -656,7 +660,7 @@ qui {
 			local error_msg "There is a potential name conflict between field [`field'] and [`fieldFound'] as `field' is in a repeat group. When variables in repeat groups are imported to Stata they will be given the suffix `field'_1, `field'_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is."
 
 			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
-			
+
 
 			**Prepare the string to recurse on. Remove eveything up to the matched
 			* field [strpos("`fieldnames'","`fieldFound'")] and the field
@@ -680,6 +684,7 @@ qui {
 		/***********************************************
 			TEST - Stata language for labels
 			Test that there is one column with labels formatted for stata
+			If there is, test that it's not too long
 		***********************************************/
 
 		*User specified stata label name thar is not simply stata
@@ -703,28 +708,29 @@ qui {
 			*The default stata label language name does not exist. Throw warning (error for now)
 			else {
 
-				local error_msg "}There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read."
+				local error_msg "There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read."
 
 				if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 			}
 		}
+		else {
+			*Test the length of the Stata label
+			gen labellength = strlen(`labelstata')
 
-		*Test the length of the Stata label
-		gen labellength = strlen(`labelstata')
+			*Names that are always too long
+			gen longlabel	= (labellength > 80)
 
-		*Names that are always too long
-		gen longlabel	= (labellength > 80)
-
-		*Report if a label is too long and will be truncated
-		cap assert longlabel == 0
-		if _rc {
+			*Report if a label is too long and will be truncated
+			cap assert longlabel == 0
+			if _rc {
 
 
-			local error_msg "These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:"
+				local error_msg "These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:"
 
-			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list row type name labellength `labelstata' if longlabel == 1")
+				if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list row type name labellength `labelstata' if longlabel == 1")
 
+			}
 		}
 
 }
@@ -733,11 +739,11 @@ end
 capture program drop report_file
 		program 	 report_file , rclass
 qui {
-		
+
 		noi di "report_file command ok"
 		syntax anything , format(string) report_tempfile(string) [message(string) filepath(string) table(string)]
 		noi di "report_file syntax ok [`anything']"
-		
+
 		local allowed_formats 	"txt"
 		local allowed_tasks		"setup add write"
 
@@ -768,7 +774,7 @@ qui {
 		*Setup files
 		if "`task'" == "setup" {
 
-			*Raw text .txt file 	
+			*Raw text .txt file
 			if "`format'" == "txt"  {
 
 				*Write the title rows defined above
@@ -786,7 +792,7 @@ qui {
 					_n ///
 					"######################################################################" _n ///
 					"######################################################################" _n ///
-					_n	
+					_n
 				file close 		`report_handler'
 
 			}
@@ -807,11 +813,11 @@ qui {
 									_n ///
 									`""`message'""' _n ///
 									_n ///
-									
+
 				file close 		`report_handler'
-				
+
 				if "`table'" != "" noi report_table `table' , report_tempfile("`report_tempfile'")
-				
+
 			}
 		}
 
@@ -835,17 +841,28 @@ qui {
 			}
 
 			*Write temporary file to disk
-			noi copy "`report_tempfile'" "`filepath'", replace
-			
+			cap copy "`report_tempfile'" "`filepath'", replace
+
+			if _rc == 608 {
+				noi di as error "{phang}The file `filepath' cannot be overwritten. If you have this file open, close it and run the command again.{p_end}"
+				error 608
+			}
+			else if !_rc {
+				noi di as result `"{phang}Report saved to: {browse "`filepath'":`filepath'} "'
+			}
+			else {
+				error _rc
+			}
+
 		}
-		
+
 		*Just for programming purposes, should never show
 		else {
 			noi di as error "Task error"
 			error 198
 		}
-		
-		
+
+
 }
 end
 
@@ -853,17 +870,17 @@ end
 capture program drop report_table
 		program 	 report_table , rclass
 qui {
-	
-	
+
+
 	noi di "report_table command ok"
 	syntax anything [if], report_tempfile(string) [options(string)]
 	noi di "report_table syntax ok [`anything']"
-	
+
 	preserve
-	
+
 		tempname report_handler
-	
-		local allowed_cmds		"list"	
+
+		local allowed_cmds		"list"
 
 		*Get task subcommand
 		gettoken command varlist : anything
@@ -873,60 +890,60 @@ qui {
 			noi di as error "{phang}In command report_file tasks [`command'] is not in allowed_tasks [`allowed_cmds'].{p_end}"
 			error 198
 		}
-		
+
 		*apply if condition if applicable
 		if "`if'" != "" keep `if'
 
 		if "`command'" == "list" {
-		
+
 			local rows = _N
 			keep `varlist'
-			
-			
+
+
 			*Prepare title row and name it tablestr0
 			foreach var of local varlist {
 				local title `"`title',"`var'" "'
-				
-				cap confirm string variable `var' 
+
+				cap confirm string variable `var'
 				if _rc == 0 {
 					replace `var' = subinstr(`var', char(34), "", .) //remove " sign
 					replace `var' = subinstr(`var', char(96), "", .) //remove ` sign
 					replace `var' = subinstr(`var', char(36), "", .) //remove $ sign
 					replace `var' = subinstr(`var', char(10), "", .) //remove line end
-				}				
-			}					
-			
+				}
+			}
+
 			*Write and save report
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' `"`title'"' _n
 			file close 		`report_handler'
-			
+
 			*Loop over all cases and prepare tablestrs and numbe rthem
 			forvalue row = 1/`rows' {
-				
+
 				local row_str ""
-			
+
 				*loop over each var and prepare the row
 				foreach var of local varlist {
 					local cell_value = `var'[`row']
 					local row_str `"`row_str',"`cell_value'""'
 				}
-				
+
 				*Write and save report
 				cap file close 	`report_handler'
 				file open  		`report_handler' using "`report_tempfile'", text write append
 				file write  	`report_handler' `"`row_str'"' _n
 				file close 		`report_handler'
 			}
-			
+
 			*Add line space
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' _n
-			file close 		`report_handler'			
+			file close 		`report_handler'
 		}
-		
+
 	restore
 }
 end
@@ -937,8 +954,8 @@ pause on
 set trace off
 
 if c(username) == "WB501238" {
-	global sheet 	"C:\Users\WB501238\Dropbox\WB\Mozambique SLWRMP\Data\DataWork\HouseholdMidline\Questionnaire\CTO\HH\v1\CTO_HHMidline_v1.csv"
-	global text 	"C:\Users\WB501238\Downloads\text.txt"
+	global sheet 	"C:\Users\WB501238\Dropbox\WB\Analytics\DIME Analytics\Data Coordinator\iefieldkit\CTO_HHMidline_v1.xlsx"
+	global text 	"C:\Users\WB501238\Downloads\text2.csv"
 }
 
 
@@ -948,4 +965,4 @@ if c(username) == "kbrkb" {
 }
 
 set trace off
-ietestform , surveyform("$sheet") statalanguage(text) txtreport("$text")
+ietestform , surveyform("$sheet") txtreport("$text")
