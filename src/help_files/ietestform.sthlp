@@ -25,7 +25,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":
 {synopt :{cmdab:report(}{it:string}{cmd:)}}file path to .csv report listing all issues found.{p_end}
 
 {phang}{it:Optional options}{p_end}
-{synopt :{cmdab:statalanguage(}{it:string}{cmd:)}}name of Stata label column in the form definition (if not "stata").{p_end}
+{synopt :{cmdab:statalanguage(}{it:string}{cmd:)}}name of Stata label column in the form definition (if not "label:stata").{p_end}
 {synoptline}
 
 {title:Description}
@@ -43,15 +43,18 @@ the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
 
 {title:Choice sheet}
 
-{pstd}{cmd:Numeric name:} test that all VARIABLES IN THE NAME VARIABLE are numeric. 
+{pstd}{cmd:Numeric name/value:} test that all values in the name/value column are numeric. Having non-numeric values
+will cause conflicts when importing to Stata.
 
 {pstd}{cmd:No unused lists:} test that all lists in the choices sheets are used at least once in the survey sheet. 
 
 {pstd}{cmd:No duplicated labels:} test that there are no duplicated labels within a list_name.
 
-{pstd}{cmd:No duplicated names:} test that all combinations of list_name and name are unique. 
+{pstd}{cmd:Unlabelled values:} test that all non-missing values in the label column have a name.
 
-{pstd}{cmd:Stata language:} test that there is one column with labels formatted for Stata.
+{pstd}{cmd:No duplicated name/value:} test that all combinations of list_name and name/value are unique. 
+
+{pstd}{cmd:Stata language:} test that there is one column with value labels formatted for Stata.
 
 {title:Survey sheet}
 
@@ -61,6 +64,13 @@ the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
 repeat groups whose names will become too long once suffixes are added in wide format.
 
 {pstd}{cmd:Naming repeat/group:} test for unnamed repeat/group. Not an error but good practice
+
+{pstd}{cmd:Stata language:} test that there is one column with variable labels formatted for Stata.
+
+{pstd}{cmd:Long variable labels:} test that variable labels have no more than 80 characters.
+
+{pstd}{cmd:Name conflict after long to wide:} test that variable names resulting from adding repeat group suffixes
+ will not be the same as other existing variables.
 
 {space 4}{hline}
 

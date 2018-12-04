@@ -158,9 +158,9 @@ qui {
 	}
 
 	/***********************************************
-		TEST - No duplicates combinations
-		Test that all combinations of
-		list_name and name is unique
+		TEST - Non labelled values
+		Test that all non-missing values in the label
+		column have a name
 	***********************************************/
 
 	*Test for duplicates and return error if not all combinations are unique
@@ -225,7 +225,7 @@ qui {
 
 
 	/***********************************************
-		TEST - Stata language for labels
+		TEST - Stata language for value labels
 		Test that there is one column with labels formatted for stata
 	***********************************************/
 
@@ -669,9 +669,9 @@ qui {
 		syntax , surveysheetvars(varlist) [statalanguage(string) report_tempfile(string)]
 
 		/***********************************************
-			TEST - Stata language for labels
-			Test that there is one column with labels formatted for stata
-			If there is, test that it's not too long
+			TEST - Stata language for variable labels
+			Test that there is one column with variable 
+			labels formatted for stata.
 		***********************************************/
 
 		*User specified stata label name thar is not simply stata
@@ -702,6 +702,13 @@ qui {
 			}
 		}
 		else {
+		
+		/***********************************************
+			TEST - Long variable labels
+			Test that variable labels are no longer than
+			80 characters
+		***********************************************/
+		
 			*Test the length of the Stata label
 			gen labellength = strlen(`labelstata')
 
