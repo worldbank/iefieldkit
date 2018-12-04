@@ -192,9 +192,9 @@ qui {
 				local theLabel		: word `i' of `allLabels'
 				local theChoices	: word `i' of `allChoices'
 
-				replace name`template' 		= "`theVariable'" 	in `=`i'`templateN''
-				replace label`template' 	= "`theLabel'" 		in `=`i'`templateN''
-				replace choices`template' 	= "`theChoices'" 	in `=`i'`templateN''
+				replace name`template' 		= `"`theVariable'"' 	in `=`i'`templateN''
+				replace label`template' 	= `"`theLabel'"' 		in `=`i'`templateN''
+				replace choices`template' 	= `"`theChoices'"' 	in `=`i'`templateN''
 			}
 
 		// Export variable information to "survey" sheet
