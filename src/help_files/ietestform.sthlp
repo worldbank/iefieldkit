@@ -8,7 +8,7 @@ help for {hi:ietesform}
 {phang2}{cmdab:ietesform} {hline 2} Test Survey CTO for errors and best practices SCTO's server does not check for.
 
 {phang2}For a more descriptive discussion on the intended usage and work flow of this
-command please see the {browse "ADD LINK HERE":DIME Wiki}.
+command please see the {browse "https://dimewiki.worldbank.org/wiki/SurveyCTO_Coding_Practices":DIME Wiki}.
 
 {title:Syntax}
 
@@ -24,8 +24,8 @@ command please see the {browse "ADD LINK HERE":DIME Wiki}.
 {synopthdr:options}
 {synoptline}
 {synopt :{cmdab:csheetaliases(}{it:string}{cmd:)}}WRITE DESCRIPTION HERE.{p_end}
-{synopt :{cmdab:statalanguage(}{it:string}{cmd:)}}WRITE DESCRIPTION HERE.{p_end}
-{synopt :{cmdab:textreport(}{it:string}{cmd:)}}file path to .txt report with potential issues found.{p_end}
+{synopt :{cmdab:statalanguage(}{it:string}{cmd:)}}name of Stata label column in the form definition (if not "stata").{p_end}
+{synopt :{cmdab:textreport(}{it:string}{cmd:)}}file path to .txt report listing all issues found.{p_end}
 {synoptline}
 
 {title:Description}
@@ -37,9 +37,12 @@ command please see the {browse "ADD LINK HERE":DIME Wiki}.
  the context of collecting data that will be imported to Stata.
 
 {dlgtab:Tests performed:}
-{pstd}{cmd:Numeric name:} test that all variables in the name variable are numeric.
+{pstd}{cmd:No unused lists:} test that all lists in the choices sheets are used in the survey sheet.
 
-{pstd}{cmd:No duplicated combinations:} test that there are no duplicated labels within a list.
+{pstd}{cmd:Numeric name:} test that all VARIABLES IN THE NAME VARIABLE are numeric. This will create an error.
+
+{pstd}{cmd:No duplicated combinations:} test that there are no duplicated labels within a list_name. This will issue a 
+warning, but not an error.
 
 {pstd}{cmd:No duplicated labels:} test that all combinations of list_name and name are unique.
 

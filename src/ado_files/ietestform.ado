@@ -210,7 +210,7 @@ qui {
 		Test that there is one column with labels formatted for stata
 	***********************************************/
 
-	*User specified stata label name thar is not simply stata
+	*User specified stata label name that is not simply stata
 	if "`statalanguage'" != "" {
 		local labelstata "label`statalanguage'"
 	}
