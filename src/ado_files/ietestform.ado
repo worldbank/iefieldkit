@@ -3,7 +3,31 @@
 capture program drop ietestform
 		program ietestform , rclass
 
-	syntax , surveyform(string) report(string) [statalanguage(string) ]
+qui {
+
+	version 13
+
+	preserve
+		
+	syntax , surveyform(string) report(string) [statalanguage(string)]
+	
+	
+	/***********************************************
+		Test input
+	***********************************************/
+	
+	*Test that the form file exists
+	cap confirm file "`surveyform'"
+	if _rc {
+		
+		noi di as error "{phang}The SCTO questionnaire form file in surveyform(`surveyform') was not found.{p_end}"
+		error _rc
+	}
+	
+	
+	/***********************************************
+		Get form meta data and set up report file
+	***********************************************/
 	
 	*Get meta data on the form from the form setting sheet
 	importsettingsheet, form("`surveyform'")
@@ -61,7 +85,10 @@ capture program drop ietestform
 	
 	*Write the file to disk
 	noi report_file write, report_tempfile("`report_tempfile'") filepath("`report'")
-
+	
+	restore
+	
+}
 end
 
 ** This program imports the settings sheet and get meta information to be used in report header
