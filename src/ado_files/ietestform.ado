@@ -719,7 +719,7 @@ qui {
 			gen labellength = strlen(`labelstata')
 
 			*Names that are always too long
-			gen longlabel	= (labellength > 80)
+			gen longlabel	= (labellength > 80 & type != "note")
 
 			*Report if a label is too long and will be truncated
 			cap assert longlabel == 0
