@@ -340,8 +340,10 @@ qui {
 		replace `var' = "" if `var' == "."
 	}
 
+	
 	/***********************************************
-		Test type column
+		TEST - Type column
+		Test for not matching begin/end group/repeat
 	***********************************************/
 
 	*Do tests related to the type column
