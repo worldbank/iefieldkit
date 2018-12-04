@@ -827,11 +827,20 @@ qui {
 end
 
 
+
 pause on
 set trace off
 
 if c(username) == "WB501238" {
-	global sheet 	"C:\Users\WB501238\Dropbox\WB\Mozambique SLWRMP\Data\DataWork\HouseholdMidline\Questionnaire\CTO\HH\v1\CTO_HHMidline_v1.xlsx"
+	global sheet 	"C:\Users\WB501238\Dropbox\WB\Mozambique SLWRMP\Data\DataWork\HouseholdMidline\Questionnaire\CTO\HH\v1\CTO_HHMidline_v1.csv"
 	global text 	"C:\Users\WB501238\Downloads\text.txt"
 }
+
+
+if c(username) == "kbrkb" {
+	global sheet 	"C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls"
+	global text 	"C:\Users\kbrkb\Documents\GitHub\iefieldkit\test\ietestform\outputtest\txttest.csv"
+}
+
+set trace off
 ietestform , surveyform("$sheet") statalanguage(text) txtreport("$text")
