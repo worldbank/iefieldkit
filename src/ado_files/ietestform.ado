@@ -32,7 +32,11 @@ capture program drop ietestform
 		Tests based on info from multiple sheets
 	***********************************************/
 
-	*Test that all lists in the choice sheet was actually used in the survey sheet
+	/***********************************************
+		TEST - No unused lists
+		Test that all lists in the choice sheet were
+		actually used in the survey sheet
+	***********************************************/
 	local unused_lists : list all_list_names - all_lists_used
 	if "`unused_lists'" != "" {
 
@@ -661,6 +665,7 @@ qui {
 		/***********************************************
 			TEST - Stata language for labels
 			Test that there is one column with labels formatted for stata
+			If there is, test that it's not too long
 		***********************************************/
 
 		*User specified stata label name thar is not simply stata
@@ -684,28 +689,29 @@ qui {
 			*The default stata label language name does not exist. Throw warning (error for now)
 			else {
 
-				local error_msg "}There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read."
+				local error_msg "There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read."
 
 				if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
 			}
 		}
+		else {
+			*Test the length of the Stata label
+			gen labellength = strlen(`labelstata')
 
-		*Test the length of the Stata label
-		gen labellength = strlen(`labelstata')
+			*Names that are always too long
+			gen longlabel	= (labellength > 80)
 
-		*Names that are always too long
-		gen longlabel	= (labellength > 80)
-
-		*Report if a label is too long and will be truncated
-		cap assert longlabel == 0
-		if _rc {
+			*Report if a label is too long and will be truncated
+			cap assert longlabel == 0
+			if _rc {
 
 
-			local error_msg "These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:"
+				local error_msg "These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:"
 
-			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list row type name `labelstata' if longlabel == 1")
+				if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list row type name `labelstata' if longlabel == 1")
 
+			}
 		}
 
 }
@@ -918,8 +924,8 @@ pause on
 set trace off
 
 if c(username) == "WB501238" {
-	global sheet 	"C:\Users\WB501238\Dropbox\WB\Mozambique SLWRMP\Data\DataWork\HouseholdMidline\Questionnaire\CTO\HH\v1\CTO_HHMidline_v1.csv"
-	global text 	"C:\Users\WB501238\Downloads\text.txt"
+	global sheet 	"C:\Users\WB501238\Dropbox\WB\Analytics\DIME Analytics\Data Coordinator\iefieldkit\CTO_HHMidline_v1.xlsx"
+	global text 	"C:\Users\WB501238\Downloads\text2.csv"
 }
 
 
@@ -929,4 +935,4 @@ if c(username) == "kbrkb" {
 }
 
 set trace off
-ietestform , surveyform("$sheet") statalanguage(text) txtreport("$text")
+ietestform , surveyform("$sheet") txtreport("$text")

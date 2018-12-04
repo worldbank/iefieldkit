@@ -8,7 +8,7 @@ help for {hi:ietesform}
 {phang2}{cmdab:ietesform} {hline 2} Test Survey CTO for errors and best practices SCTO's server does not check for.
 
 {phang2}For a more descriptive discussion on the intended usage and work flow of this
-command please see the {browse "https://dimewiki.worldbank.org/wiki/SurveyCTO_Coding_Practices":DIME Wiki}.
+command please see the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
 
 {title:Syntax}
 
@@ -37,14 +37,24 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/SurveyCTO_Co
  the context of collecting data that will be imported to Stata.
 
 {dlgtab:Tests performed:}
-{pstd}{cmd:No unused lists:} test that all lists in the choices sheets are used in the survey sheet.
+
+{phang2}For a more detailed discussion on each of the test below and why they are best practices, please see
+the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
+
+{title:Choice sheet}
 
 {pstd}{cmd:Numeric name:} test that all VARIABLES IN THE NAME VARIABLE are numeric. This will create an error.
 
-{pstd}{cmd:No duplicated combinations:} test that there are no duplicated labels within a list_name. This will issue a 
+{pstd}{cmd:No unused lists:} test that all lists in the choices sheets are used at least once in the survey sheet. 
+This will issue a warning, but not an error.
+
+{pstd}{cmd:No duplicated labels:} test that there are no duplicated labels within a list_name. This will issue a 
 warning, but not an error.
 
-{pstd}{cmd:No duplicated labels:} test that all combinations of list_name and name are unique.
+{pstd}{cmd:No duplicated names:} test that all combinations of list_name and name are unique. This will issue a 
+warning, but not an error.
+
+{title:Survey sheet}
 
 {pstd}{cmd:Stata language:} test that there is one column with labels formatted for Stata.
 
