@@ -110,6 +110,9 @@ qui {
 	*Get a list with all the list names
 	levelsof list_name, clean local("all_list_names")
 
+	*Count number of non-missing 
+	egen 	labelmiss	 = rowmiss(`labelvars')
+	egen 	labelnonmiss = rownonmiss(`labelvars'), strok
 
 	/***********************************************
 		TEST - Numeric name
@@ -154,6 +157,22 @@ qui {
 		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list list_name `valuevar' if `item_dup' != 0")
 	}
 
+	/***********************************************
+		TEST - No duplicates combinations
+		Test that all combinations of
+		list_name and name is unique
+	***********************************************/
+
+	*Test for duplicates and return error if not all combinations are unique
+	gen lable_with_missvalue = (missing(`valuevar') & labelnonmiss != 0)
+	count if lable_with_missvalue != 0
+	if `r(N)' > 0 {
+
+		local error_msg "There non-missing values in the label column for rows that has missing value in the `valuevar' column:"
+
+		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list list_name `valuevar' `labelvars' if lable_with_missvalue != 0")
+	}
+	
 
 	/***********************************************
 		TEST - No duplicates labels in list
