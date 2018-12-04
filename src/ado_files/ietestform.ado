@@ -739,11 +739,11 @@ end
 capture program drop report_file
 		program 	 report_file , rclass
 qui {
-
+		
 		noi di "report_file command ok"
 		syntax anything , format(string) report_tempfile(string) [message(string) filepath(string)]
 		noi di "report_file syntax ok [`anything']"
-
+		
 		local allowed_formats 	"txt"
 		local allowed_tasks		"setup add write"
 
@@ -752,7 +752,7 @@ qui {
 
 		*test that task is allowed
 		if `:list task in allowed_tasks' == 0 {
-			noi di as error "{phang}In command report_file tasks [`tasks'] is not in allowed_tasks [`allowed_tasks'].{p_end}"
+			noi di as error "{phang}In command report_file task [`task'] is not in allowed_tasks [`allowed_tasks'].{p_end}"
 			error 198
 		}
 
@@ -774,23 +774,32 @@ qui {
 		*Setup files
 		if "`task'" == "setup" {
 
-			*Raw text .txt file
+			*Raw text .txt file 	
 			if "`format'" == "txt"  {
 
 				*Write the title rows defined above
 				cap file close 	`report_handler'
 				file open  		`report_handler' using "`report_tempfile'", text write replace
-				file write  	`report_handler' "This report is created by the Stata command ietestform" _n _n ///
-					"Use either of these lings to read more about this command:" _n ///
-					"https://github.com/worldbank/iefieldkit" _n ///
-					"https://dimewiki.worldbank.org/wiki/Ietestform" _n _n _n
+				file write  	`report_handler' ///
+					"######################################################################" _n ///
+					"######################################################################" _n ///
+					_n ///
+					"This report is created by the Stata command ietestform" _n ///
+					_n ///
+					"Use either of these links to read more about this command:" _n ///
+					",https://github.com/worldbank/iefieldkit" _n ///
+					",https://dimewiki.worldbank.org/wiki/Ietestform" _n ///
+					_n ///
+					"######################################################################" _n ///
+					"######################################################################" _n ///
+					_n	
 				file close 		`report_handler'
 
 			}
 		}
 
 		*Add item to report
-		if "`task'" == "add" {
+		else if "`task'" == "add" {
 
 			*.txt format
 			if "`format'" == "txt"  {
@@ -799,14 +808,18 @@ qui {
 				cap file close 	`report_handler'
 				file open  		`report_handler' using "`report_tempfile'", text write append
 				file write  	`report_handler' ///
-									"**************************************************************************************" _n _n ///
-									`"`message'"' _n _n
+									"######################################################################" _n ///
+									"Read more about this test and why this is an error or do not follow the best practices we recommend here: https://dimewiki.worldbank.org/wiki/Ietestform##insertanchorhere" _n ///
+									_n ///
+									`""`message'""' _n ///
+									_n ///
+									
 				file close 		`report_handler'
 			}
 		}
 
 		*Write final file to disk
-		if "`task'" == "write" {
+		else if "`task'" == "write" {
 
 			*.txt format
 			if "`format'" == "txt"  {
@@ -815,13 +828,27 @@ qui {
 				cap file close 	`report_handler'
 				file open  		`report_handler' using "`report_tempfile'", text write append
 				file write  	`report_handler' ///
-									"REplace this with A FOOTER WHEN DONE" _n
+					_n ///
+					"######################################################################" _n ///
+					"######################################################################" _n ///
+					_n ///
+					"This is the end of the report." _n
 				file close 		`report_handler'
 
 			}
 
 			*Write temporary file to disk
-			copy "`report_tempfile'" "`filepath'", replace
+			noi copy "`report_tempfile'" "`filepath'", replace
+			
+		}
+		
+		*Just for programming purposes, should never show
+		else {
+			noi di as error "Task error"
+			error 198
+		}
+		
+		
 		}
 }
 end
