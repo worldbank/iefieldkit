@@ -43,7 +43,10 @@ capture program drop ietestform
 
 
 	*Write the file to disk
-	if "`txtreport'" != "" report_file write , format("txt") report_tempfile("`txt_tempfile'") filepath("`txtreport'")
+	if "`txtreport'" != "" {
+		noi report_file write , format("txt") report_tempfile("`txt_tempfile'") filepath("`txtreport'")
+
+	}
 
 end
 
@@ -148,12 +151,7 @@ qui {
 
 		local error_msg "There are duplicates in the following list_names:"
 
-		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
-
-		// noi di as error "{phang}`error_msg'{p_end}"
-		// noi list list_name `valuevar' if `item_dup' != 0
-		// noi di ""
-
+		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list list_name `valuevar' if `item_dup' != 0")
 	}
 
 
@@ -201,10 +199,7 @@ qui {
 
 			local error_msg "There are duplicate labels in the column `labelvar' within the [`lists_with_dups'] list(s) in the following labels:"
 
-			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
-
-			// noi di as error "{phang}`error_msg'{p_end}"
-			// noi list list_name `valuevar' `labelvar' filter if `label_dup_all' == 1
+			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list list_name `valuevar' `labelvar' filter if `label_dup_all' == 1")
 
 		}
 	}
@@ -399,12 +394,7 @@ qui {
 
 				local error_msg "It is bad practice to leave the name column empty for end_group or end_repeat fields. While it is allowed in ODK it makes error finding harder and slower."
 
-				if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
-
-				// noi di as error "{phang}`error_msg'{p_end}"
-				// noi list _excel_row_number type name if _n == `row'
-				// noi di ""
-				//error 688
+				if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list row type name if _n == `row'")
 			}
 
 			*Add begin group to stack if either begin_group or begin_repeat
@@ -559,11 +549,7 @@ qui {
 
 		local error_msg "These variable names are longer then 32 characters. That is allowed in the data formats used in SurveyCTO - and is therefore allowed in their test - but will cause an error when the data is imported to Stata. The following names should be shortened:"
 
-		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
-
-		// noi di as error "{phang}`error_msg'{p_end}"
-		// noi list _excel_row_number type name if longname == 1
-		// noi di ""
+		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list row type name if longname == 1")
 
 	}
 
@@ -572,11 +558,7 @@ qui {
 
 		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_x} to the variable name for each repeat group this variable is in, where {it:x} is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ({it:_x}) are needed. The following varaibles are are longer then 32 characters if two characters will be adeed per repeat group and should therefore be shortened:"
 
-		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
-
-		// noi di as error "{phang}`error_msg'{p_end}"
-		// noi list _excel_row_number type name num_nested_repeats if longname1 == 1
-		// noi di ""
+		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list row type name num_nested_repeats if longname1 == 1")
 
 	}
 
@@ -585,11 +567,7 @@ qui {
 
 		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_xx} to the variable name for each repeat group this variable is in, where {it:xx} is the repeat count for that repeat. This test assumed that the repeat count is between 10 and 99 so that up to three characters ({it:_xx}) are needed. The following variables are are longer then 32 characters if two characters will be added per repeat group and should therefore be shortened:"
 
-		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
-
-		// noi di as error "{phang}`error_msg'{p_end}"
-		// noi list _excel_row_number type name num_nested_repeats if longname2 == 1
-		// noi di ""
+		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list row type name num_nested_repeats if longname2 == 1")
 
 	}
 
@@ -724,12 +702,8 @@ qui {
 
 			local error_msg "These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:"
 
-			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
+			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list row type name `labelstata' if longlabel == 1")
 
-			// noi di as error "{phang}`error_msg'{p_end}"
-			// noi list _excel_row_number type name `labelstata' if longlabel == 1
-			// noi di ""
-			//error 198
 		}
 
 }
@@ -740,7 +714,7 @@ capture program drop report_file
 qui {
 		
 		noi di "report_file command ok"
-		syntax anything , format(string) report_tempfile(string) [message(string) filepath(string)]
+		syntax anything , format(string) report_tempfile(string) [message(string) filepath(string) table(string)]
 		noi di "report_file syntax ok [`anything']"
 		
 		local allowed_formats 	"txt"
@@ -814,6 +788,9 @@ qui {
 									_n ///
 									
 				file close 		`report_handler'
+				
+				if "`table'" != "" noi report_table `table' , report_tempfile("`report_tempfile'")
+				
 			}
 		}
 
@@ -848,7 +825,88 @@ qui {
 		}
 		
 		
+}
+end
+
+
+capture program drop report_table
+		program 	 report_table , rclass
+qui {
+	
+	
+	noi di "report_table command ok"
+	syntax anything [if], report_tempfile(string) [options(string)]
+	noi di "report_table syntax ok [`anything']"
+	
+	preserve
+	
+		tempname report_handler
+	
+		local allowed_cmds		"list"	
+
+		*Get task subcommand
+		gettoken command varlist : anything
+
+		*test that task is allowed
+		if `:list command in allowed_cmds' == 0 {
+			noi di as error "{phang}In command report_file tasks [`command'] is not in allowed_tasks [`allowed_cmds'].{p_end}"
+			error 198
 		}
+		
+		*apply if condition if applicable
+		if "`if'" != "" keep `if'
+
+		if "`command'" == "list" {
+		
+			local rows = _N
+			keep `varlist'
+			
+			
+			*Prepare title row and name it tablestr0
+			foreach var of local varlist {
+				local title `"`title',"`var'" "'
+				
+				cap confirm string variable `var' 
+				if _rc == 0 {
+					replace `var' = subinstr(`var', char(34), "", .) //remove " sign
+					replace `var' = subinstr(`var', char(96), "", .) //remove ` sign
+					replace `var' = subinstr(`var', char(36), "", .) //remove $ sign
+					replace `var' = subinstr(`var', char(10), "", .) //remove line end
+				}				
+			}					
+			
+			*Write and save report
+			cap file close 	`report_handler'
+			file open  		`report_handler' using "`report_tempfile'", text write append
+			file write  	`report_handler' `"`title'"' _n
+			file close 		`report_handler'
+			
+			*Loop over all cases and prepare tablestrs and numbe rthem
+			forvalue row = 1/`rows' {
+				
+				local row_str ""
+			
+				*loop over each var and prepare the row
+				foreach var of local varlist {
+					local cell_value = `var'[`row']
+					local row_str `"`row_str',"`cell_value'""'
+				}
+				
+				*Write and save report
+				cap file close 	`report_handler'
+				file open  		`report_handler' using "`report_tempfile'", text write append
+				file write  	`report_handler' `"`row_str'"' _n
+				file close 		`report_handler'
+			}
+			
+			*Add line space
+			cap file close 	`report_handler'
+			file open  		`report_handler' using "`report_tempfile'", text write append
+			file write  	`report_handler' _n
+			file close 		`report_handler'			
+		}
+		
+	restore
 }
 end
 
