@@ -962,7 +962,9 @@ if c(username) == "WB501238" {
 if c(username) == "kbrkb" {
 	global sheet 	"C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls"
 	global text 	"C:\Users\kbrkb\Documents\GitHub\iefieldkit\test\ietestform\outputtest\txttest.csv"
+	
+	local statalang "statalanguage(text)"
 }
 
 set trace off
-ietestform , surveyform("$sheet") txtreport("$text")
+ietestform , surveyform("$sheet") txtreport("$text") `statalang'
