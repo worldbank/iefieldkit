@@ -782,7 +782,7 @@ qui {
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' ///
 								"######################################################################" _n ///
-								"Read more about this test and why this is an error or do not follow the best practices we recommend here: https://dimewiki.worldbank.org/wiki/Ietestform##insertanchorhere" _n ///
+								"Read more about this test and why this is an error or does not follow the best practices we recommend here: https://dimewiki.worldbank.org/wiki/Ietestform##insertanchorhere" _n ///
 								_n ///
 								`""`message'""' _n ///
 								_n ///
