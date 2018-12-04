@@ -61,8 +61,8 @@ qui {
 			drop `touse'
 
 	// Template Setup
-		if "`anything'" != "" {
-			use "`anything'" , clear
+		if `"`anything'"' != "" {
+			use `anything' , clear
 		}
 
 		if "`template'" != "" {
@@ -389,7 +389,7 @@ qui {
 			foreach survey in `surveys' {
 				local ++x
 				local filepath : word `x' of `anything'
-				iecodebook export `filepath' `using' , template(`survey')
+				iecodebook export "`filepath'" `using' , template(`survey')
 			}
 		exit
 		}
