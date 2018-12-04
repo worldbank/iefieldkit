@@ -723,7 +723,7 @@ qui {
 
 			local error_msg "These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:"
 
-			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list row type name `labelstata' if longlabel == 1")
+			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list row type name labellength `labelstata' if longlabel == 1")
 
 		}
 
