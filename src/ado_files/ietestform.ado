@@ -150,6 +150,7 @@ qui {
 	*Test for duplicates and return error if not all combinations are unique
 	duplicates tag list_name `valuevar', gen(`item_dup')
 	count if `item_dup' != 0
+	replace list_item_dup = 0 if missing(`valuevar')	//If value var is missing, it is not a duplicate, it will be tested for later.
 	if `r(N)' > 0 {
 
 		local error_msg "There are duplicates in the following list_names:"
