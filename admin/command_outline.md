@@ -55,6 +55,8 @@ This command will make a difference between tests returning an error or a warnin
        * -[x] duplicated labels inside a list
      * -[x] Test that all list options are used at least once - warning
      * -[x] Test that there is a Stata label column
+     * -[x] Test that all values are labelled
+     * -[x] Test that all labels have a corresponding non-missing value
   * Options
     * -[x] form() - File path to questionnaire form
     * -[ ] suppress() - An option that takes a list of tests that the user want to skip
