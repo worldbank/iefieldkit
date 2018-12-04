@@ -642,9 +642,9 @@ qui {
 	gen namelen_repeat2 = namelen + num_nested_repeats * 3 //Adding "_10" for each loop
 
 	*Names that are always too long
-	gen longname	= (namelen > 32)
-	gen longname1	= (namelen_repeat1 > 32)
-	gen longname2	= (namelen_repeat2 > 32)
+	gen longname    = (namelen > 32)
+    gen longname1   = (namelen_repeat1 > 32 & longname 	== 0) 	//if longname is 1, then this test is redundant
+    gen longname2   = (namelen_repeat2 > 32 & longname1 == 0) 	//if longname1 is 1, then this test is redundant
 
 	cap assert longname == 0
 	if _rc {
