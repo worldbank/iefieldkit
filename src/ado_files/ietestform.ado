@@ -173,7 +173,7 @@ qui {
 
 
 	/***********************************************
-		Get info from rowa/labels and
+		Get info from rows/labels and
 		make tests on them
 	***********************************************/
 
@@ -234,9 +234,9 @@ qui {
 	}
 
 	/***********************************************
-		TEST - Non labelled values
+		TEST - Value labels with no values
 		Test that all non-missing values in the label
-		column have a name
+		column have a name/value
 	***********************************************/
 
 	*Test for duplicates and return error if not all combinations are unique
@@ -244,11 +244,25 @@ qui {
 	count if lable_with_missvalue != 0
 	if `r(N)' > 0 {
 
-		local error_msg "There non-missing values in the label column for rows that has missing value in the `valuevar' column:"
+		local error_msg "There non-missing values in the label column for rows that have missing value in the `valuevar' column:"
 
 		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list list_name `valuevar' `labelvars' if lable_with_missvalue != 0")
 	}
 
+	/***********************************************
+		TEST - Unlabelled values
+		Test that all values/names have a label
+	***********************************************/
+
+	*Test for duplicates and return error if not all combinations are unique
+	gen unlabelled = (!missing(`valuevar') & labelnonmiss == 0)
+	count if unlabelled != 0
+	if `r(N)' > 0 {
+
+		local error_msg "There non-missing values in the `valuevar' column without a label in the label colum:"
+
+		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list list_name `valuevar' `labelvars' if unlabelled != 0")
+	}
 
 	/***********************************************
 		TEST - No duplicates labels in list

@@ -50,7 +50,9 @@ will cause conflicts when importing to Stata.
 
 {pstd}{cmd:No duplicated labels:} test that there are no duplicated labels within a list_name.
 
-{pstd}{cmd:Unlabelled values:} test that all non-missing values in the label column have a name.
+{pstd}{cmd:Value labels with no values:} test that all non-missing entries in the label column have a non-missing value/name.
+
+{pstd}{cmd:Unlabelled values:} test that all values/names have a label.
 
 {pstd}{cmd:No duplicated name/value:} test that all combinations of list_name and name/value are unique. 
 
