@@ -14,18 +14,18 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":
 
 {phang2}
 {cmdab:ietestform}
-, {cmdab:surveyform(}{it:survey_filepath}{cmd:)} [{cmdab:csheetaliases(}{it:string}{cmd:)}  {cmdab:statalanguage(}{it:string}{cmd:)}
-{cmdab:textreport(}{it:string}{cmd:)}]
-
-{phang2}where {it:survey_filepath} is the file path to the Excel file with the Survey CTO form definition
+, {cmdab:surveyform(}{it:survey_filepath}{cmd:)} {cmdab:report(}{it:string}{cmd:)} 
+[{cmdab:statalanguage(}{it:string}{cmd:)}]
 
 {marker opts}{...}
 {synoptset 28}{...}
 {synopthdr:options}
 {synoptline}
-{synopt :{cmdab:csheetaliases(}{it:string}{cmd:)}}WRITE DESCRIPTION HERE.{p_end}
+{synopt :{cmdab:surveyform(}{it:string}{cmd:)}}file path to the file with the Survey CTO form definition.{p_end}
+{synopt :{cmdab:report(}{it:string}{cmd:)}}file path to .csv report listing all issues found.{p_end}
+
+{phang}{it:Optional options}{p_end}
 {synopt :{cmdab:statalanguage(}{it:string}{cmd:)}}name of Stata label column in the form definition (if not "stata").{p_end}
-{synopt :{cmdab:textreport(}{it:string}{cmd:)}}file path to .txt report listing all issues found.{p_end}
 {synoptline}
 
 {title:Description}
@@ -43,26 +43,24 @@ the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
 
 {title:Choice sheet}
 
-{pstd}{cmd:Numeric name:} test that all VARIABLES IN THE NAME VARIABLE are numeric. This will create an error.
+{pstd}{cmd:Numeric name:} test that all VARIABLES IN THE NAME VARIABLE are numeric. 
 
 {pstd}{cmd:No unused lists:} test that all lists in the choices sheets are used at least once in the survey sheet. 
-This will issue a warning, but not an error.
 
-{pstd}{cmd:No duplicated labels:} test that there are no duplicated labels within a list_name. This will issue a 
-warning, but not an error.
+{pstd}{cmd:No duplicated labels:} test that there are no duplicated labels within a list_name.
 
-{pstd}{cmd:No duplicated names:} test that all combinations of list_name and name are unique. This will issue a 
-warning, but not an error.
-
-{title:Survey sheet}
+{pstd}{cmd:No duplicated names:} test that all combinations of list_name and name are unique. 
 
 {pstd}{cmd:Stata language:} test that there is one column with labels formatted for Stata.
 
+{title:Survey sheet}
+
 {pstd}{cmd:Type column:} test for not matching begin/end group/repeat.
 
-{pstd}{cmd:Long variable names:} test for variable names that are too long for Stata.
+{pstd}{cmd:Long variable names:} test for variable names that are too long for Stata. This includes variables inside 
+repeat groups whose names will become too long once suffixes are added in wide format.
 
-{pstd}{cmd:Name conflict after long to wide} test that repeat group variable names will not become too long for Stata in wide format.
+{pstd}{cmd:Naming repeat/group:} test for unnamed repeat/group. Not an error but good practice
 
 {space 4}{hline}
 
@@ -70,11 +68,10 @@ warning, but not an error.
 
 {phang}{cmdab:surveyform(}{it:survey_filepath}{cmd:)} 
 
-{phang}{cmdab:csheetaliases(}{it:string}{cmd:)} 
+{phang}{cmdab:report(}{it:string}{cmd:)} 
 
 {phang}{cmdab:statalanguage(}{it:string}{cmd:)} 
 
-{phang}{cmdab:textreport(}{it:string}{cmd:)} 
 
 
 

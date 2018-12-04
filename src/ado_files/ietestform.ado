@@ -422,7 +422,8 @@ qui {
 
 
 	/***********************************************
-		Test end and begin
+		TEST - Naming groups and repeats
+		Test that groups and repeats are named
 	***********************************************/
 
 	*********
@@ -970,6 +971,10 @@ if c(username) == "WB501238" {
 	global text 	"C:\Users\WB501238\Downloads\text2.csv"
 }
 
+if c(username) == "luiza" {
+	global sheet 	"C:\Users\luiza\Dropbox\WB\Analytics\DIME Analytics\Data Coordinator\iefieldkit\CTO_HHMidline_v1.xlsx"
+	global text 	"C:\Users\luiza\Downloads\text2.csv"
+}
 
 if c(username) == "kbrkb" {
 	global sheet 	"C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls"
