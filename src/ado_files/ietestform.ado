@@ -5,13 +5,24 @@ capture program drop ietestform
 
 	syntax , surveyform(string) report(string) [statalanguage(string) ]
 	
+	*Get meta data on the form from the form setting sheet
+	importsettingsheet, form("`surveyform'")
+	
+	*Load returned values in locals
+	local meta_v		= "`r(version)'" 
+    local meta_id		= "`r(form_id)'" 
+    local meta_title	= "`r(form_title)'"
+	
+	*Setup the report tempfile where all results from all tests will be written
 	tempfile report_tempfile
-	noi report_file setup , report_tempfile("`report_tempfile'")
+	noi report_file setup , report_tempfile("`report_tempfile'") ///
+		metav("`meta_v'") metaid("`meta_id'") metatitle("`meta_title'") metafile("`surveyform'")
 	
 
 	/***********************************************
 		Test the choice sheet independently
 	***********************************************/
+	
 	noi importchoicesheet, form("`surveyform'") statalanguage(`statalanguage') report_tempfile("`report_tempfile'")
 
 	*Get all choice lists actaually used
@@ -21,6 +32,7 @@ capture program drop ietestform
 	/***********************************************
 		Test the survey sheet independently
 	***********************************************/
+	
 	noi importsurveysheet, form("`surveyform'") statalanguage(`statalanguage') report_tempfile("`report_tempfile'")
 
 	*Get all choice lists actaually used
@@ -43,15 +55,41 @@ capture program drop ietestform
 		report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
 	}
 
+	/***********************************************
+		Finsish the report and write it to disk
+	***********************************************/	
+	
 	*Write the file to disk
 	noi report_file write, report_tempfile("`report_tempfile'") filepath("`report'")
 
-	
-
 end
 
+** This program imports the settings sheet and get meta information to be used in report header
+capture program drop importsettingsheet
+		program 	 importsettingsheet , rclass
+		
+qui {
+
+	noi di "importsettingsheet command ok"
+	syntax , form(string) 
+	noi di "importsettingsheet syntax ok"
+	
+	*Import the choices sheet
+	import excel "`form'", sheet("settings") clear first
+	
+	*Return the settings in return locals
+	return local form_title = form_title[1]
+	return local form_id 	= form_id[1]
+	return local version 	= version[1]
+
+} 
+end
+
+
+** This program imports the choice sheet and run tests on the information there
 capture program drop importchoicesheet
 		program 	 importchoicesheet , rclass
+		
 qui {
 	noi di "importchoicesheet command ok"
 	syntax , form(string) [statalanguage(string) report_tempfile(string)]
@@ -128,7 +166,6 @@ qui {
 		local error_msg "There are non numeric values in the [`valuevar'] column in the choices sheet"
 
 		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
-
 
 	}
 	else if _rc != 0 {
@@ -735,7 +772,7 @@ capture program drop report_file
 qui {
 
 		noi di "report_file command ok"
-		syntax anything , report_tempfile(string) [message(string) filepath(string) table(string)]
+		syntax anything , report_tempfile(string) [message(string) filepath(string) table(string) metav(string) metaid(string) metatitle(string) metafile(string)]
 		noi di "report_file syntax ok [`anything']"
 
 		local allowed_tasks		"setup add write"
@@ -760,6 +797,9 @@ qui {
 
 		*Setup files
 		if "`task'" == "setup" {
+		
+			local user = c(username)
+			local date = subinstr(c(current_date)," ","",.)
 
 			*Write the title rows defined above
 			cap file close 	`report_handler'
@@ -768,11 +808,16 @@ qui {
 				"######################################################################" _n ///
 				"######################################################################" _n ///
 				_n ///
-				"This report is created by the Stata command ietestform" _n ///
+				"This report was created by user `user' on `date' by the Stata command ietestform" _n ///
 				_n ///
 				"Use either of these links to read more about this command:" _n ///
 				",https://github.com/worldbank/iefieldkit" _n ///
 				",https://dimewiki.worldbank.org/wiki/Ietestform" _n ///
+				_n ///
+				",Form ID,`metaid'" _n ///
+				",Form Title,`metatitle'" _n ///
+				",Form Version,`metav'" _n ///
+				",Form File,`metafile'" _n ///
 				_n ///
 				"######################################################################" _n ///
 				"######################################################################" _n ///
