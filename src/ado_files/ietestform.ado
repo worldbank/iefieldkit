@@ -39,9 +39,6 @@ capture program drop ietestform
 		local error_msg "There are lists in the choices sheets that are not used in any field in the survey sheet. These are the unused list(s): [`unused_lists']"
 
 		if "`txtreport'" != "" report_file add , format("txt") report_tempfile("`txt_tempfile'") message("`error_msg'")
-
-		// noi di as error "{phang}`error_msg'{p_end}"
-		// noi di ""
 	}
 
 
@@ -129,14 +126,12 @@ qui {
 
 		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
-		// noi di as error "{phang}`error_msg'{p_end}"
-
 
 	}
 	else if _rc != 0 {
 		noi di as error "{phang}ERROR IN CODE LOGIC [cap confirm numeric variable `valuevar']{p_end}"
 		noi di ""
-		//error 198
+		error 198
 	}
 
 
@@ -167,9 +162,6 @@ qui {
 		Test that there are no duplicate
 		labels within a list
 	***********************************************/
-
-	*Local to indicate if error should be shown after all loops have completed
-	local throw_label_dup_error 0
 
 	*Initialize the dummy that indicate if there are duplicates to 0. This is used to store errors on
 	gen `label_dup_all' = 0
@@ -214,15 +206,7 @@ qui {
 			// noi di as error "{phang}`error_msg'{p_end}"
 			// noi list list_name `valuevar' `labelvar' filter if `label_dup_all' == 1
 
-			*Indicate that at least one error was thrown and that command should exit on error code.
-			local throw_label_dup_error 1
 		}
-	}
-
-	*Throw error code if at least one lable duplicate was found
-	if `throw_label_dup_error' == 1 {
-		noi di ""
-		//error 141
 	}
 
 
@@ -255,9 +239,7 @@ qui {
 			local error_msg "There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read."
 
 			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
-
-			// noi di as error "{phang}`error_msg'{p_end}"
-			// noi di ""
+			
 		}
 	}
 
@@ -450,12 +432,6 @@ qui {
 				*Get the begin name
 				local beginname = substr("`lastbegin'", strpos("`lastbegin'","#")+ 1,.) //Everything that follows the #
 
-				//noi di "begintype `begintype'"
-				//noi di "beginname `beginname'"
-
-				//noi di "endtype `row_type'"
-				//noi di "endname `endname'"
-
 				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed
 				if "`endname'" != "`beginname'"  {
 
@@ -463,8 +439,6 @@ qui {
 
 					if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
-					// noi di as error "{phang}`error_msg'{p_end}"
-					// noi di ""
 				}
 
 				* If name are the same but types are differnt, then it is most likely a typo in type
@@ -473,9 +447,6 @@ qui {
 					local error_msg "The `begintype' [{inp:`endname'}] is ended with a [{inp:end_`begintype'}] which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'."
 
 					if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
-
-					// noi di as error "{phang}`error_msg'{p_end}"
-					// noi di ""
 
 				}
 
@@ -687,8 +658,7 @@ qui {
 			local error_msg "There is a potential name conflict between field [`field'] and [`fieldFound'] as `field' is in a repeat group. When variables in repeat groups are imported to Stata they will be given the suffix `field'_1, `field'_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is."
 
 			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
-
-			//noi di as error "{phang}`error_msg'{p_end}"
+			
 
 			**Prepare the string to recurse on. Remove eveything up to the matched
 			* field [strpos("`fieldnames'","`fieldFound'")] and the field
@@ -739,9 +709,6 @@ qui {
 
 				if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
-				// noi di as error "{phang}`error_msg'{p_end}"
-				// noi di ""
-
 			}
 		}
 
@@ -756,7 +723,7 @@ qui {
 		if _rc {
 
 
-			local error_msg "}These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:"
+			local error_msg "These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the varaibles in the data set makes sense to a human reader. The following labels should be shortened:"
 
 			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'")
 
