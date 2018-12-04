@@ -57,9 +57,6 @@ qui {
 	syntax , form(string) [statalanguage(string) txtfile(string)]
 	noi di "importchoicesheet syntax ok"
 
-	*Gen the tempvars needed
-	tempvar countmissing item_dup label_dup label_dup_all
-
 	/***********************************************
 		Load choices sheet from form
 	***********************************************/
@@ -104,8 +101,8 @@ qui {
 	***********************************************/
 
 	*Drop rows with all values missing
-	egen 	`countmissing' = rownonmiss(_all), strok
-	drop if `countmissing' == 0
+	egen 	countmissing = rownonmiss(_all), strok
+	drop if countmissing == 0
 
 	*Get a list with all the list names
 	levelsof list_name, clean local("all_list_names")
@@ -148,14 +145,16 @@ qui {
 	***********************************************/
 
 	*Test for duplicates and return error if not all combinations are unique
-	duplicates tag list_name `valuevar', gen(`item_dup')
-	count if `item_dup' != 0
+	duplicates tag list_name `valuevar', gen(list_item_dup)
+	
 	replace list_item_dup = 0 if missing(`valuevar')	//If value var is missing, it is not a duplicate, it will be tested for later.
+	
+	count if list_item_dup != 0
 	if `r(N)' > 0 {
 
 		local error_msg "There are duplicates in the following list_names:"
 
-		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list list_name `valuevar' if `item_dup' != 0")
+		if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list list_name `valuevar' if list_item_dup != 0")
 	}
 
 	/***********************************************
@@ -182,13 +181,13 @@ qui {
 	***********************************************/
 
 	*Initialize the dummy that indicate if there are duplicates to 0. This is used to store errors on
-	gen `label_dup_all' = 0
+	gen label_all_cols_dup = 0
 
 	** Loop over each label language column
 	foreach labelvar of local labelvars {
 
 		*Reset vars and locals used in each label column
-		replace `label_dup_all' = 0
+		replace label_all_cols_dup = 0
 		local lists_with_dups ""
 
 		*Loop over each list name
@@ -196,30 +195,30 @@ qui {
 
 			**Test for duplicates in the label var and display
 			* errors if any observation do not have a unique,
-			* i.e. `label_dup' != 0, label
-			duplicates tag `labelvar' if list_name == "`list'", gen(`label_dup')
+			* i.e. label_dup != 0, label
+			duplicates tag `labelvar' if list_name == "`list'", gen(label_dup)
 
 			*Was any duplicates found in this list
-			count if `label_dup' == 1
+			count if label_dup == 1
 			if `r(N)' > 0 {
 				*Copy duplicate values to main
-				replace `label_dup_all' = 1 if `label_dup' == 1
+				replace label_all_cols_dup = 1 if label_dup == 1
 
 				local lists_with_dups =trim("`lists_with_dups' `list'")
 			}
 
 			*Drop the tempvar so that it can be generated again by duplicates
-			drop `label_dup'
+			drop label_dup
 		}
 
 		**If there are any duplicates in label within a list for this
 		* label column, display error and list those cases
-		count if `label_dup_all' == 1
+		count if label_all_cols_dup == 1
 		if `r(N)' > 0 {
 
 			local error_msg "There are duplicate labels in the column `labelvar' within the [`lists_with_dups'] list(s) in the following labels:"
 
-			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list list_name `valuevar' `labelvar' filter if `label_dup_all' == 1")
+			if "`txtfile'" != "" noi report_file add , format("txt") report_tempfile("`txtfile'") message("`error_msg'") table("list list_name `valuevar' `labelvar' filter if label_all_cols_dup == 1")
 
 		}
 	}
