@@ -469,15 +469,6 @@ qui {
 		}
 	}
 
-	*Throw error code if any errors were encountered above
-	if `begin_end_error' {
-		noi di ""
-		//error 688
-	}
-
-
-
-
 	/***********************************************
 		Parse select_one, select_multiple values
 	***********************************************/
