@@ -851,9 +851,9 @@ qui {
 				noi di as result `"{phang}Report saved to: {browse "`filepath'":`filepath'} "'
 			}
 			else {
-				error _rc
+				*Something did not work, run the command again to get full error message and return error code
+				copy "`report_tempfile'" "`filepath'", replace
 			}
-
 		}
 
 		*Just for programming purposes, should never show
