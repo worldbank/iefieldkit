@@ -108,6 +108,14 @@ qui {
 	*Import the choices sheet
 	import excel "`form'", sheet("settings") clear first
 	
+	if _rc == 603 {
+		noi di as error  "{phang}The file `form' cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an version of Excel.{p_end}"
+		error 603
+	}
+	else if _rc {
+		import excel "`form'", sheet("settings") clear first
+	}
+
 	*Return the settings in return locals
 	return local form_title = form_title[1]
 	return local form_id 	= form_id[1]
