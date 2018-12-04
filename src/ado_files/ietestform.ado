@@ -822,9 +822,18 @@ qui {
 			}
 
 			*Write temporary file to disk
-			noi copy "`report_tempfile'" "`filepath'", replace
+			cap copy "`report_tempfile'" "`filepath'", replace
 			
-			noi di as result `"{phang}Report saved to: {browse "`filepath'":`filepath'} "'
+			if _rc == 608 {
+				noi di as error "{phang}The file `filepath' cannot be overwritten. If you have this file open, close it and run the command again.{p_end}"
+				error 608
+			}
+			else if !_rc {
+				noi di as result `"{phang}Report saved to: {browse "`filepath'":`filepath'} "'
+			}
+			else {
+				error _rc
+			}
 			
 		}
 		
