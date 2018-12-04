@@ -243,7 +243,6 @@ qui {
 		}
 	}
 
-
 	/***********************************************
 		Return values
 	***********************************************/
@@ -271,8 +270,8 @@ qui {
 	import excel "`form'", sheet("survey") clear first
 
 	*Gen
-	gen _excel_row_number = _n
-	order _excel_row_number
+	gen row = _n
+	order row
 
 	*Drop rows with all values missing
 	egen `countmissing' = rownonmiss(_all), strok
@@ -311,7 +310,7 @@ qui {
 		error 688
 	}
 
-	keep `surveysheetvars_required' _excel_row_number
+	keep `surveysheetvars_required' row
 
 	*********
 	*make command vars that sometimes are not used and then loaded as numeric
