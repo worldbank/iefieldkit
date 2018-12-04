@@ -778,14 +778,14 @@ qui {
 
 			*The user specified stata label language name does not exist. Throw error
 			if "`statalanguage'" != "" {
-				noi di as error "{phang}The label langauge specified in {inp:statalanguage(`statalanguage')} does not exist in the choice sheet. A column in the choice sheet must have a name that is [label:`statalanguage'].{p_end}"
+				noi di as error "{phang}The label langauge specified in {inp:statalanguage(`statalanguage')} does not exist in the survey sheet. A column in the survey sheet must have a name that is [label:`statalanguage'].{p_end}"
 				noi di ""
 				error 198
 			}
 			*The default stata label language name does not exist. Throw warning (error for now)
 			else {
 
-				local error_msg "There is no column in the choice sheet with the name [label:stata]. This is best practice as this allows you to automatically import choice list labels optimized for Stata's value labels making the data set easier to read."
+				local error_msg "There is no column in the survey sheet with the name [label:stata]. This is best practice as this allows you to automatically import variable labels optimized for Stata, making the data set easier to read."
 
 				noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
 
