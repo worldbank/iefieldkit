@@ -1,11 +1,11 @@
 {smcl}
 {hline}
-help for {hi:ietesform}
+help for {hi:ietestform}
 {hline}
 
 {title:Title}
 
-{phang2}{cmdab:ietesform} {hline 2} Test Survey CTO for errors and best practices SCTO's server does not check for.
+{phang2}{cmdab:ietestform} {hline 2} Test Survey CTO for errors and best practices SCTO's server does not check for.
 
 {phang2}For a more descriptive discussion on the intended usage and work flow of this
 command please see the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
@@ -14,7 +14,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":
 
 {phang2}
 {cmdab:ietestform}
-, {cmdab:surveyform(}{it:survey_filepath}{cmd:)} {cmdab:report(}{it:string}{cmd:)} 
+, {cmdab:surveyform(}{it:survey_filepath}{cmd:)} {cmdab:report(}{it:string}{cmd:)}
 [{cmdab:statalanguage(}{it:string}{cmd:)}]
 
 {marker opts}{...}
@@ -32,8 +32,8 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":
 
 {dlgtab:In brief:}
 {pstd}{cmd:ietestform} takes a SurveyCTO form definition in Excel format and parses
- it to test for errors and best practices that SCTO's server does not check for. Some 
- of these test are testing that DIME Analytics' best practices are used, especially in 
+ it to test for errors and best practices that SCTO's server does not check for. Some
+ of these test are testing that DIME Analytics' best practices are used, especially in
  the context of collecting data that will be imported to Stata.
 
 {dlgtab:Tests performed:}
@@ -46,7 +46,7 @@ the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
 {pstd}{cmd:Numeric name/value:} test that all values in the name/value column are numeric. Having non-numeric values
 will cause conflicts when importing to Stata.
 
-{pstd}{cmd:No unused lists:} test that all lists in the choices sheets are used at least once in the survey sheet. 
+{pstd}{cmd:No unused lists:} test that all lists in the choices sheets are used at least once in the survey sheet.
 
 {pstd}{cmd:No duplicated labels:} test that there are no duplicated labels within a list_name.
 
@@ -54,7 +54,7 @@ will cause conflicts when importing to Stata.
 
 {pstd}{cmd:Unlabelled values:} test that all values/names have a label.
 
-{pstd}{cmd:No duplicated name/value:} test that all combinations of list_name and name/value are unique. 
+{pstd}{cmd:No duplicated name/value:} test that all combinations of list_name and name/value are unique.
 
 {pstd}{cmd:Stata language:} test that there is one column with value labels formatted for Stata.
 
@@ -62,7 +62,7 @@ will cause conflicts when importing to Stata.
 
 {pstd}{cmd:Type column:} test for not matching begin/end group/repeat.
 
-{pstd}{cmd:Long variable names:} test for variable names that are too long for Stata. This includes variables inside 
+{pstd}{cmd:Long variable names:} test for variable names that are too long for Stata. This includes variables inside
 repeat groups whose names will become too long once suffixes are added in wide format.
 
 {pstd}{cmd:Naming repeat/group:} test for unnamed repeat/group. Not an error but good practice
@@ -78,11 +78,11 @@ repeat groups whose names will become too long once suffixes are added in wide f
 
 {title:Options}
 
-{phang}{cmdab:surveyform(}{it:survey_filepath}{cmd:)} 
+{phang}{cmdab:surveyform(}{it:survey_filepath}{cmd:)}
 
-{phang}{cmdab:report(}{it:string}{cmd:)} 
+{phang}{cmdab:report(}{it:string}{cmd:)}
 
-{phang}{cmdab:statalanguage(}{it:string}{cmd:)} 
+{phang}{cmdab:statalanguage(}{it:string}{cmd:)}
 
 
 
