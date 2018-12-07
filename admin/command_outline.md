@@ -42,6 +42,8 @@ This command will make a difference between tests returning an error or a warnin
         * -[x] If it exist, make sure that no label is longer than 80 characters - error    
     * range column
       * -[ ] All decimal/integer fields should have a ranges - warning
+    * repeat count column
+      * test that there is a repeat count. Many cases when that is not needed but a good check nonetheless
     * required column
       *  -[ ] test that all fields apart from note are required
       *  -[ ] test that note fields are _NOT_ required. There are cases when this is meant to be the case, but since they are exceptions, there should be a warnings
