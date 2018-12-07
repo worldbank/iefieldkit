@@ -1,13 +1,15 @@
-*! version 5.4 15DEC2017  DIME Analytics lcardosodeandrad@worldbank.org
+*! version 0.1 12DEC2018  DIME Analytics dimeanalytics@worldbank.org
 
 capture program drop iefieldkit
 program iefieldkit, rclass
 
 	* UPDATE THESE LOCALS FOR EACH NEW VERSION PUBLISHED
-	local version "5.4"
-	local versionDate "15DEC2017"
+	local version "0.1"
+	local versionDate "12DEC2018"
 
 	syntax [anything]
+	
+	version 13
 
 	/**********************
 		Error messages

@@ -1,11 +1,11 @@
-//! version 0.1 19OCT2018  DIME Analytics bdaniels@worldbank.org
+//! version 0.1 12DEC2018  DIME Analytics dimeanalytics@worldbank.org
 
 // Main syntax *********************************************************************************
 
 cap program drop iecodebook
 	program def  iecodebook
 
-	version 13.1 // Required 13.1 due to use of long macros
+	version 13 // Required 13.1 due to use of long macros
 
 	syntax [anything] using , [*]
 
