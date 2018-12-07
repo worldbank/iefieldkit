@@ -201,7 +201,17 @@ qui {
 			}
 
 		// Export variable information to "survey" sheet
-		export excel `using' , sheet("survey") sheetreplace first(varl)
+		cap export excel `using' , sheet("survey") sheetreplace first(varl)
+		local rc = _rc
+		forvalues i = 1/10 {
+			if `rc' != 0 {
+				sleep `i'000
+				cap export excel `using' , sheet("survey") sheetreplace first(varl)
+				local rc = _rc
+			}
+		}
+		if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open. Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
+		if `rc' != 0 exit
 	restore
 
 	// Create value labels sheet
@@ -244,6 +254,16 @@ qui {
 
 		// Export value labels to "choices" sheet
 		cap export excel `using' , sheet("choices`template_us'") sheetreplace first(var)
+		local rc = _rc
+		forvalues i = 1/10 {
+			if `rc' != 0 {
+				sleep `i'000
+				cap export excel `using' , sheet("choices`template_us'") sheetreplace first(var)
+				local rc = _rc
+			}
+		}
+		if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open. Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
+		if `rc' != 0 exit
 
 	// Reload original data
 	use `allData' , clear
