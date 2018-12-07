@@ -101,9 +101,9 @@ capture program drop importsettingsheet
 		
 qui {
 
-	noi di "importsettingsheet command ok"
+	//noi di "importsettingsheet command ok"
 	syntax , form(string) 
-	noi di "importsettingsheet syntax ok"
+	//noi di "importsettingsheet syntax ok"
 	
 	*Import the choices sheet
 	import excel "`form'", sheet("settings") clear first
@@ -130,9 +130,9 @@ capture program drop importchoicesheet
 		program 	 importchoicesheet , rclass
 		
 qui {
-	noi di "importchoicesheet command ok"
+	//noi di "importchoicesheet command ok"
 	syntax , form(string) [statalanguage(string) report_tempfile(string)]
-	noi di "importchoicesheet syntax ok"
+	//noi di "importchoicesheet syntax ok"
 
 	/***********************************************
 		Load choices sheet from form
@@ -361,7 +361,6 @@ capture program drop importsurveysheet
 qui {
 	syntax , form(string) [statalanguage(string) report_tempfile(string)]
 
-
 	*Gen the tempvars needed
 	tempvar countmissing
 
@@ -456,10 +455,9 @@ capture program drop test_survey_type
 		program 	 test_survey_type , rclass
 qui {
 
-
-	noi di "test_survey_type command ok"
+	//noi di "test_survey_type command ok"
 	syntax ,  [report_tempfile(string)]
-	noi di "test_survey_type syntax ok"
+	//noi di "test_survey_type syntax ok"
 
 	/***********************************************
 		Standardizing name of type values
@@ -593,9 +591,9 @@ capture program drop test_survey_name
 		program 	 test_survey_name , rclass
 qui {
 
-	noi di "test_survey_name command ok"
+	//noi di "test_survey_name command ok"
 	syntax ,  [report_tempfile(string)]
-	noi di "test_survey_name syntax ok"
+	//noi di "test_survey_name syntax ok"
 
 	/***********************************************
 		Gen value needed in tests
@@ -824,9 +822,9 @@ capture program drop report_file
 		program 	 report_file , rclass
 qui {
 
-		noi di "report_file command ok"
+		//noi di "report_file command ok"
 		syntax anything , report_tempfile(string) [message(string) filepath(string) table(string) metav(string) metaid(string) metatitle(string) metafile(string)]
-		noi di "report_file syntax ok [`anything']"
+		//noi di "report_file syntax ok [`anything']"
 
 		local allowed_tasks		"setup add write"
 
@@ -944,9 +942,9 @@ capture program drop report_table
 qui {
 
 
-	noi di "report_table command ok"
+	//noi di "report_table command ok"
 	syntax anything [if], report_tempfile(string) [options(string)]
-	noi di "report_table syntax ok [`anything']"
+	//noi di "report_table syntax ok [`anything']"
 
 	preserve
 
@@ -1019,28 +1017,3 @@ qui {
 	restore
 }
 end
-
-
-
-pause on
-set trace off
-
-if c(username) == "WB501238" {
-	global sheet 	"C:\Users\WB501238\Dropbox\WB\Analytics\DIME Analytics\Data Coordinator\iefieldkit\CTO_HHMidline_v1.xlsx"
-	global text 	"C:\Users\WB501238\Downloads\text2.csv"
-}
-
-if c(username) == "luiza" {
-	global sheet 	"C:\Users\luiza\Dropbox\WB\Analytics\DIME Analytics\Data Coordinator\iefieldkit\CTO_HHMidline_v1.xlsx"
-	global text 	"C:\Users\luiza\Downloads\text2.csv"
-}
-
-if c(username) == "kbrkb" {
-	global sheet 	"C:\Users\kbrkb\Dropbox\work\CTO_HHMidline_v2.xls"
-	global text 	"C:\Users\kbrkb\Documents\GitHub\iefieldkit\test\ietestform\outputtest\report_test.csv"
-	
-	local statalang "statalanguage(text)"
-}
-
-set trace off
-ietestform , surveyform("$sheet") report("$text") `statalang'
