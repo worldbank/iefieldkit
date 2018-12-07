@@ -1,6 +1,6 @@
 # iefieldkit
 
-## installation
+## installation - beta version
 This is just a beta release. We know that there are still bugs to be resolved, output to be improved etc. before this package of commands is as user-friendly as we aim for it to be when the first non-beta version is released. With that said, we are immensely grateful for anyone who wants to help us test this command and report bugs, suggest improvements, ask for clarifications where documentation is not great etc. The non-beta version of the command will be released on _SSC_ but until then, the command is installed using the code below:
 ```
     net install iefieldkit , from("https://raw.githubusercontent.com/worldbank/iefieldkit/master/src") replace
@@ -12,8 +12,9 @@ Stata commands designed for primary data collection using [SurveyCTO](https://ww
 
 When using this package of commands for the first time, we recommend that you read the section on the intended work flow. Some commands have features that assumes that the commands earlier in the work flow have been used. You will be notified if that is the case as some features might not work, but to the degree possible, the commands will have other ways to implement those features.
 
-## work flow
-_Not sure what the most markdown friendly format for this work flow would be, let me know if you have suggestions, but for now it is a list_
+## Suggested commands
+
+Only **ietestform** and **iecodebook** are released yet, and they are only released in beta version for testing.
 
 * Questionnaire design
   * **ietestform** - command that tests the SurveyCTO questionnaire form for risky practices. This is not a substitute to the test SurveyCTO's servers do when uploading a form, but a complement. SurveyCTO's servers check that the syntax is correct, while **ietestform** warns you and bring your attention to practices that are not incorrect from a strict syntax perspecitve, but are practices that are prone to errors, or should only be used in very specific cases.
