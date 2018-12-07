@@ -182,7 +182,7 @@ in order to tell the command the exact adjustments that you want to be made in t
 
 {p 2 4}We would like to acknowledge the help in testing and proofreading we received
  in relation to this command and help file from (in alphabetical order):{p_end}{break}
-{pmore}Kristoffer Bjarkefur{break}Luiza Cardoso De Andrade{break}Maria Ruth Jones{break}{break}...and all DIME Research Assistants and Field Coordinators{break}
+{pmore}Kristoffer Bjarkefur{break}Luiza Cardoso De Andrade{break}Saori Iwamoto{break}Maria Ruth Jones{break}{break}...and all DIME Research Assistants and Field Coordinators{break}
 
 {title:Authors}
 
