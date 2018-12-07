@@ -353,6 +353,7 @@ qui {
 		foreach type in Recodes Choices Labels {
 			foreach change in `all`type'' {
 				cap `change'
+				if _rc != 0 & _rc != 100 di as err `"One of your `=lower("`type'")' failed: check `change' in the codebook."'
 			}
 		}
 
