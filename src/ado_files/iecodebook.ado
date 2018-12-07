@@ -17,9 +17,9 @@ cap program drop iecodebook
 		local file = subinstr(`"`using'"',"using","",.)
 		cap confirm new file `file'
 		if _rc != 0 {
-			noi noi noi di as err "That template already exists. iecodebook does not allow you to overwrite an existing template,"
+			di as err "That template already exists. iecodebook does not allow you to overwrite an existing template,"
 			di as err " since you may already have set it up. If you are {bf:sure} that you want to delete this template,"
-			di as err `" you need to manually remove it from`file'. iecodebook will now exit."'
+			di as err `" you need to manually remove it from`file'. [iecodebook] will now exit."'
 			exit
 		}
 	}
@@ -57,6 +57,9 @@ cap program drop iecodebook_export
 
 	syntax [anything] [using] [if] [in], [template(string asis)] [trim(string asis)]
 qui {
+
+	// Return a warning if there are lots of variables
+	if `c(k)' >= 1000 di as err "This dataset has `c(k)' variables. This may take a long time! Consider subsetting your variables first."
 
 	// Store current data and apply if/in via [marksample]
 		tempfile allData
@@ -240,7 +243,7 @@ qui {
 			}
 
 		// Export value labels to "choices" sheet
-		export excel `using' , sheet("choices`template_us'") sheetreplace first(var)
+		cap export excel `using' , sheet("choices`template_us'") sheetreplace first(var)
 
 	// Reload original data
 	use `allData' , clear
