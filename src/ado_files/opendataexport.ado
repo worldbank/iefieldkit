@@ -100,7 +100,7 @@ noi di in red "Thank you for creating a neatly shareable dataset or codebook wit
 	
 end
 
-* Demo
+/* Demo
 
 	cd /Users/bbdaniels/GitHub/stata/dev/openstatakit/
 
@@ -112,5 +112,5 @@ end
 
 	opendataexport "opendataexport" using `""opendataexport.ado" "opendataexport.ado""'
 	opendataexport "opendataexport_compact" 	, compact
-	
+*/	
 * Have a lovely day!
