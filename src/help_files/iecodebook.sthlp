@@ -36,8 +36,8 @@ and optionally produces an export version of the dataset with only variables use
 {marker Options}{...}
 {synopthdr:Options}
 {synoptline}
-{synopt:{opt drop}}When applying a codebook from {it:"/path/to/codebook.xlsx"}, requests that {cmdab:iecodebook} drop any variables which are not given "final" names in the codebook.
-The default behavior is to retain "unselected" variables. {p_end}
+{synopt:{opt drop}}When applying a codebook from {it:"/path/to/codebook.xlsx"}, requests that {cmdab:iecodebook} drop all variables which are not given "final" names in the codebook.
+The default behavior is to retain "unselected" variables. Alternatively, to drop variables one-by-one, write "drop" in the "name" column of the codebook.{p_end}
 {synoptline}
 
 {p}{it:Setting up a template to append multiple datasets:}{p_end}

@@ -376,7 +376,9 @@ qui {
 		foreach type in Recodes Choices Labels {
 			foreach change in `all`type'' {
 				cap `change'
-				if _rc != 0 & _rc != 100 di as err `"One of your `=lower("`type'")' failed: check `change' in the codebook."'
+				if 		_rc == 181 			 	di as err `"Variable `: word 3 of `change'' is a string and cannot have a value label."'
+				else if _rc == 111 			 	di as err `"Variable `: word 3 of `change'' was not found."'
+				else if _rc != 0 & _rc != 100 	di as err `"One of your `=lower("`type'")' failed: check `change' in the codebook."'
 			}
 		}
 
