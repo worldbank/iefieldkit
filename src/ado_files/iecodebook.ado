@@ -24,6 +24,7 @@ cap program drop iecodebook
 		}
 	}
 
+	// Make sure some command is specified
 	if !inlist("`subcommand'","template","apply","append","export") {
 		di as err "{bf:iecodebook} requires [template], [apply], [append], or [export] to be specified with a target [using] codebook. Type {bf:help iecodebook} for details."
 	}
@@ -315,7 +316,7 @@ qui {
 				local theChoices	= choices[`i']
 				local theRecode		= recode`survey'[`i']
 
-				if "`drop'" != "" & "`theRename'" == "" local allDrops "`allDrops' `theName'"
+				if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == "drop") local allDrops "`allDrops' `theName'"
 				if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames1 	= `"`allRenames1' `theName'"'
 				if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames2 	= `"`allRenames2' `theRename'"'
 				if "`theRename'" != "" & "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' `"label var `theName' "`theLabel'" "' "'
