@@ -220,14 +220,16 @@ qui {
 		// Fill temp dataset with value labels
 		foreach var of varlist * {
 			local theLabel : value label `var'
-			cap label save `theLabel' using `theLabels' ,replace
-			if _rc==0 {
-				preserve
-				import delimited using `theLabels' , clear delimit(", modify", asstring)
-				append using `theCommands'
-					save `theCommands' , replace emptyok
+			if "`theLabel'" != "" {
+				cap label save `theLabel' using `theLabels' ,replace
+				if _rc==0 {
+					preserve
+					import delimited using `theLabels' , clear delimit(", modify", asstring)
+					append using `theCommands'
+						save `theCommands' , replace emptyok
 
-				restore
+					restore
+				}
 			}
 		}
 
