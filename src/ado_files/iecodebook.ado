@@ -274,7 +274,8 @@ qui {
 	// Reload original data
 	use `allData' , clear
 	// Success message
-	if `c(N)' > 1 di as err `"Codebook for `template' created `using'!"'
+	if "`template'" == "" local template "current"
+	if `c(N)' > 1 di as err `"Codebook for `template' data created `using'!"'
 
 } // end qui
 end
