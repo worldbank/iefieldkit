@@ -21,6 +21,9 @@ cap program drop iecodebook
 		di as err "Enjoy!"
 		exit
 	}
+	else if _rc != 0 {
+		syntax [anything] using , [*]
+	}
 
 	// Select subcommand
 	gettoken subcommand anything : anything
