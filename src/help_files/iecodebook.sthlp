@@ -30,7 +30,7 @@ and optionally produces an export version of the dataset with only variables use
 
 {p}{it:Applying the completed template to the current data:}{p_end}
 
-{p 2}{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"}, [drop]{p_end}
+{p 2}{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"}, [{bf:drop}] [{opt miss:ingvalues(# "label" [# "label" ...])}]{p_end}
 {break}
 {synoptset}{...}
 {marker Options}{...}
@@ -38,6 +38,8 @@ and optionally produces an export version of the dataset with only variables use
 {synoptline}
 {synopt:{opt drop}}When applying a codebook from {it:"/path/to/codebook.xlsx"}, requests that {cmdab:iecodebook} drop all variables which are not given "final" names in the codebook.
 The default behavior is to retain "unselected" variables. Alternatively, to drop variables one-by-one, write "drop" in the "name" column of the codebook.{p_end}
+{synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
+For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every coded answer.{p_end}
 {synoptline}
 
 {p}{it:Setting up a template to append multiple datasets:}{p_end}
@@ -52,7 +54,8 @@ The default behavior is to retain "unselected" variables. Alternatively, to drop
 {p 2 4}{cmdab:iecodebook append} /// {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
 {help using} {it:"/path/to/codebook.xlsx"} /// {break}
-, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} [{bf:nodrop}]{p_end}
+, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} /// {break}
+[{opt miss:ingvalues(# "label" [# "label" ...])}] [{bf:nodrop}]{p_end}
 {break}
 {synoptset}{...}
 {marker Options}{...}
@@ -61,6 +64,8 @@ The default behavior is to retain "unselected" variables. Alternatively, to drop
 {synopt:{opt surveys()}}{bf:This option is always required.} When creating a template {it:or} reading a codebook from {it:"/path/to/codebook.xlsx"}, {cmdab:iecodebook} will use this list of names
 to identify each survey in the codebook. These should be exactly one word for each survey, and they must come in the same order as the filepaths.
 When importing, this will also be used to create a variable identifying the source of each observation.{p_end}
+{synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
+For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every coded answer.{p_end}
 {synopt:{opt nodrop}}{bf:Specifying this option will keep all variables from all datasets. Use carefully!}
 Forcibly appending data, especially of different types, can result in loss of information.
 For example, appending a same-named string variable to a numeric variable may cause data deletion.

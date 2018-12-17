@@ -279,7 +279,7 @@ end
 cap program drop iecodebook_apply
 	program 	 iecodebook_apply
 
-	syntax [anything] [using] , [template] [drop] [survey(string asis)]
+	syntax [anything] [using] , [template] [drop] [survey(string asis)] [MISSingvalues(string asis)]
 qui {
 	// Setups
 
@@ -361,6 +361,8 @@ qui {
 							local theNextLabel = label[`i']
 							local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `theNextValue' "`theNextLabel'" "'
 						}
+					// Add missing values if requested
+					local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `missingvalues' "'
 				}
 
 	// Back to original dataset to apply changes from codebook
@@ -400,7 +402,7 @@ end
 cap program drop iecodebook_append
 	program 	 iecodebook_append
 
-	syntax [anything] [using] , surveys(string asis) [template] [noDROP]
+	syntax [anything] [using] , surveys(string asis) [template] [noDROP] [*]
 qui {
 
 	// Optional no-drop
@@ -408,7 +410,7 @@ qui {
 		local drop "drop"
 	}
 	else {
-		di as err "You have turned off the [drop] option, which means you are forcing all variables to be appended even if you did not manually harmonize them."
+		di as err "You have turned off the [drop] default, which means you are forcing all variables to be appended even if you did not manually harmonize them."
 		di as err "Make sure to check the resulting dataset carefully. Forcibly appending data, especially of different types, may result in loss of information."
 		local drop ""
 	}
@@ -447,7 +449,7 @@ qui {
 			local ++x
 			local survey : word `x' of `surveys'
 			use `dataset' , clear
-			iecodebook apply `using' , survey(`survey') `drop'
+			iecodebook apply `using' , survey(`survey') `drop' `options'
 
 			gen survey = `x'
 			tempfile next_data
