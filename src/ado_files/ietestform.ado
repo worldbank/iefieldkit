@@ -868,7 +868,7 @@ qui {
 				",Form Version,`metav'" _n ///
 				",Form File,`metafile'" _n ///
 				"----------------------------------------------------------------------" _n
-				
+
 			file close 		`report_handler'
 		}
 
@@ -881,7 +881,7 @@ qui {
 			file write  	`report_handler' ///
 								"----------------------------------------------------------------------" _n ///
 								`""`message'""' _n ///
-								"Read more about this test and why this is an error or does not follow the best practices we recommend in https://dimewiki.worldbank.org/wiki/Ietestform--insertanchorhere" _n ///
+								"Read more about this test and why this is an error or does not follow the best practices we recommend in https://dimewiki.worldbank.org/wiki/Ietestform##insertanchorhere" _n ///
 
 			file close 		`report_handler'
 
