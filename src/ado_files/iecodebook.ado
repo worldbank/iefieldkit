@@ -470,6 +470,7 @@ qui {
 		append using `next_data'
 			label def survey `x' "`survey'" , add
 			label val survey survey
+			label var survey "Data Source"
 			save `final_data' , replace emptyok
 	}
 
