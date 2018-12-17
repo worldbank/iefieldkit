@@ -7,7 +7,20 @@ cap program drop iecodebook
 
 	version 13 // Required 13.1 due to use of long macros
 
-	syntax [anything] using , [*]
+	cap syntax [anything] using , [*]
+	if _rc == 100 {
+		di "    _                     __     __                __		"
+		di "   (_)__  _________  ____/ /__  / /_  ____  ____  / /__		"
+		di "  / / _ \/ ___/ __ \/ __  / _ \/ __ \/ __ \/ __ \/ //_/		"
+		di " / /  __/ /__/ /_/ / /_/ /  __/ /_/ / /_/ / /_/ / ,<		"
+		di "/_/\___/\___/\____/\__,_/\___/_.___/\____/\____/_/|_| 		"
+		di " "
+		di as err "Welcome to [iecodebook]!"
+		di as err "It seems you have left out something important – the codebook!"
+		di as err "If you are new to [iecodebook], please {stata h iecodebook:view the help file}."
+		di as err "Enjoy!"
+		exit
+	}
 
 	// Select subcommand
 	gettoken subcommand anything : anything
