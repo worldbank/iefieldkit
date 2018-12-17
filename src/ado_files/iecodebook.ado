@@ -104,10 +104,10 @@ qui {
 
 		// Stack up all the lines of code from all the dofiles in a dataset
 		foreach dofile in `trim' {
-				import delimited "`dofile'" , clear
-				append using `a'
-				tempfile a
-					save `a' , replace
+			import delimited "`dofile'" , clear
+			append using `a'
+			tempfile a
+				save `a' , replace
 		}
 
 		// Loop through every variable in the current dataset and put its name wherever it occurs
@@ -128,10 +128,8 @@ qui {
 		// Loop over variable names to build list of variables to keep
 		count
 		forvalues i = 1/`r(N)' {
-
 			local theNextVar = v[`i']
 			local theKeepList = "`theKeepList' `theNextVar'"
-
 		}
 
 		// Restore and keep variables
@@ -241,25 +239,24 @@ qui {
 
 		// Clean up value labels for export * use SurveyCTO syntax for sheet names and column names
 		use `theCommands' , clear
+		count
+		if `r(N)' > 0 {
+			duplicates drop
+			drop v2
+			replace v1 = trim(subinstr(v1,"label define","",.))
+			split v1 , parse(`"""')
+			split v11 , parse(`" "')
+			keep v111 v112 v12
+			order v111 v112 v12
 
-			count
-			if `r(N)' > 0 {
-				duplicates drop
-				drop v2
-				replace v1 = trim(subinstr(v1,"label define","",.))
-				split v1 , parse(`"""')
-				split v11 , parse(`" "')
-				keep v111 v112 v12
-				order v111 v112 v12
-
-				rename (v111 v112 v12)(list_name value label)
-			}
-			else {
-				set obs 1
-				gen list_name = ""
-				gen value = ""
-				gen label = ""
-			}
+			rename (v111 v112 v12)(list_name value label)
+		}
+		else {
+			set obs 1
+			gen list_name = ""
+			gen value = ""
+			gen label = ""
+		}
 
 		// Export value labels to "choices" sheet
 		cap export excel `using' , sheet("choices`template_us'") sheetreplace first(var)
@@ -276,6 +273,8 @@ qui {
 
 	// Reload original data
 	use `allData' , clear
+	// Success message
+	if `c(N)' > 1 di as err `"Codebook for `template' created `using'!"'
 
 } // end qui
 end
@@ -292,93 +291,87 @@ qui {
 		if "`survey'" == "" local survey "current"
 
 	// Template setup
-
-		if "`template'" != "" {
-			// Create empty codebook with "survey" variable
-				preserve
-					clear
-					set obs 1
-					gen survey = 0
-						label var survey "Survey"
-					iecodebook export `using'
-				restore
-			// Append current dataset
-			tempfile current
-			save `current' , replace
-			iecodebook export `current' `using' , template(`survey')
-		exit
-		}
+	if "`template'" != "" {
+		// Create empty codebook with "survey" variable
+			preserve
+				clear
+				set obs 1
+				gen survey = 0
+					label var survey "(Ignore this placeholder, but do not delete it. Thanks!)"
+				iecodebook export `using'
+			restore
+		// Append current dataset
+		tempfile current
+		save `current' , replace
+		iecodebook export `current' `using' , template(`survey')
+	exit
+	}
 
 	// Apply codebook
 	preserve
 
 		// Loop over survey sheet and accumulate rename, relabel, recode, vallab
+		import excel `using' , clear first sheet(survey) allstring
+		count
+		forvalues i = 1/`r(N)' {
+			local theName		= name`survey'[`i']
+	    	local theRename 	= name[`i']
+			local theLabel		= label[`i']
+			local theChoices	= choices[`i']
+			local theRecode		= recode`survey'[`i']
 
-			import excel `using' , clear first sheet(survey) allstring
-
-			count
-			forvalues i = 1/`r(N)' {
-				local theName		= name`survey'[`i']
-		    	local theRename 	= name[`i']
-				local theLabel		= label[`i']
-				local theChoices	= choices[`i']
-				local theRecode		= recode`survey'[`i']
-
-				if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == "drop") local allDrops "`allDrops' `theName'"
-				if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames1 	= `"`allRenames1' `theName'"'
-				if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames2 	= `"`allRenames2' `theRename'"'
-				if "`theRename'" != "" & "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' `"label var `theName' "`theLabel'" "' "'
-				if "`theRename'" != "" & "`theChoices'" != "" 	local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
-				if "`theRename'" != "" & "`theRecode'" 	!= "" 	local allRecodes 	= `"`allRecodes' "recode `theName' `theRecode'""'
-			}
+			if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == "drop") local allDrops "`allDrops' `theName'"
+			if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames1 	= `"`allRenames1' `theName'"'
+			if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames2 	= `"`allRenames2' `theRename'"'
+			if "`theRename'" != "" & "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' `"label var `theName' "`theLabel'" "' "'
+			if "`theRename'" != "" & "`theChoices'" != "" 	local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
+			if "`theRename'" != "" & "`theRecode'" 	!= "" 	local allRecodes 	= `"`allRecodes' "recode `theName' `theRecode'""'
+		}
 
 		// Loop over choices sheet and accumulate vallab definitions
 
 			// Prepare list of value labels needed.
+			drop if choices == ""
+			cap duplicates drop choices, force
 
-				drop if choices == ""
-				cap duplicates drop choices, force
-
-				count
-				if `r(N)' == 1 {
-					local theValueLabels = choices[1]
+			count
+			if `r(N)' == 1 {
+				local theValueLabels = choices[1]
+			}
+			else {
+				forvalues i = 1/`r(N)' {
+					local theNextValLab  = choices[`i']
+					local theValueLabels `theValueLabels' `theNextValLab'
 				}
-				else {
-					forvalues i = 1/`r(N)' {
-						local theNextValLab  = choices[`i']
-						local theValueLabels `theValueLabels' `theNextValLab'
-					}
-				}
+			}
 
 			// Prepare list of values for each value label.
+			import excel `using', first clear sheet(choices) allstring
+				tempfile choices
+					save `choices', replace
 
-				import excel `using', first clear sheet(choices) allstring
-					tempfile choices
-						save `choices', replace
-
-				foreach theValueLabel in `theValueLabels' {
-					use `choices', clear
-					keep if list_name == "`theValueLabel'"
-					local theLabelList "`theValueLabel'"
-						count
-						local n_vallabs = `r(N)'
-						forvalues i = 1/`n_vallabs' {
-							local theNextValue = value[`i']
-							local theNextLabel = label[`i']
-							local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `theNextValue' "`theNextLabel'" "'
-						}
-					// Add missing values if requested
-					local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `missingvalues' "'
-				}
+			foreach theValueLabel in `theValueLabels' {
+				use `choices', clear
+				keep if list_name == "`theValueLabel'"
+				local theLabelList "`theValueLabel'"
+					count
+					local n_vallabs = `r(N)'
+					forvalues i = 1/`n_vallabs' {
+						local theNextValue = value[`i']
+						local theNextLabel = label[`i']
+						local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `theNextValue' "`theNextLabel'" "'
+					}
+				// Add missing values if requested
+				local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `missingvalues' "'
+			}
 
 	// Back to original dataset to apply changes from codebook
 	restore
 
 		// Define value labels
-
-			foreach theValueLabel in `theValueLabels' {
-				label def `theValueLabel' `theLabelList_`theValueLabel'', replace
-				}
+		foreach theValueLabel in `theValueLabels' {
+			label def `theValueLabel' `theLabelList_`theValueLabel'', replace
+			}
 
 		// Drop leftovers if requested
 		cap drop `allDrops'
@@ -390,7 +383,7 @@ qui {
 				if 		_rc == 181 			 	di as err `"Variable `: word 3 of `change'' is a string and cannot have a value label."'
 				else if _rc == 111 			 	di as err `"Variable `: word 3 of `change'' was not found."'
 				// Do nothing on survey variable - TODO: stop the survey variable being implemented on a single dataset?
-				else if "`=lower("`type'")'" == "labels" & `"`change'"' == `"label var  "Survey" "' {
+				else if "`=lower("`type'")'" == "labels" & `"`change'"' == `"label var  "(Ignore this placeholder, but do not delete it. Thanks!)" "' {
 					}
 				// Generic error message
 				else if _rc != 0 & _rc != 100 	di as err `"One of your `=lower("`type'")' failed: check `change' in the codebook."'
@@ -399,11 +392,15 @@ qui {
 
 		// Rename variables and catch errors
 		cap rename (`allRenames1') (`allRenames2')
-			if _rc != 0 {
-				di as err "That codebook contains a rename conflict. Please check and retry. iecodebook will exit."
-				rename (`allRenames1') (`allRenames2')
-			exit
-			}
+		if _rc != 0 {
+			di as err "That codebook contains a rename conflict. Please check and retry. iecodebook will exit."
+			rename (`allRenames1') (`allRenames2')
+		exit
+		}
+
+	// Success message
+	di as err `"Applied codebook `survey' `using'!"'
+
 } // end qui
 end
 
@@ -426,57 +423,57 @@ qui {
 	}
 
 	// Final dataset setup
-
-		clear
-		tempfile final_data
-			save `final_data' , replace emptyok
+	clear
+	tempfile final_data
+		save `final_data' , replace emptyok
 
 	// Template setup
-
-		if "`template'" != "" {
-			// create empty codebook
-			preserve
-				clear
-				set obs 1
-				gen survey = 0
-					label var survey "Survey"
-				iecodebook export `using'
-			restore
-			// append one codebook per survey
-			local x = 0
-			foreach survey in `surveys' {
-				local ++x
-				local filepath : word `x' of `anything'
-				iecodebook export "`filepath'" `using' , template(`survey')
-			}
-		exit
+	if "`template'" != "" {
+		// create empty codebook
+		preserve
+			clear
+			set obs 1
+			gen survey = 0
+				label var survey "Survey"
+			iecodebook export `using'
+		restore
+		// append one codebook per survey
+		local x = 0
+		foreach survey in `surveys' {
+			local ++x
+			local filepath : word `x' of `anything'
+			iecodebook export "`filepath'" `using' , template(`survey')
 		}
+	exit
+	}
 
 	// Loop over datasets and apply codebook
+	local x = 0
+	foreach dataset in `anything' {
+		local ++x
+		local survey : word `x' of `surveys'
+		use `dataset' , clear
+		iecodebook apply `using' , survey(`survey') `drop' `options'
 
-		local x = 0
-		foreach dataset in `anything' {
-			local ++x
-			local survey : word `x' of `surveys'
-			use `dataset' , clear
-			iecodebook apply `using' , survey(`survey') `drop' `options'
+		gen survey = `x'
+		tempfile next_data
+			save `next_data' , replace
+		use `final_data' , clear
+		append using `next_data'
+			label def survey `x' "`survey'" , add
+			label val survey survey
+			save `final_data' , replace emptyok
+	}
 
-			gen survey = `x'
-			tempfile next_data
-				save `next_data' , replace
-			use `final_data' , clear
-			append using `next_data'
-				label def survey `x' "`survey'" , add
-				label val survey survey
-				save `final_data' , replace emptyok
-		}
+	// Success message
+	di as err `"Applied codebook `using' to `anything'! Check your data carefully!"'
 
 	// Final codebook
-
-		local using = subinstr(`"`using'"',".xlsx","_appended.xlsx",.)
+	local using = subinstr(`"`using'"',".xlsx","_appended.xlsx",.)
 		iecodebook export `using'
-
 		use `final_data' , clear
+		di as err `"Created appended codebook `using'!"'
+
 } // end qui
 end
 
