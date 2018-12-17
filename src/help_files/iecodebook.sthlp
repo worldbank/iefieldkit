@@ -50,9 +50,14 @@ in order to tell the command the exact adjustments that you want to be made in t
 
 {title:Syntax}
 
+{p 2 2}{it:Note that the correct command is always created by replacing}
+	{break}{it:"apply" or "append" with "template" when creating the template,}
+	{break}{it:and changing it back to execute the template. It's that easy!}{p_end}
+
 {p}{it:Setting up a template to apply to the current data:}{p_end}
 
 {p 2}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
+
 
 {p}{it:Applying the completed template to the current data:}{p_end}
 
@@ -68,7 +73,7 @@ The default behavior is to retain all variables. Alternatively, to drop variable
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every coded answer.{p_end}
 {synoptline}
 
-{p}{it:Setting up a template to append multiple datasets:}{p_end}
+{p}{it:Setting up a template to harmonize and append multiple datasets:}{p_end}
 
 {p 2 4}{cmdab:iecodebook template} /// {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
@@ -152,6 +157,9 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c BLC}{hline 27}{c BRC}
 
 {p 2}{it:Step 4: Use the {bf:apply} function to read the completed codebook:}{p_end}
+{p 4 4}{it:Note that the correct command is created by replacing}
+	{break}{it:"template" with "apply" after creating the template.}{p_end}
+{break}
     {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
     {stata iecodebook apply using "codebook.xlsx":iecodebook apply using "codebook.xlsx"}
     {stata ta dom:tab dom}
@@ -188,9 +196,12 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c BLC}{hline 91}{c BRC}
 
 {p 2}{it:Step 3: Read and apply the harmonization template:}{p_end}
-{p 4 6}{inp:iecodebook append} 		/// {it:Note that the correct command is}
-{break}{inp:"data1.dta" "data2.dta"} 	/// {it:created by replacing "template"}
-{break}{inp: using "codebook.xlsx"} 	/// {it:with "append" after creating the template.}
+{p 4 4}{it:Note that the correct command is created by replacing}
+	{break}{it:"template" with "append" after creating the template.}{p_end}
+{break}
+{p 4 6}{inp:iecodebook append}
+{break}{inp:"data1.dta" "data2.dta"}
+{break}{inp: using "codebook.xlsx"}
 {break}{inp: , surveys(First Second)}
 {break}{stata iecodebook append "data1.dta" "data2.dta" using "codebook.xlsx" , surveys(First Second):(Run)}{p_end}
 
