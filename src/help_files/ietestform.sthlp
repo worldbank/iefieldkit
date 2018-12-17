@@ -5,35 +5,37 @@ help for {hi:ietesform}
 
 {title:Title}
 
-{phang2}{cmdab:ietesform} {hline 2} Test Survey CTO for errors and best practices SCTO's server does not check for.
+{phang2}{cmdab:ietesform} {hline 2} Test SurveyCTO form definition file for errors and best practices the server does not check for.
 
-{phang2}For a more descriptive discussion on the intended usage and work flow of this
+{phang2}For a more descriptive discussion on the intended usage and workflow of this
 command please see the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
 
 {title:Syntax}
 
 {phang2}
 {cmdab:ietestform}
-, {cmdab:surveyform(}{it:survey_filepath}{cmd:)} {cmdab:report(}{it:string}{cmd:)} 
-[{cmdab:statalanguage(}{it:string}{cmd:)}]
+, {cmdab:surveyform(}{it:"/path/to/survey.xlsx"}{cmd:)} /// {break}
+{cmdab:report(}{it:"/path/to/report.csv"}{cmd:)} /// {break}
+[{cmdab:statalanguage(}{it:column_name}{cmd:)}]
 
 {marker opts}{...}
 {synoptset 28}{...}
 {synopthdr:options}
 {synoptline}
-{synopt :{cmdab:surveyform(}{it:string}{cmd:)}}file path to the file with the Survey CTO form definition.{p_end}
-{synopt :{cmdab:report(}{it:string}{cmd:)}}file path to .csv report listing all issues found.{p_end}
+{phang}{it:Required options}{p_end}
+{synopt :{cmdab:surveyform()}}Specify the filepath to the file with the SurveyCTO form definition.{p_end}
+{synopt :{cmdab:report()}}Specify the filepath to the .csv report you want to create listing all issues found.{p_end}
 
 {phang}{it:Optional options}{p_end}
-{synopt :{cmdab:statalanguage(}{it:string}{cmd:)}}name of Stata label column in the form definition (if not "label:stata").{p_end}
+{synopt :{cmdab:statalanguage()}}Specify the name of the column with Stata labels in the form definition (if it is {it:not} "label:stata").{p_end}
 {synoptline}
 
 {title:Description}
 
 {dlgtab:In brief:}
 {pstd}{cmd:ietestform} takes a SurveyCTO form definition in Excel format and parses
- it to test for errors and best practices that SCTO's server does not check for. Some 
- of these test are testing that DIME Analytics' best practices are used, especially in 
+ it to test for errors and best practices that SCTO's server does not check for. Some
+ of these test are testing that DIME Analytics' best practices are used, especially in
  the context of collecting data that will be imported to Stata.
 
 {dlgtab:Tests performed:}
@@ -46,7 +48,7 @@ the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
 {pstd}{cmd:Numeric name/value:} test that all values in the name/value column are numeric. Having non-numeric values
 will cause conflicts when importing to Stata.
 
-{pstd}{cmd:No unused lists:} test that all lists in the choices sheets are used at least once in the survey sheet. 
+{pstd}{cmd:No unused lists:} test that all lists in the choices sheets are used at least once in the survey sheet.
 
 {pstd}{cmd:No duplicated labels:} test that there are no duplicated labels within a list_name.
 
@@ -54,7 +56,7 @@ will cause conflicts when importing to Stata.
 
 {pstd}{cmd:Unlabelled values:} test that all values/names have a label.
 
-{pstd}{cmd:No duplicated name/value:} test that all combinations of list_name and name/value are unique. 
+{pstd}{cmd:No duplicated name/value:} test that all combinations of list_name and name/value are unique.
 
 {pstd}{cmd:Stata language:} test that there is one column with value labels formatted for Stata.
 
@@ -62,7 +64,7 @@ will cause conflicts when importing to Stata.
 
 {pstd}{cmd:Type column:} test for not matching begin/end group/repeat.
 
-{pstd}{cmd:Long variable names:} test for variable names that are too long for Stata. This includes variables inside 
+{pstd}{cmd:Long variable names:} test for variable names that are too long for Stata. This includes variables inside
 repeat groups whose names will become too long once suffixes are added in wide format.
 
 {pstd}{cmd:Naming repeat/group:} test for unnamed repeat/group. Not an error but good practice
@@ -78,11 +80,11 @@ repeat groups whose names will become too long once suffixes are added in wide f
 
 {title:Options}
 
-{phang}{cmdab:surveyform(}{it:survey_filepath}{cmd:)} 
+{phang}{cmdab:surveyform(}{it:survey_filepath}{cmd:)}
 
-{phang}{cmdab:report(}{it:string}{cmd:)} 
+{phang}{cmdab:report(}{it:string}{cmd:)}
 
-{phang}{cmdab:statalanguage(}{it:string}{cmd:)} 
+{phang}{cmdab:statalanguage(}{it:string}{cmd:)}
 
 
 
