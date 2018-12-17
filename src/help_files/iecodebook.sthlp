@@ -15,20 +15,6 @@ help for {hi:iecodebook}
 
 {p}{cmdab:iecodebook} {hline 2} performs common data cleaning tasks using dataset definitions (codebooks) written in Excel files. {p_end}
 
-{title:Functions}
-
-{p 2 4}{cmdab:iecodebook template}{break} creates an Excel template that describes the current or targeted dataset(s),
-with empty columns for you to specify the changes or harmonizations for the other {bf:iecodebook} commands.{p_end}
-{break}
-{p 2 4}{cmdab:iecodebook apply}{break} reads an Excel codebook that specifies
-renames, recodes, variable labels, and value labels, and applies them to the current dataset.{p_end}
-{break}
-{p 2 4}{cmdab:iecodebook append}{break} reads an Excel codebook that specifies how variables should be harmonized across
-two or more datasets - rename, recode, variable labels, and value labels - applies the harmonization, and appends the datasets.{p_end}
-{break}
-{p 2 4}{cmdab:iecodebook export}{break} creates an Excel codebook that describes the current dataset,
-and optionally produces an export version of the dataset with only variables used in specified dofiles.{p_end}
-
 {title:Description}
 {marker description}{...}
 
@@ -48,24 +34,56 @@ designed to be both human- and machine-readable.
 In both cases, you will need to manually complete the template
 in order to tell the command the exact adjustments that you want to be made in the dataset.{p_end}
 
+{title:Functions}
+
+{p 2 4}{cmdab:iecodebook template}{break} creates an Excel template that describes the current or targeted dataset(s),
+with empty columns for you to specify the changes or harmonizations for the other {bf:iecodebook} commands.{p_end}
+{break}
+{p 2 4}{cmdab:iecodebook apply}{break} reads an Excel codebook that specifies
+renames, recodes, variable labels, and value labels, and applies them to the current dataset.{p_end}
+{break}
+{p 2 4}{cmdab:iecodebook append}{break} reads an Excel codebook that specifies how variables should be harmonized across
+two or more datasets - rename, recode, variable labels, and value labels - applies the harmonization, and appends the datasets.{p_end}
+{break}
+{p 2 4}{cmdab:iecodebook export}{break} creates an Excel codebook that describes the current dataset,
+and optionally produces an export version of the dataset with only variables used in specified dofiles.{p_end}
+
 {title:Syntax}
 
 {p 2 2}{it:Note that the correct command is always created by replacing}
 	{break}{it:"apply" or "append" with "template" when creating the template,}
 	{break}{it:and changing it back to execute the template. It's that easy!}{p_end}
 
-{p}{it:Setting up a template to apply to the current data:}{p_end}
+{dlgtab 0:Apply: Setting up and using a codebook to alter current data}
 
 {p 2}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
 
-
-{p}{it:Applying the completed template to the current data:}{p_end}
-
 {p 2}{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"}, [{bf:drop}] [{opt miss:ingvalues(# "label" [# "label" ...])}]{p_end}
-{break}
+
+{dlgtab 0:Append: Setting up and using a codebook to harmonize and append multiple datasets}
+
+{p 2 4}{cmdab:iecodebook template} /// {break}
+{it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
+{help using} {it:"/path/to/codebook.xlsx"} /// {break}
+, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}{p_end}
+
+{p 2 4}{cmdab:iecodebook append} /// {break}
+{it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
+{help using} {it:"/path/to/codebook.xlsx"} /// {break}
+, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} /// {break}
+[{opt miss:ingvalues(# "label" [# "label" ...])}] [{bf:nodrop}]{p_end}
+
+{dlgtab 0:Export: Creating a full codebook of the current data}
+
+{p 2 4}{cmdab:iecodebook export} [{help if}] [{help in}] /// {break}
+{help using} {it:"/path/to/codebook.xlsx"} ,  /// {break}
+[{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
+
+{title:Options}
+
 {synoptset}{...}
 {marker Options}{...}
-{synopthdr:Options}
+{synopthdr:Apply Options}
 {synoptline}
 {synopt:{opt drop}}When applying a codebook from {it:"/path/to/codebook.xlsx"}, requests that {cmdab:iecodebook} drop all variables which are not given "final" names in the codebook.
 The default behavior is to retain all variables. Alternatively, to drop variables one-by-one, write "drop" in the "name" column of the codebook.{p_end}
@@ -73,24 +91,10 @@ The default behavior is to retain all variables. Alternatively, to drop variable
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every coded answer.{p_end}
 {synoptline}
 
-{p}{it:Setting up a template to harmonize and append multiple datasets:}{p_end}
-
-{p 2 4}{cmdab:iecodebook template} /// {break}
-{it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
-{help using} {it:"/path/to/codebook.xlsx"} /// {break}
-, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}{p_end}
-
-{p}{it:Using a completed template to harmonize and append multiple datasets:}{p_end}
-
-{p 2 4}{cmdab:iecodebook append} /// {break}
-{it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
-{help using} {it:"/path/to/codebook.xlsx"} /// {break}
-, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} /// {break}
-[{opt miss:ingvalues(# "label" [# "label" ...])}] [{bf:nodrop}]{p_end}
 {break}
 {synoptset}{...}
 {marker Options}{...}
-{synopthdr:Options}
+{synopthdr:Append Options}
 {synoptline}
 {synopt:{opt surveys()}}{bf:This option is always required.} When creating a template {it:or} reading a codebook from {it:"/path/to/codebook.xlsx"}, {cmdab:iecodebook} will use this list of names
 to identify each survey in the codebook. These should be exactly one word for each survey, and they must come in the same order as the filepaths.
@@ -104,23 +108,18 @@ For example, appending a same-named string variable to a numeric variable may ca
 By default, {cmdab:iecodebook append} will {bf:drop} all variables without a new {it:name} explicitly written in the codebook to signify manual review for harmonization.{p_end}
 {synoptline}
 
-{p}{it:Exporting a full codebook of the current data:}{p_end}
-
-{p 2 4}{cmdab:iecodebook export} [{help if}] [{help in}] /// {break}
-{help using} {it:"/path/to/codebook.xlsx"} ,  /// {break}
-[{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
-{break}
 {synoptset}{...}
 {marker Options}{...}
-{synopthdr:Options}
+{synopthdr:Export Options}
 {synoptline}
 {synopt:{opt trim()}} Takes one or more dofiles and trims the current dataset to only include variables used in those dofiles,
 and saves an identically named .dta file at the location specified in {it:"/path/to/codebook.xlsx"}.{p_end}
 {synoptline}
 
 {marker example}
+{title:Examples}
 
-{title:Example 1: Applying a codebook to current data}
+{dlgtab 0:Apply: Create and prepare a codebook to clean current data}
 
 {p 2 4}{it:Step 1: Use the {bf:template} function to create a codebook template for the current dataset:}{p_end}
     {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
@@ -164,7 +163,7 @@ and saves an identically named .dta file at the location specified in {it:"/path
     {stata iecodebook apply using "codebook.xlsx":iecodebook apply using "codebook.xlsx"}
     {stata ta dom:tab dom}
 
-{title:Example 2: Appending multiple datasets using a codebook}
+{dlgtab 0:Append: Harmonize and combine multiple datasets using a codebook}
 
 {p 2}{it:Step 0: Create two dummy datasets for testing iecodebook append}{p_end}
     {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
@@ -205,7 +204,7 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {break}{inp: , surveys(First Second)}
 {break}{stata iecodebook append "data1.dta" "data2.dta" using "codebook.xlsx" , surveys(First Second):(Run)}{p_end}
 
-{title:Example 3: Creating a simple codebook}
+{dlgtab 0:Export: Creating a simple codebook}
 {break}
 {p 2 2}{stata sysuse auto.dta , clear:sysuse auto.dta , clear}
 {break}{stata iecodebook export using "codebook.xlsx":iecodebook export using "codebook.xlsx"}{p_end}
