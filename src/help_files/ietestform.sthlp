@@ -7,8 +7,8 @@ help for {hi:ietesform}
 
 {phang2}{cmdab:ietesform} {hline 2} Test SurveyCTO form definition file for errors and best practices the server does not check for.
 
-{phang2}For a more descriptive discussion on the intended usage and workflow of this
-command please see the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
+{phang2}{it: For a more descriptive discussion on the intended usage and workflow of this command please see the}
+{browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
 
 {title:Syntax}
 

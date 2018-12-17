@@ -8,49 +8,49 @@ qui {
 	version 13
 
 	preserve
-		
+
 	syntax , surveyform(string) report(string) [statalanguage(string)]
-	
-	
+
+
 	/***********************************************
 		Test input
 	***********************************************/
-	
+
 	*Test that the form file exists
 	cap confirm file "`surveyform'"
 	if _rc {
-		
+
 		noi di as error "{phang}The SCTO questionnaire form file in surveyform(`surveyform') was not found.{p_end}"
 		error _rc
 	}
-	
+
 	*TODO: add test for form file is xls or xsls
 	*TODO: add test for report file
 		* folder exists
 		* file type is cvs or file type where we will add csv to name
-	
+
 	/***********************************************
 		Get form meta data and set up report file
 	***********************************************/
-	
+
 	*Get meta data on the form from the form setting sheet
 	importsettingsheet, form("`surveyform'")
-	
+
 	*Load returned values in locals
-	local meta_v		= "`r(version)'" 
-    local meta_id		= "`r(form_id)'" 
+	local meta_v		= "`r(version)'"
+    local meta_id		= "`r(form_id)'"
     local meta_title	= "`r(form_title)'"
-	
+
 	*Setup the report tempfile where all results from all tests will be written
 	tempfile report_tempfile
 	noi report_file setup , report_tempfile("`report_tempfile'") ///
 		metav("`meta_v'") metaid("`meta_id'") metatitle("`meta_title'") metafile("`surveyform'")
-	
+
 
 	/***********************************************
 		Test the choice sheet independently
 	***********************************************/
-	
+
 	noi importchoicesheet, form("`surveyform'") statalanguage(`statalanguage') report_tempfile("`report_tempfile'")
 
 	*Get all choice lists actaually used
@@ -60,7 +60,7 @@ qui {
 	/***********************************************
 		Test the survey sheet independently
 	***********************************************/
-	
+
 	noi importsurveysheet, form("`surveyform'") statalanguage(`statalanguage') report_tempfile("`report_tempfile'")
 
 	*Get all choice lists actaually used
@@ -85,29 +85,29 @@ qui {
 
 	/***********************************************
 		Finsish the report and write it to disk
-	***********************************************/	
-	
+	***********************************************/
+
 	*Write the file to disk
 	noi report_file write, report_tempfile("`report_tempfile'") filepath("`report'")
-	
+
 	restore
-	
+
 }
 end
 
 ** This program imports the settings sheet and get meta information to be used in report header
 capture program drop importsettingsheet
 		program 	 importsettingsheet , rclass
-		
+
 qui {
 
 	//noi di "importsettingsheet command ok"
-	syntax , form(string) 
+	syntax , form(string)
 	//noi di "importsettingsheet syntax ok"
-	
+
 	*Import the choices sheet
 	import excel "`form'", sheet("settings") clear first
-	
+
 	if _rc == 603 {
 		noi di as error  "{phang}The file `form' cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an version of Excel.{p_end}"
 		error 603
@@ -121,14 +121,14 @@ qui {
 	return local form_id 	= form_id[1]
 	return local version 	= version[1]
 
-} 
+}
 end
 
 
 ** This program imports the choice sheet and run tests on the information there
 capture program drop importchoicesheet
 		program 	 importchoicesheet , rclass
-		
+
 qui {
 	//noi di "importchoicesheet command ok"
 	syntax , form(string) [statalanguage(string) report_tempfile(string)]
@@ -341,7 +341,7 @@ qui {
 		else {
 
 			local error_msg "There is no column in the choice sheet with the name [label:stata]. This is best practice as it allows you to automatically import choice list labels optimized for Stata's value labels, making the data set easier to read."
-			
+
 			noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
 
 		}
@@ -758,7 +758,7 @@ qui {
 
 		/***********************************************
 			TEST - Stata language for variable labels
-			Test that there is one column with variable 
+			Test that there is one column with variable
 			labels formatted for stata.
 		***********************************************/
 
@@ -790,13 +790,13 @@ qui {
 			}
 		}
 		else {
-		
+
 		/***********************************************
 			TEST - Long variable labels
 			Test that variable labels are no longer than
 			80 characters
 		***********************************************/
-		
+
 			*Test the length of the Stata label
 			gen labellength = strlen(`labelstata')
 
@@ -848,7 +848,7 @@ qui {
 
 		*Setup files
 		if "`task'" == "setup" {
-		
+
 			local user = c(username)
 			local date = subinstr(c(current_date)," ","",.)
 
@@ -908,7 +908,7 @@ qui {
 				"This is the end of the report." _n
 			file close 		`report_handler'
 
-	
+
 
 			*Write temporary file to disk
 			cap copy "`report_tempfile'" "`filepath'", replace
