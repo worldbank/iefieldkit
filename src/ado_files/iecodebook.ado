@@ -1,11 +1,11 @@
-//! version 0.1 12DEC2018  DIME Analytics dimeanalytics@worldbank.org
+//! version 0.1 31DEC2018  DIME Analytics dimeanalytics@worldbank.org
 
 // Main syntax *********************************************************************************
 
 cap program drop iecodebook
 	program def  iecodebook
 
-	version 13 // Required 13.1 due to use of long macros
+	version 13 // Requires 13.1 due to use of long macros
 
 	cap syntax [anything] using , [*]
 	if _rc == 100 {
@@ -30,12 +30,12 @@ cap program drop iecodebook
 
 	// Throw error if codebook exists
 	if ("`subcommand'" == "template") {
-		local file = subinstr(`"`using'"',"using","",.)
+		local file = subinstr(`"`using'"',"using ","",.)
 		cap confirm new file `file'
 		if _rc != 0 {
 			di as err "That template already exists. iecodebook does not allow you to overwrite an existing template,"
 			di as err " since you may already have set it up. If you are {bf:sure} that you want to delete this template,"
-			di as err `" you need to manually remove it from`file'. [iecodebook] will now exit."'
+			di as err `" you need to manually remove it from `file'. [iecodebook] will now exit."'
 			exit
 		}
 	}
@@ -231,7 +231,8 @@ qui {
 				local rc = _rc
 			}
 		}
-		if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open. Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
+		if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
+		if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
 		if `rc' != 0 exit
 	restore
 
@@ -253,7 +254,7 @@ qui {
 			}
 		}
 
-		// Clean up value labels for export * use SurveyCTO syntax for sheet names and column names
+		// Clean up value labels for export - use SurveyCTO syntax for sheet names and column names
 		use `theCommands' , clear
 		count
 		if `r(N)' > 0 {
@@ -284,7 +285,8 @@ qui {
 				local rc = _rc
 			}
 		}
-		if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open. Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
+		if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
+		if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
 		if `rc' != 0 exit
 
 	// Reload original data
@@ -348,38 +350,25 @@ qui {
 		// Loop over choices sheet and accumulate vallab definitions
 
 			// Prepare list of value labels needed.
-			drop if choices == ""
-			cap duplicates drop choices, force
-
-			count
-			if `r(N)' == 1 {
-				local theValueLabels = choices[1]
-			}
-			else {
-				forvalues i = 1/`r(N)' {
-					local theNextValLab  = choices[`i']
-					local theValueLabels `theValueLabels' `theNextValLab'
-				}
-			}
+			levelsof choices , local(theValueLabels)
 
 			// Prepare list of values for each value label.
 			import excel `using', first clear sheet(choices) allstring
-				tempfile choices
-					save `choices', replace
 
-			foreach theValueLabel in `theValueLabels' {
-				use `choices', clear
-				keep if list_name == "`theValueLabel'"
-				local theLabelList "`theValueLabel'"
-					count
-					local n_vallabs = `r(N)'
-					forvalues i = 1/`n_vallabs' {
-						local theNextValue = value[`i']
-						local theNextLabel = label[`i']
-						local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `theNextValue' "`theNextLabel'" "'
-					}
-				// Add missing values if requested
-				local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `missingvalues' "'
+			count
+			local n_vallabs = `r(N)'
+			forvalues i = 1/`n_vallabs' {
+				local theNextValue = value[`i']
+				local theNextLabel = label[`i']
+				local theValueLabel = list_name[`i']
+				local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `theNextValue' "`theNextLabel'" "'
+			}
+
+			// Add missing values if requested
+			if `"`missingvalues'"' != "" {
+				foreach theValueLabel in `theValueLabels' {
+					local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `missingvalues' "'
+				}
 			}
 
 	// Back to original dataset to apply changes from codebook
