@@ -9,7 +9,7 @@ qui {
 
 	preserve
 
-	syntax , surveyform(string) report(string) [statalanguage(string)]
+	syntax , Surveyform(string) Report(string) [STATAlanguage(string)]
 
 
 	/***********************************************

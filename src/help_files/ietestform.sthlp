@@ -14,20 +14,20 @@ help for {hi:ietesform}
 
 {phang2}
 {cmdab:ietestform}
-, {cmdab:surveyform(}{it:"/path/to/survey.xlsx"}{cmd:)} /// {break}
-{cmdab:report(}{it:"/path/to/report.csv"}{cmd:)} /// {break}
-[{cmdab:statalanguage(}{it:column_name}{cmd:)}]
+, {cmdab:s:urveyform(}{it:"/path/to/survey.xlsx"}{cmd:)} /// {break}
+{cmdab:r:eport(}{it:"/path/to/report.csv"}{cmd:)} /// {break}
+[{cmdab:stata:language(}{it:column_name}{cmd:)}]
 
 {marker opts}{...}
 {synoptset 28}{...}
 {synopthdr:options}
 {synoptline}
 {phang}{it:Required options}{p_end}
-{synopt :{cmdab:surveyform()}}Specify the filepath to the file with the SurveyCTO form definition.{p_end}
-{synopt :{cmdab:report()}}Specify the filepath to the .csv report you want to create listing all issues found.{p_end}
+{synopt :{cmdab:s:urveyform()}}Specify the filepath to the file with the SurveyCTO form definition.{p_end}
+{synopt :{cmdab:r:eport()}}Specify the filepath to the .csv report you want to create listing all issues found.{p_end}
 
 {phang}{it:Optional options}{p_end}
-{synopt :{cmdab:statalanguage()}}Specify the name of the column with Stata labels in the form definition (if it is {it:not} "label:stata").{p_end}
+{synopt :{cmdab:stata:language()}}Specify the name of the column with Stata labels in the form definition (if it is {it:not} "label:stata").{p_end}
 {synoptline}
 
 {title:Description}
