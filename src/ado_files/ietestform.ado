@@ -204,8 +204,7 @@ qui {
 
 		local error_msg "There are non numeric values in the [`valuevar'] column of the choice sheet"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
-			wikifragment("Value.2FName_Numeric")
+		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Value.2FName_Numeric")
 
 	}
 	else if _rc != 0 {
