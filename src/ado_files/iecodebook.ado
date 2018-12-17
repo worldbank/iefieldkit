@@ -147,7 +147,7 @@ qui {
 			save `savedta' , replace
 	}
 
-	// Create XLSX file with all current/remaining variable names and labels * use SurveyCTO syntax for sheet names and column names
+	// Create XLSX file with all current/remaining variable names and labels; use SurveyCTO syntax for sheet names and column names
 	preserve
 
 		// Record dataset info
@@ -160,10 +160,12 @@ qui {
 				local theVariable 	= "`var'"
 				local theLabel		: var label `var'
 				local theChoices	: val label `var'
+				local theType		: type `var'
 
-				local allVariables 	`"`allVariables' "`theVariable'""'
-				local allLabels    	`"`allLabels'   "`theLabel'""'
-				local allChoices 	`"`allChoices'   "`theChoices'""'
+				local allVariables 	`"`allVariables' 	"`theVariable'"	"'
+				local allLabels    	`"`allLabels'  		"`theLabel'"	"'
+				local allChoices 	`"`allChoices'   	"`theChoices'"	"'
+				local allTypes	 	`"`allTypes'   		"`theType'"		"'
 			}
 
 		// Write to new dataset
@@ -186,6 +188,8 @@ qui {
 				label var name`template' "name`template_colon'"
 			gen label`template' = ""
 				label var label`template' "label`template_colon'"
+			gen type`template' = ""
+				label var type`template' "type`template_colon'"
 			gen choices`template' = ""
 				label var choices`template' "choices`template_colon'"
 			if `TEMPLATE' gen recode`template' = ""
@@ -195,10 +199,12 @@ qui {
 				local theVariable 	: word `i' of `allVariables'
 				local theLabel		: word `i' of `allLabels'
 				local theChoices	: word `i' of `allChoices'
+				local theType		: word `i' of `allTypes'
 
 				replace name`template' 		= `"`theVariable'"' 	in `=`i'`templateN''
 				replace label`template' 	= `"`theLabel'"' 		in `=`i'`templateN''
-				replace choices`template' 	= `"`theChoices'"' 	in `=`i'`templateN''
+				replace type`template' 		= `"`theType'"' 		in `=`i'`templateN''
+				replace choices`template' 	= `"`theChoices'"' 		in `=`i'`templateN''
 			}
 
 		// Export variable information to "survey" sheet
