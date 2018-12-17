@@ -400,8 +400,19 @@ end
 cap program drop iecodebook_append
 	program 	 iecodebook_append
 
-	syntax [anything] [using] , surveys(string asis) [template]
+	syntax [anything] [using] , surveys(string asis) [template] [noDROP]
 qui {
+
+	// Optional no-drop
+	if "`drop'" == "" {
+		local drop "drop"
+	}
+	else {
+		di as err "You have turned off the [drop] option, which means you are forcing all variables to be appended even if you did not manually harmonize them."
+		di as err "Make sure to check the resulting dataset carefully. Forcibly appending data, especially of different types, may result in loss of information."
+		local drop ""
+	}
+
 	// Final dataset setup
 
 		clear
@@ -436,7 +447,7 @@ qui {
 			local ++x
 			local survey : word `x' of `surveys'
 			use `dataset' , clear
-			iecodebook apply `using' , survey(`survey') drop
+			iecodebook apply `using' , survey(`survey') `drop'
 
 			gen survey = `x'
 			tempfile next_data

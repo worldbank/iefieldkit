@@ -6,7 +6,7 @@ help for {hi:iecodebook}
 
 {title:Title}
 
-{p}{cmdab:iecodebook} {hline 2} imports or exports dataset definitions (codebooks) written in Excel files. {p_end}
+{p}{cmdab:iecodebook} {hline 2} performs common data cleaning tasks using dataset definitions (codebooks) written in Excel files. {p_end}
 
 {title:Functions}
 
@@ -52,7 +52,7 @@ The default behavior is to retain "unselected" variables. Alternatively, to drop
 {p 2 4}{cmdab:iecodebook append} /// {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
 {help using} {it:"/path/to/codebook.xlsx"} /// {break}
-, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}{p_end}
+, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} [{bf:nodrop}]{p_end}
 {break}
 {synoptset}{...}
 {marker Options}{...}
@@ -61,6 +61,11 @@ The default behavior is to retain "unselected" variables. Alternatively, to drop
 {synopt:{opt surveys()}}{bf:This option is always required.} When creating a template {it:or} reading a codebook from {it:"/path/to/codebook.xlsx"}, {cmdab:iecodebook} will use this list of names
 to identify each survey in the codebook. These should be exactly one word for each survey, and they must come in the same order as the filepaths.
 When importing, this will also be used to create a variable identifying the source of each observation.{p_end}
+{synopt:{opt nodrop}}{bf:Specifying this option will keep all variables from all datasets. Use carefully!}
+Forcibly appending data, especially of different types, can result in loss of information.
+For example, appending a same-named string variable to a numeric variable may cause data deletion.
+(This is common when one dataset has all missing values for a given variable.)
+By default, {cmdab:iecodebook append} will {bf:drop} all variables without a new name explicitly written in the codebook to signify manual review for harmonization.{p_end}
 {synoptline}
 
 {p}{it:Exporting a full codebook of the current data:}{p_end}
