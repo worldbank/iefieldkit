@@ -293,7 +293,7 @@ qui {
 	use `allData' , clear
 	// Success message
 	if "`template'" == "" local template "current"
-	if `c(N)' > 1 di as err `"Codebook for `template' data created `using'!"'
+	if `c(N)' > 1 di as err `"Codebook for `template' data created `using'"'
 
 } // end qui
 end
@@ -317,6 +317,8 @@ qui {
 				set obs 1
 				gen survey = 0
 					label var survey "(Ignore this placeholder, but do not delete it. Thanks!)"
+					label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
+					label val survey yesno
 				iecodebook export `using'
 			restore
 		// Append current dataset
@@ -332,7 +334,7 @@ qui {
 		// Loop over survey sheet and accumulate rename, relabel, recode, vallab
 		import excel `using' , clear first sheet(survey) allstring
 		count
-		forvalues i = 1/`r(N)' {
+		forvalues i = 2/`r(N)' {
 			local theName		= name`survey'[`i']
 	    	local theRename 	= name[`i']
 			local theLabel		= label[`i']
@@ -388,9 +390,6 @@ qui {
 				cap `change'
 				if 		_rc == 181 			 	di as err `"Variable `: word 3 of `change'' is a string and cannot have a value label."'
 				else if _rc == 111 			 	di as err `"Variable `: word 3 of `change'' was not found."'
-				// Do nothing on survey variable - TODO: stop the survey variable being implemented on a single dataset?
-				else if "`=lower("`type'")'" == "labels" & `"`change'"' == `"label var  "(Ignore this placeholder, but do not delete it. Thanks!)" "' {
-					}
 				// Generic error message
 				else if _rc != 0 & _rc != 100 	di as err `"One of your `=lower("`type'")' failed: check `change' in the codebook."'
 			}
@@ -405,7 +404,7 @@ qui {
 		}
 
 	// Success message
-	di as err `"Applied codebook `survey' `using'!"'
+	di as err `"Applied codebook to `survey' data `using'"'
 
 } // end qui
 end
@@ -440,7 +439,9 @@ qui {
 			clear
 			set obs 1
 			gen survey = 0
-				label var survey "Survey"
+				label var survey "(Ignore this placeholder, but do not delete it. Thanks!)"
+				label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
+				label val survey yesno
 			iecodebook export `using'
 		restore
 		// append one codebook per survey
@@ -461,6 +462,7 @@ qui {
 		use `dataset' , clear
 		iecodebook apply `using' , survey(`survey') `drop' `options'
 
+
 		gen survey = `x'
 		tempfile next_data
 			save `next_data' , replace
@@ -472,13 +474,13 @@ qui {
 	}
 
 	// Success message
-	di as err `"Applied codebook `using' to `anything'! Check your data carefully!"'
+	di as err `"..."'
+	di as err `"Applied codebook `using' to `anything' – check your data carefully!"'
 
 	// Final codebook
 	local using = subinstr(`"`using'"',".xlsx","_appended.xlsx",.)
 		iecodebook export `using'
 		use `final_data' , clear
-		di as err `"Created appended codebook `using'!"'
 
 } // end qui
 end

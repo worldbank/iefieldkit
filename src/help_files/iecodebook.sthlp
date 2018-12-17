@@ -58,7 +58,8 @@ and optionally produces an export version of the dataset with only variables use
 
 {p 2}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
 
-{p 2}{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"}, [{bf:drop}] [{opt miss:ingvalues(# "label" [# "label" ...])}]{p_end}
+{p 2 4 }{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"} /// {break}
+, [{bf:drop}] [{opt miss:ingvalues(# "label" [# "label" ...])}]{p_end}
 
 {dlgtab 0:Append: Setting up and using a codebook to harmonize and append multiple datasets}
 
@@ -85,7 +86,7 @@ and optionally produces an export version of the dataset with only variables use
 {marker Options}{...}
 {synopthdr:Apply Options}
 {synoptline}
-{synopt:{opt drop}}When applying a codebook from {it:"/path/to/codebook.xlsx"}, requests that {cmdab:iecodebook} drop all variables which are not given "final" names in the codebook.
+{synopt:{opt drop}}Requests that {cmdab:iecodebook} drop all variables which have no entry in the "name" column in the codebook.
 The default behavior is to retain all variables. Alternatively, to drop variables one-by-one, write "drop" in the "name" column of the codebook.{p_end}
 {synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every coded answer.{p_end}
@@ -121,7 +122,7 @@ and saves an identically named .dta file at the location specified in {it:"/path
 
 {dlgtab 0:Apply: Create and prepare a codebook to clean current data}
 
-{p 2 4}{it:Step 1: Use the {bf:template} function to create a codebook template for the current dataset:}{p_end}
+{p 2 4}{it:Step 1: Use the {bf:template} function to create a codebook template for the current dataset.}{p_end}
     {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
     {stata iecodebook template using "codebook.xlsx":iecodebook template using "codebook.xlsx"}
 
@@ -141,7 +142,7 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}Car type{col 60}origin{col 80}(0=1)(1=0){col 95}{c |}
 {col 3}{c BLC}{hline 91}{c BRC}
 
-{p 2}{it:Step 3: Use the "choices" sheet to define variable labels according to the following syntax:}{p_end}
+{p 2}{it:Step 3: Use the "choices" sheet to define variable labels according to the following syntax.}{p_end}
 {col 3}{c TLC}{hline 27}{c TRC}
 {col 3}{c |}{col 4} list_name{col 15} value{col 22} label{col 31}{c |}
 {col 3}{c LT}{hline 27}{c RT}
@@ -155,7 +156,7 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c |}{col 4} {it:on the "survey" sheet.}{col 31}{c |}
 {col 3}{c BLC}{hline 27}{c BRC}
 
-{p 2}{it:Step 4: Use the {bf:apply} function to read the completed codebook:}{p_end}
+{p 2}{it:Step 4: Use the {bf:apply} function to read the completed codebook.}{p_end}
 {p 4 4}{it:Note that the correct command is created by replacing}
 	{break}{it:"template" with "apply" after creating the template.}{p_end}
 {break}
@@ -165,16 +166,17 @@ and saves an identically named .dta file at the location specified in {it:"/path
 
 {dlgtab 0:Append: Harmonize and combine multiple datasets using a codebook}
 
-{p 2}{it:Step 0: Create two dummy datasets for testing iecodebook append}{p_end}
+{p 2}{it:Step 0: Create two dummy datasets for testing iecodebook append.}{p_end}
     {stata sysuse auto.dta , clear:sysuse auto.dta , clear}
-    {stata save data1.dta , replace:save data1.dta , replace}
+    	{stata save data1.dta , replace:save data1.dta , replace}
     {stata rename (price foreign mpg)(cost origin car_mpg):rename (price foreign mpg)(cost origin car_mpg)}
-    {stata save data2.dta , replace:save data2.dta , replace}
+    	{stata save data2.dta , replace:save data2.dta , replace}
 
-{p 2 4}{it:Step 1: Create a harmonization template for iecodebook append}{p_end}
-{p 4 6}{inp:iecodebook template}       ///
-{break}{inp:"data1.dta" "data2.dta"}   /// {it: Note that this}
-{break}{inp: using "codebook.xlsx"}    /// {it: clears current data.}
+{p 2 4}{it:Step 1: Create a harmonization template for iecodebook append.}{break}{it:Note that this clears current data.}{p_end}
+{break}
+{p 4 6}{inp:iecodebook template}
+{break}{inp:"data1.dta" "data2.dta"}
+{break}{inp: using "codebook.xlsx"}
 {break}{inp: , surveys(First Second)}
 {break}{stata iecodebook template "data1.dta" "data2.dta" using "codebook.xlsx" , surveys(First Second):(Run)}
 {p_end}
@@ -194,7 +196,7 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}(0=1)(1=0){col 60}origin{col 80}(0=1)(1=0){col 95}{c |}<- {it:commands}
 {col 3}{c BLC}{hline 91}{c BRC}
 
-{p 2}{it:Step 3: Read and apply the harmonization template:}{p_end}
+{p 2}{it:Step 3: Read and apply the harmonization template.}{p_end}
 {p 4 4}{it:Note that the correct command is created by replacing}
 	{break}{it:"template" with "append" after creating the template.}{p_end}
 {break}
