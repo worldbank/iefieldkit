@@ -28,6 +28,9 @@ qui {
 		* folder exists
 		* file type is cvs or file type where we will add csv to name
 
+	*Tempfile that will be used to write the report
+	tempfile report_tempfile
+
 	/***********************************************
 		Get form meta data and set up report file
 	***********************************************/
@@ -41,7 +44,6 @@ qui {
     local meta_title	= "`r(form_title)'"
 
 	*Setup the report tempfile where all results from all tests will be written
-	tempfile report_tempfile
 	noi report_file setup , report_tempfile("`report_tempfile'") ///
 		metav("`meta_v'") metaid("`meta_id'") metatitle("`meta_title'") metafile("`surveyform'")
 
@@ -100,18 +102,16 @@ capture program drop importsettingsheet
 
 qui {
 
-	//noi di "importsettingsheet command ok"
 	syntax , form(string)
-	//noi di "importsettingsheet syntax ok"
 
-	*Import the choices sheet
-	import excel "`form'", sheet("settings") clear first
-
+	*Import the settings sheet - This is the first time the file is imported so add one layer of custom test
+	cap import excel "`form'", sheet("settings") clear first
 	if _rc == 603 {
-		noi di as error  "{phang}The file `form' cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an version of Excel.{p_end}"
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an version of Excel.{p_end}"
 		error 603
 	}
-	else if _rc {
+	else if _rc != 0 {
+		*Run the command without cap and display error message for any other error
 		import excel "`form'", sheet("settings") clear first
 	}
 
@@ -136,9 +136,8 @@ capture program drop importchoicesheet
 		program 	 importchoicesheet , rclass
 
 qui {
-	//noi di "importchoicesheet command ok"
+
 	syntax , form(string) [statalanguage(string) report_tempfile(string)]
-	//noi di "importchoicesheet syntax ok"
 
 	/***********************************************
 		Load choices sheet from form
@@ -172,10 +171,7 @@ qui {
 		error 688
 	}
 
-	*Create a list of the variables with labels (multiple in case of multiple languages)
-	foreach var of local choicesheetvars {
-		if substr("`var'", 1, 5) == "label" local labelvars "`labelvars' `var'"
-	}
+
 
 
 	/***********************************************
@@ -185,14 +181,34 @@ qui {
 
 	*Drop rows with all values missing
 	egen 	countmissing = rownonmiss(_all), strok
+
+	** Generate a variable with row number. This must be done after the egen code
+	*  above as the variable row will have value for all rows, and it must be done
+	*  before the drop code below as otherwise the row number will not correspond
+	*  to the row in the excel file.
+	gen row = _n
+	order row
+
+	*After the row number has been created to be identical to form file, then drop empty rows
 	drop if countmissing == 0
 
 	*Get a list with all the list names
 	levelsof list_name, clean local("all_list_names")
 
-	*Count number of non-missing
-	egen 	labelmiss	 = rowmiss(`labelvars')
-	egen 	labelnonmiss = rownonmiss(`labelvars'), strok
+	*Create a list of the variables with labels (multiple in case of multiple languages)
+	foreach var of local choicesheetvars {
+		if substr("`var'", 1, 5) == "label" local labelvars "`labelvars' `var'"
+	}
+	local num_label_vars : word count `labelvars'
+
+	*Create dummies for missing status in the label vars
+	egen 	label_count_miss	 = rowmiss(`labelvars')
+	egen 	label_count_non_miss = rownonmiss(`labelvars'), strok
+
+	gen label_all_miss 		= (label_count_non_miss == 0)
+	gen label_some_miss 	= (label_count_miss > 0)
+	gen label_all_non_miss 	= (label_count_miss == 0)
+	gen label_some_non_miss = (label_count_non_miss > 0)
 
 	/***********************************************
 		TEST - Numeric name
@@ -206,11 +222,12 @@ qui {
 	*Test if error code is 7, other codes should return other error message
 	if _rc == 7 {
 
-		*TODO: Find a way to list the non-numeric values identified
+		*Creates a dummy for all obs where value/name var is not numeric
+		gen non_numeric = missing(real(`valuevar'))
 
 		local error_msg "There are non numeric values in the [`valuevar'] column of the choice sheet"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Value.2FName_Numeric")
+		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Value.2FName_Numeric") table("list row list_name `valuevar' if non_numeric != 0")
 
 	}
 	else if _rc != 0 {
@@ -229,30 +246,34 @@ qui {
 	*Test for duplicates and return error if not all combinations are unique
 	duplicates tag list_name `valuevar', gen(list_item_dup)
 
-	replace list_item_dup = 0 if missing(`valuevar')	//If value var is missing, it is not a duplicate, it will be tested for later.
+	*Don't treat missing as duplicates, it will be tested for later.
+	replace list_item_dup = 0 if missing(`valuevar')
 
+	*Add item to report if any duplicates were found
 	count if list_item_dup != 0
 	if `r(N)' > 0 {
 
 		local error_msg "There are duplicates in the following list_names:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Duplicated_List_Code") table("list list_name `valuevar' if list_item_dup != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Duplicated_List_Code") table("list row list_name `valuevar' if list_item_dup != 0")
 	}
 
 	/***********************************************
 		TEST - Value labels with no values
 		Test that all non-missing values in the label
-		column have a name/value
+		column have a name/value.
 	***********************************************/
 
-	*Test for duplicates and return error if not all combinations are unique
-	gen lable_with_missvalue = (missing(`valuevar') & labelnonmiss != 0)
+	*Test that all rows with a label in any language as a value in the value var
+	gen lable_with_missvalue = (missing(`valuevar') & label_some_non_miss == 1)
+
+	*Add item to report for any row with missing value in the value/name var
 	count if lable_with_missvalue != 0
 	if `r(N)' > 0 {
 
-		local error_msg "There non-missing values in the [label] column of the choice sheet for rows that have missing value in the [`valuevar'] column:"
+		local error_msg "There is no value in the [`valuevar'] column for some choice list items that have non-missing values in the [`labelvars'] column(s):"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list list_name `valuevar' `labelvars' if lable_with_missvalue != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list row list_name `valuevar' `labelvars' if lable_with_missvalue != 0")
 	}
 
 	/***********************************************
@@ -260,14 +281,16 @@ qui {
 		Test that all values/names have a label
 	***********************************************/
 
-	*Test for duplicates and return error if not all combinations are unique
-	gen unlabelled = (!missing(`valuevar') & labelnonmiss == 0)
+	*Test that rows with non-missing value/name values have label in all label languages
+	gen unlabelled = (!missing(`valuevar') & label_some_miss == 1)
+
+	*Add item to report for any row with missing label in the label vars
 	count if unlabelled != 0
 	if `r(N)' > 0 {
 
 		local error_msg "There non-missing values in the [`valuevar'] column of the choice sheet without a label in the [label] colum:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list list_name `valuevar' `labelvars' if unlabelled != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list row list_name `valuevar' `labelvars' if unlabelled != 0")
 	}
 
 	/***********************************************
@@ -737,7 +760,6 @@ qui {
 			local fieldFound	= trim(regexs(0))
 
 			*Display error
-
 			local error_msg "There is a potential name conflict between field [`field'] and [`fieldFound'] as `field' is in a repeat group. When variables in repeat groups are imported to Stata they will be given the suffix `field'_1, `field'_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is."
 
 			noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Repeat_Group_Field_Name_Length") message("`error_msg'")
@@ -782,9 +804,11 @@ qui {
 
 			*The user specified stata label language name does not exist. Throw error
 			if "`statalanguage'" != "" {
+
 				noi di as error "{phang}The label langauge specified in {inp:statalanguage(`statalanguage')} does not exist in the survey sheet. A column in the survey sheet must have a name that is [label:`statalanguage'].{p_end}"
 				noi di ""
 				error 198
+
 			}
 			*The default stata label language name does not exist. Throw warning (error for now)
 			else {
@@ -812,7 +836,6 @@ qui {
 			*Report if a label is too long and will be truncated
 			cap assert longlabel == 0
 			if _rc {
-
 
 				local error_msg "These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the variables in the data set makes sense to a human reader. The following labels should be shortened:"
 
@@ -885,19 +908,20 @@ qui {
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' ///
-								"----------------------------------------------------------------------" _n ///
-								`""`message'""' _n
+				"----------------------------------------------------------------------" _n ///
+				`""`message'""' _n
 			file close 		`report_handler'
-      
-      *Add table if applicable
+
+			*Add table if applicable
 			if "`table'" != "" noi report_table `table' , report_tempfile("`report_tempfile'")
-      
-      *Add link to wiki at the bottom
+
+			*Add link to wiki at the bottom
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write append
-			file write  	`report_handler' _n ///
-								"Read more about this test and why this is an error or does not follow the best practices we recommend in https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n
-			file close 		`report_handler'      
+			file write  	`report_handler' ///
+				_n ///
+				"Read more about this test and why this is an error or does not follow the best practices we recommend in https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n
+			file close 		`report_handler'
 		}
 
 		*Write final file to disk
