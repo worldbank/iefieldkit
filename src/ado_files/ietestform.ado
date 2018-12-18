@@ -115,18 +115,17 @@ qui {
 		import excel "`form'", sheet("settings") clear first
 	}
 
+	*test that the column version exist
+	cap confirm variable form_title form_id version
+	if _rc != 0 {
+		noi di as error  "{phang}The three variables [form_title form_id version] were not found in the settings sheet of the form. Make sure that your form was already tested at SurveyCTO's server. If you are using non-SurveyCTO ODK then the variable [version] is not requried. To make this command work in that case, simply create a new column in the settings sheet, give it the name {it:version} on first row, and the value 1 on the second row.{p_end}"
+		confirm variable form_title form_id version
+	}
+
 	*Return the settings in return locals
 	return local form_title = form_title[1]
 	return local form_id 	= form_id[1]
-
-	*test that the column version exist
-	cap confirm variable Version
-	if _rc ==  {
-		return local version 	= version[1]
-	}
-	else {
-		return local version "No version column in settings sheet"
-	}
+	return local version 	= version[1]
 
 }
 end
