@@ -344,9 +344,8 @@ qui {
 			if "`theName'" 	!= "" {
 				// Drop if requested
 				if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == "drop") local allDrops "`allDrops' `theName'"
-
 				// Otherwise process requested changes as long as there is something there
-				if "`theName'" != "" & "`theRename'" != "drop" & !("`drop'" != "" & "`theRename'" == "") {
+				else {
 												local allRenames1 	= `"`allRenames1' `theName'"'
 												local allRenames2 	= `"`allRenames2' `theRename'"'
 					if "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' `"label var `theName' "`theLabel'" "' "'
