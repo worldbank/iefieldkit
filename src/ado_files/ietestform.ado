@@ -9,8 +9,7 @@ qui {
 
 	preserve
 
-	syntax , surveyform(string) report(string) [statalanguage(string)]
-
+	syntax , Surveyform(string) Report(string) [STATAlanguage(string)]
 
 	/***********************************************
 		Test input
@@ -856,8 +855,6 @@ qui {
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write replace
 			file write  	`report_handler' ///
-				"######################################################################" _n ///
-				"######################################################################" _n ///
 				_n ///
 				"This report was created by user `user' on `date' using the Stata command ietestform" _n ///
 				_n ///
@@ -869,29 +866,31 @@ qui {
 				",Form Title,`metatitle'" _n ///
 				",Form Version,`metav'" _n ///
 				",Form File,`metafile'" _n ///
-				_n ///
-				"######################################################################" _n ///
-				"######################################################################" _n ///
-				_n
+				"----------------------------------------------------------------------" _n
+
 			file close 		`report_handler'
 		}
 
 		*Add item to report
 		else if "`task'" == "add" {
 
-			*Add item to report
+			*Add seperator and error message
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' ///
-								"######################################################################" _n ///
-								"Read more about this test and why this is an error or does not follow the best practices we recommend in https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n ///
-								_n ///
-								`""`message'""' _n ///
-								_n ///
-
+								"----------------------------------------------------------------------" _n ///
+								`""`message'""' _n
 			file close 		`report_handler'
-
+      
+      *Add table if applicable
 			if "`table'" != "" noi report_table `table' , report_tempfile("`report_tempfile'")
+      
+      *Add link to wiki at the bottom
+			cap file close 	`report_handler'
+			file open  		`report_handler' using "`report_tempfile'", text write append
+			file write  	`report_handler' _n ///
+								"Read more about this test and why this is an error or does not follow the best practices we recommend in https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n
+			file close 		`report_handler'      
 		}
 
 		*Write final file to disk
@@ -902,8 +901,8 @@ qui {
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' ///
 				_n ///
-				"######################################################################" _n ///
-				"######################################################################" _n ///
+				"----------------------------------------------------------------------" _n ///
+				"----------------------------------------------------------------------" _n ///
 				_n ///
 				"This is the end of the report." _n
 			file close 		`report_handler'
