@@ -341,12 +341,19 @@ qui {
 			local theChoices	= choices[`i']
 			local theRecode		= recode`survey'[`i']
 
-			if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == "drop") local allDrops "`allDrops' `theName'"
-			if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames1 	= `"`allRenames1' `theName'"'
-			if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames2 	= `"`allRenames2' `theRename'"'
-			if "`theRename'" != "" & "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' `"label var `theName' "`theLabel'" "' "'
-			if "`theRename'" != "" & "`theChoices'" != "" 	local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
-			if "`theRename'" != "" & "`theRecode'" 	!= "" 	local allRecodes 	= `"`allRecodes' "recode `theName' `theRecode'""'
+			if "`theName'" 	!= "" {
+				// Drop if requested
+				if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == "drop") local allDrops "`allDrops' `theName'"
+
+				// Otherwise process replacements
+				if "`theRename'" != "" & "`theRename'" != "drop" {
+												local allRenames1 	= `"`allRenames1' `theName'"'
+												local allRenames2 	= `"`allRenames2' `theRename'"'
+					if "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' `"label var `theName' "`theLabel'" "' "'
+					if "`theChoices'" 	!= "" 	local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
+					if "`theRecode'" 	!= "" 	local allRecodes 	= `"`allRecodes' "recode `theName' `theRecode'""'
+				}
+			}
 		}
 
 		// Loop over choices sheet and accumulate vallab definitions
