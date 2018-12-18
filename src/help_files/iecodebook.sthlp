@@ -139,10 +139,10 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c |}{col 4} survey{col 12}{it:(Ignore this placeholder, but do not delete it.)}{col 45}{col 60} {col 80} {col 95}{c |}
 {col 3}{c |}{col 4} {col 95}{c |}
 {col 3}{c |}{col 4} car{col 12}Name{col 22}{col 31}make{col 45}Make and Model{col 60} {col 80} {col 95}{c |}
-{col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}Car type{col 60}origin{col 80}(0=1)(1=0){col 95}{c |}
-{col 3}{c |}{col 4}  |{col 12}  |{col 22}   |{col 31}   {col 45}{col 60} {col 80}   {col 95}{c |}
 {col 3}{c |}{col 4}  |{col 12}  |{col 22}{it:value}{col 31}{col 45}{col 60} {col 80}{it:recode}{col 95}{c |}
 {col 3}{c |}{col 4}{it:rename}{col 12}{it:label}{col 22}{it:labels}{col 31}{it:Current names, labels, types, & value labels}{col 45}{col 60} {col 80}{it:commands}{col 95}{c |}
+{col 3}{c |}{col 4}  |{col 12}  |{col 22}  |{col 31}{col 45}{col 60} {col 80}  |{col 95}{c |}
+{col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}Car type{col 60}origin{col 80}(0=1)(1=0){col 95}{c |}
 {col 3}{c BLC}{hline 91}{c BRC}
 
 {p 2}{it:Step 3: Use the "choices" sheet to define variable labels according to the following syntax.}{p_end}
