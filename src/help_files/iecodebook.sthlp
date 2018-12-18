@@ -20,23 +20,21 @@ help for {hi:iecodebook}
 
 {p 2 4}{cmdab:iecodebook} is designed to automate repetitive data cleaning tasks in two situations:
 {bf:apply}, where a large number of variables need to have arbitrary {help rename}, {help recode}, or {help label} commands applied to them;
-and {bf:append}, when two or more datasets need to be harmonized to have the same variable names, labels, and value labels ("choices")
+and {bf:append}, where two or more datasets need to be harmonized to have the same variable names, labels, and value labels ("choices")
 in order to be appended together.{p_end}
 
 {p 2 4}The purpose of {cmdab:iecodebook} is therefore to (1) make the coding much more compact
-for an arbitrary number of commands, usually to a single line of code; and (2) to leave a human-readable record of the adjustments
+for an arbitrary number of commands, usually to a single line of code in the case of {bf:apply}; and (2) to leave a human-readable record of the adjustments
 that were made and how they correspond across datasets in the case of {bf:append}. {cmdab:iecodebook} also provides an {bf:export} utility so that a human-readable record of the variables and their labels in a dataset
 can be instantly created at any time.{p_end}
 
 {p 2 4}For the {bf:apply} and {bf:append} syntaxes, {cmdab:iecodebook} provides a {bf:template} command
-that will correctly set up a codebook or harmonization template
-designed to be both human- and machine-readable.
-In both cases, you will need to manually complete the template
+that will correctly set up a) a codebook in the case of {bf:apply} or b) a harmonization template in the case of {bf:append}. In both cases, you will need to manually complete the template
 in order to tell the command the exact adjustments that you want to be made in the dataset.{p_end}
 
 {title:Functions}
 
-{p 2 4}{cmdab:iecodebook template}{break} creates an Excel template that describes the current or targeted dataset(s),
+{p 2 4}{cmdab:iecodebook template}{break} creates an Excel codebook template that describes the current or targeted dataset(s),
 with empty columns for you to specify the changes or harmonizations for the other {bf:iecodebook} commands.{p_end}
 {break}
 {p 2 4}{cmdab:iecodebook apply}{break} reads an Excel codebook that specifies
@@ -61,6 +59,8 @@ and optionally produces an export version of the dataset with only variables use
 {p 2 4 }{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"} /// {break}
 , [{bf:drop}] [{opt miss:ingvalues(# "label" [# "label" ...])}]{p_end}
 
+{p 2 4 } {it: Note: For }{bf:apply}{it: command, you need to have the dataset that you want to modify open in current stata session.}{p_end}
+
 {dlgtab 0:Append: Setting up and using a codebook to harmonize and append multiple datasets}
 
 {p 2 4}{cmdab:iecodebook template} /// {break}
@@ -73,6 +73,9 @@ and optionally produces an export version of the dataset with only variables use
 {help using} {it:"/path/to/codebook.xlsx"} /// {break}
 , {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} /// {break}
 [{opt miss:ingvalues(# "label" [# "label" ...])}] [{bf:nodrop}]{p_end}
+
+{p 2 4} {it: Note: survey names to be specified in }{bf:surveys()}{it: must be a one word. Names must have no space, quotation marks or dash.}{p_end}
+
 
 {dlgtab 0:Export: Creating a full codebook of the current data}
 
@@ -136,10 +139,10 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c |}{col 4} survey{col 12}{it:(Ignore this placeholder, but do not delete it.)}{col 45}{col 60} {col 80} {col 95}{c |}
 {col 3}{c |}{col 4} {col 95}{c |}
 {col 3}{c |}{col 4} car{col 12}Name{col 22}{col 31}make{col 45}Make and Model{col 60} {col 80} {col 95}{c |}
+{col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}Car type{col 60}origin{col 80}(0=1)(1=0){col 95}{c |}
+{col 3}{c |}{col 4}  |{col 12}  |{col 22}   |{col 31}   {col 45}{col 60} {col 80}   {col 95}{c |}
 {col 3}{c |}{col 4}  |{col 12}  |{col 22}{it:value}{col 31}{col 45}{col 60} {col 80}{it:recode}{col 95}{c |}
 {col 3}{c |}{col 4}{it:rename}{col 12}{it:label}{col 22}{it:labels}{col 31}{it:Current names, labels, types, & value labels}{col 45}{col 60} {col 80}{it:commands}{col 95}{c |}
-{col 3}{c |}{col 4}  |{col 12}  |{col 22}  |{col 31}{col 45}{col 60} {col 80}  |{col 95}{c |}
-{col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}Car type{col 60}origin{col 80}(0=1)(1=0){col 95}{c |}
 {col 3}{c BLC}{hline 91}{c BRC}
 
 {p 2}{it:Step 3: Use the "choices" sheet to define variable labels according to the following syntax.}{p_end}
