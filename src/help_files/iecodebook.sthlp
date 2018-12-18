@@ -59,7 +59,7 @@ and optionally produces an export version of the dataset with only variables use
 {p 2 4 }{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"} /// {break}
 , [{bf:drop}] [{opt miss:ingvalues(# "label" [# "label" ...])}]{p_end}
 
-{p 2 4 } {it: Note: For }{bf:apply}{it: command, you need to have the dataset that you want to modify open in current stata session.}{p_end}
+{p 2 4 } {it: Note: For }{bf:apply}{it: command, you need to have the dataset that you want to modify open in current Stata session.}{p_end}
 
 {dlgtab 0:Append: Setting up and using a codebook to harmonize and append multiple datasets}
 
@@ -74,7 +74,7 @@ and optionally produces an export version of the dataset with only variables use
 , {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} /// {break}
 [{opt miss:ingvalues(# "label" [# "label" ...])}] [{bf:nodrop}]{p_end}
 
-{p 2 4} {it: Note: survey names to be specified in }{bf:surveys()}{it: must be a one word. Names must have no space, quotation marks or dash.}{p_end}
+{p 2 4} {it: Note: survey names to be specified in }{bf:surveys()}{it: must be one word. Names must have no space, quotation marks or dash.}{p_end}
 
 
 {dlgtab 0:Export: Creating a full codebook of the current data}
