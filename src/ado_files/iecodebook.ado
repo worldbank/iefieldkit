@@ -152,7 +152,7 @@ qui {
 		restore
 			if "`theKeepList'" == "" {
 				di as err "You are dropping all variables. This is not allowed. {bf:iecodebook} will now exit."
-				exit
+				error 198
 			}
 			keep `theKeepList' // Keep only variables mentioned in the dofiles
 			compress
@@ -233,7 +233,7 @@ qui {
 		}
 		if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
 		if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
-		if `rc' != 0 exit
+		if `rc' != 0 error 603
 	restore
 
 	// Create value labels sheet
@@ -287,7 +287,7 @@ qui {
 		}
 		if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
 		if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
-		if `rc' != 0 exit
+		if `rc' != 0 error 603
 
 	// Reload original data
 	use `allData' , clear
@@ -333,12 +333,17 @@ qui {
 	import excel `using' , clear first sheet(survey) allstring
 
 		// Check for duplicate names and return informative error
-		levelsof name`survey' , local(theNameList)
+		local theNameList ""
+		count
+		forvalues i = 2/`r(N)' {
+			local theName = name`survey'[`i']
+			local theNameList "`theNameList' `theName'"
+		}
 		if "`: list dups theNameList'" != "" {
 			di as err "You have multiple entries for the same original variable in name:`survey'."
-			di as err "This will cause conflicts. iecodebook will now quit."
 			di as err "The duplicates are: `: list dups theNameList'"
-			exit
+			di as err "This will cause conflicts. iecodebook will now quit."
+			error 198
 		}
 
 		// Loop over survey sheet and accumulate rename, relabel, recode, vallab
@@ -415,7 +420,6 @@ qui {
 		if _rc != 0 {
 			di as err "That codebook contains a rename conflict. Please check and retry. iecodebook will exit."
 			rename (`allRenames1') (`allRenames2')
-		exit
 		}
 
 	// Success message
