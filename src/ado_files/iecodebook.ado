@@ -335,8 +335,8 @@ qui {
 		// Check for duplicate names and return informative error
 		levelsof name`survey' , local(theNameList)
 		if "`: list dups theNameList'" != "" {
-			di as err "You have multiple entries for the same original variable name."
-			di as err "This will cause conflicts' iecodebook will now quit."
+			di as err "You have multiple entries for the same original variable in name:`survey'."
+			di as err "This will cause conflicts. iecodebook will now quit."
 			di as err "The duplicates are: `: list dups theNameList'"
 			exit
 		}
@@ -353,7 +353,7 @@ qui {
 			if "`theName'" 	!= "" {
 				// Drop if requested
 				if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == "drop") local allDrops "`allDrops' `theName'"
-				// Otherwise process requested changes as long as there is something there
+				// Otherwise process requested changes as long as there is something specified
 				else {
 					if "`theRename'" 	!= ""	local allRenames1 	= `"`allRenames1' `theName'"'
 					if "`theRename'" 	!= "" 	local allRenames2 	= `"`allRenames2' `theRename'"'
