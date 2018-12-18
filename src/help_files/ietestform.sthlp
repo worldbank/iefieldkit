@@ -14,7 +14,6 @@ help for {hi:ietestform}
 
 {phang2}
 {cmdab:ietestform}
-
 , {cmdab:s:urveyform(}{it:"/path/to/surveyform.xlsx"}{cmd:)} /// {break}
 {cmdab:r:eport(}{it:"/path/to/report.csv"}{cmd:)} /// {break}
 [{cmdab:stata:language(}{it:column_name}{cmd:)}]
@@ -46,70 +45,59 @@ help for {hi:ietestform}
 
 {dlgtab 0:Survey}
 
-<<<<<< develop-ietestform
-{pstd}{cmd:Groups and repeats:} Each begin_group should have a matching end_group, and repeats should be properly structured.
+{p 2 4}{cmd:Groups and repeats close:}{break}
+Each begin_group should have a matching end_group, and repeats should be properly structured.
+{p_end}
 
-{pstd}{cmd:Long variable names:} Variable names must not be too long for Stata. This includes variables inside
-=======
-{pstd}{cmd:Numeric name/value:} test that all values in the name/value column are numeric. Having non-numeric values
-will cause conflicts when importing to Stata.
+{p 2 4}{cmd:Group and repeats have names:}{break}
+There should be no unnamed repeat or group. This is not strictly an error but it is good practice.
+{p_end}
 
-{pstd}{cmd:No unused lists:} test that all lists in the choices sheets are used at least once in the survey sheet.
+{p 2 4}{cmd:Group and repeat variable names do not conflict:}{break}
+Variable names resulting from adding repeat group suffixes must not be the same as other existing variables.
+This includes when converting from long format to wide format.
+{p_end}
 
-{pstd}{cmd:No duplicated labels:} test that there are no duplicated labels within a list_name.
+{p 2 4}{cmd:Variable names are not too long:}{break}
+Variable names must not be too long for Stata.
+This includes variables inside repeat groups whose names will become too long once suffixes are added in wide format.
+{p_end}
 
-{pstd}{cmd:Value labels with no values:} test that all non-missing entries in the label column have a non-missing value/name.
-
-{pstd}{cmd:Unlabelled values:} test that all values/names have a label.
-
-{pstd}{cmd:No duplicated name/value:} test that all combinations of list_name and name/value are unique.
-
-{pstd}{cmd:Stata language:} test that there is one column with value labels formatted for Stata.
-
-{title:Survey sheet}
-
-{pstd}{cmd:Type column:} test for not matching begin/end group/repeat.
-
-{pstd}{cmd:Long variable names:} test for variable names that are too long for Stata. This includes variables inside
->>>>>> master
-repeat groups whose names will become too long once suffixes are added in wide format.
-
-{pstd}{cmd:Group and repeat names:} There should be no unnamed repeat or group. This is not strictly an error but it is good practice.
-
-{pstd}{cmd:Stata language:} There must be one column with variable names formatted for Stata, using the multiple language support format.
-These labels should be in English, be no longer than 32 characters, and use no special characters.
-
-{pstd}{cmd:Long variable labels:} There must be one column with variable labels formatted for Stata, using the multiple language support format.
+{p 2 4}{cmd:Stata-compliant variable labels:}{break}
+There must be one column with variable labels formatted for Stata, using the multiple language support format, such as {it:label:stata}.
 These labels should be in English, be no longer than 80 characters, and use no special characters.
-
-{pstd}{cmd:Name conflict after long to wide:} Variable names resulting from adding repeat group suffixes
- must not be the same as other existing variables.
+{p_end}
 
 {dlgtab 0:Choices}
 
-{pstd}{cmd:Numeric values:} All values in the value column must be numeric. Having non-numeric values
-will cause conflicts when importing to Stata.
-
-{pstd}{cmd:No unused lists:} All lists in the choices sheets must be used at least once in the survey sheet.
-
-<<<<<< develop-ietestform
-{pstd}{cmd:No duplicated labels:} There should be no duplicated labels within a list_name.
-
-{pstd}{cmd:Value labels with no values:} All entries in the label column on the survey sheet must have at least one value and name on the choices sheet.
-
-{pstd}{cmd:Unlabelled values:} All values must have a label.
-=======
-{phang}{cmdab:surveyform(}{it:survey_filepath}{cmd:)}
-
-{phang}{cmdab:report(}{it:string}{cmd:)}
-
-{phang}{cmdab:statalanguage(}{it:string}{cmd:)}
->>>>>> master
-
-{pstd}{cmd:No duplicated name/value:} All combinations of list_name and value must be unique.
-
-{pstd}{cmd:Stata language:} There must be one column with value labels formatted for Stata.
+{p 2 4}{cmd:Stata-compliant value labels:}{break}
+There must be one column with value labels formatted for Stata, using the multiple language support format, such as {it:label:stata}.
 These labels should be in English, be no longer than 32 characters, and use no special characters.
+{p_end}
+
+{p 2 4}{cmd:All entries are unique:}{break}
+All combinations of {it:list_name} and {it:value} must be unique.
+{p_end}
+
+{p 2 4}{cmd:All values are labelled:}{break}
+All values must have a label.
+{p_end}
+
+{p 2 4}{cmd:No duplicated labels:}{break}
+There should be no duplicated labels within a {it:list_name}.
+{p_end}
+
+{p 2 4}{cmd:All values are numeric:}{break}
+All values in the {it:value} column must be numeric. Having non-numeric values will cause conflicts when importing to Stata.
+{p_end}
+
+{p 2 4}{cmd:No unused choice lists:}{break}
+All lists in the {it:choices} sheets must be used at least once in the survey sheet.
+{p_end}
+
+{p 2 4}{cmd:No undefined value labels:}{break}
+All entries in the {it:label} column on the {it:survey} sheet must have at least one value and name on the {it:choices} sheet.
+{p_end}
 
  {hline}
 
