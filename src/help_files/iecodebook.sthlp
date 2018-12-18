@@ -198,6 +198,9 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c |}{col 4}  |{col 12}  |{col 22}  |{col 31}{col 45}{col 60} {col 80}{col 95}{c |}   {it:recode}
 {col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}(0=1)(1=0){col 60}origin{col 80}(0=1)(1=0){col 95}{c |}<- {it:commands}
 {col 3}{c BLC}{hline 91}{c BRC}
+{p 2 4} {it: Note: When aligning the old variable names in the same row, move the variable names. (Rather than just copy the names and leaving the old names in the original place.) } {break}
+{it: Only move the variable names (do not move old label, type, or choice information).}{p_end}
+
 
 {p 2}{it:Step 3: Read and apply the harmonization template.}{p_end}
 {p 4 4}{it:Note that the correct command is created by replacing}
