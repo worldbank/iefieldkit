@@ -6,7 +6,8 @@ This is just a beta release. We know that there are still bugs to be resolved, o
     net install iefieldkit , from("https://raw.githubusercontent.com/worldbank/iefieldkit/master/src") replace
 ```
 
-
+If you are using a work computer where you are not permitted to make a `net` call to the internet from Stata, then you can do the following. Download the files from this repository by clicking the green _Clone or download_ button. Click the `<> code` tab if you do not see that button. Unzip the folders on your computer and change the URL in `from()` in the code above to the location of the _src_ folder where you unzipped the files on your computer.
+    
 ## introduction
 Stata commands designed for primary data collection using [SurveyCTO](https://www.surveycto.com/index.html). Some features of the command might require meta data specific to SurveyCTO, but you are of course free to try these commands on any use case. **iefieldkit** is similar to the package [ietoolkit](https://github.com/worldbank/ietoolkit) but the commands in **iefieldkit** relates only to primary data collection using SurveyCTO.
 
