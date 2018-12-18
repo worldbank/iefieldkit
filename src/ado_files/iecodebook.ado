@@ -330,9 +330,18 @@ qui {
 
 	// Apply codebook
 	preserve
+	import excel `using' , clear first sheet(survey) allstring
+
+		// Check for duplicate names and return informative error
+		levelsof name`survey' , local(theNameList)
+		if "`: list dups theNameList'" != "" {
+			di as err "You have multiple entries for the same original variable name."
+			di as err "This will cause conflicts' iecodebook will now quit."
+			di as err "The duplicates are: `: list dups theNameList'"
+			exit
+		}
 
 		// Loop over survey sheet and accumulate rename, relabel, recode, vallab
-		import excel `using' , clear first sheet(survey) allstring
 		count
 		forvalues i = 2/`r(N)' {
 			local theName		= name`survey'[`i']
