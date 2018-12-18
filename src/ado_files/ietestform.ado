@@ -118,7 +118,15 @@ qui {
 	*Return the settings in return locals
 	return local form_title = form_title[1]
 	return local form_id 	= form_id[1]
-	return local version 	= version[1]
+
+	*test that the column version exist
+	cap confirm variable Version
+	if _rc ==  {
+		return local version 	= version[1]
+	}
+	else {
+		return local version "No version column in settings sheet"
+	}
 
 }
 end
