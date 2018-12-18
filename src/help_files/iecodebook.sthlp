@@ -20,17 +20,21 @@ help for {hi:iecodebook}
 
 {p 2 4}{cmdab:iecodebook} is designed to automate repetitive data cleaning tasks in two situations:
 {bf:apply}, where a large number of variables need to have arbitrary {help rename}, {help recode}, or {help label} commands applied to them;
-and {bf:append}, where two or more datasets need to be harmonized to have the same variable names, labels, and value labels ("choices")
-in order to be appended together.{p_end}
+and {bf:append}, where two or more datasets need to be harmonized to have the same variable names, labels, and value labels ("choices") in order to be appended together.
+{cmdab:iecodebook} also provides an {bf:export} utility so that a human-readable record of the variables and their labels in a dataset
+can be instantly created at any time.
+{p_end}
 
-{p 2 4}The purpose of {cmdab:iecodebook} is therefore to (1) make the coding much more compact
-for an arbitrary number of commands, usually to a single line of code in the case of {bf:apply}; and (2) to leave a human-readable record of the adjustments
-that were made and how they correspond across datasets in the case of {bf:append}. {cmdab:iecodebook} also provides an {bf:export} utility so that a human-readable record of the variables and their labels in a dataset
-can be instantly created at any time.{p_end}
+{p 2 4}The purpose of {cmdab:iecodebook} is therefore to:{break}
+(1) reduce the Stata coding required for an arbitrary number of commands, usually to a single command; and {break}
+(2) to leave a human-readable record of the adjustments that were made to each dataset in Excel.
+{p_end}
 
 {p 2 4}For the {bf:apply} and {bf:append} syntaxes, {cmdab:iecodebook} provides a {bf:template} command
-that will correctly set up a) a codebook in the case of {bf:apply} or b) a harmonization template in the case of {bf:append}. In both cases, you will need to manually complete the template
-in order to tell the command the exact adjustments that you want to be made in the dataset.{p_end}
+that will correctly set up the appropriate codebook or harmonization template.
+In both cases, you then need to manually complete the template in order to tell the command the exact adjustments that you want to be made in the dataset.
+This completed template becomes a more readable record of the changes made in data cleaning than a dofile typically is.
+{p_end}
 
 {title:Functions}
 
@@ -50,7 +54,7 @@ and optionally produces an export version of the dataset with only variables use
 
 {p 2 2}{it:Note that the correct command is always created by replacing}
 	{break}{it:"apply" or "append" with "template" when creating the template,}
-	{break}{it:and changing it back to execute the template. It's that easy!}{p_end}
+	{break}{it:and changing it back to use the completed codebook. It's that easy!}{p_end}
 
 {dlgtab 0:Apply: Setting up and using a codebook to alter current data}
 
@@ -59,7 +63,7 @@ and optionally produces an export version of the dataset with only variables use
 {p 2 4 }{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"} /// {break}
 , [{bf:drop}] [{opt miss:ingvalues(# "label" [# "label" ...])}]{p_end}
 
-{p 2 4 } {it: Note: For }{bf:apply}{it: command, you need to have the dataset that you want to modify open in current Stata session.}{p_end}
+{p 2 4 } {it:Note: This function operates on the dataset that is open in the current Stata session.}{p_end}
 
 {dlgtab 0:Append: Setting up and using a codebook to harmonize and append multiple datasets}
 
@@ -74,14 +78,14 @@ and optionally produces an export version of the dataset with only variables use
 , {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} /// {break}
 [{opt miss:ingvalues(# "label" [# "label" ...])}] [{bf:nodrop}]{p_end}
 
-{p 2 4} {it: Note: survey names to be specified in }{bf:surveys()}{it: must be one word. Names must have no space, quotation marks or dash.}{p_end}
-
 
 {dlgtab 0:Export: Creating a full codebook of the current data}
 
 {p 2 4}{cmdab:iecodebook export} [{help if}] [{help in}] /// {break}
 {help using} {it:"/path/to/codebook.xlsx"} ,  /// {break}
 [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
+
+{hline}
 
 {title:Options}
 
@@ -91,6 +95,7 @@ and optionally produces an export version of the dataset with only variables use
 {synoptline}
 {synopt:{opt drop}}Requests that {cmdab:iecodebook} drop all variables which have no entry in the "name" column in the codebook.
 The default behavior is to retain all variables. Alternatively, to drop variables one-by-one, write "drop" in the "name" column of the codebook.{p_end}
+{break}
 {synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every coded answer.{p_end}
 {synoptline}
@@ -100,11 +105,15 @@ For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "
 {marker Options}{...}
 {synopthdr:Append Options}
 {synoptline}
-{synopt:{opt surveys()}}{bf:This option is always required.} When creating a template {it:or} reading a codebook from {it:"/path/to/codebook.xlsx"}, {cmdab:iecodebook} will use this list of names
-to identify each survey in the codebook. These should be exactly one word for each survey, and they must come in the same order as the filepaths.
+{synopt:{opt surveys()}}{bf:This option is always required in append.} When creating a template {it:or} reading a codebook from {it:"/path/to/codebook.xlsx"},
+{cmdab:iecodebook} will use this list of names to identify each survey in the codebook.
+{it:These must be exactly one word} for each survey, and they must come in the same order as the filepaths.
+Names must have no spaces or special characters.
 When importing, this will also be used to create a variable {it:survey} identifying the source of each observation.{p_end}
+{break}
 {synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every value-labeled answer.{p_end}
+{break}
 {synopt:{opt nodrop}}{bf:Specifying this option will keep all variables from all datasets. Use carefully!}
 Forcibly appending data, especially of different types, can result in loss of information.
 For example, appending a same-named string variable to a numeric variable may cause data deletion.
@@ -112,6 +121,7 @@ For example, appending a same-named string variable to a numeric variable may ca
 By default, {cmdab:iecodebook append} will {bf:drop} all variables without a new {it:name} explicitly written in the codebook to signify manual review for harmonization.{p_end}
 {synoptline}
 
+{break}
 {synoptset}{...}
 {marker Options}{...}
 {synopthdr:Export Options}
@@ -198,9 +208,8 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c |}{col 4}  |{col 12}  |{col 22}  |{col 31}{col 45}{col 60} {col 80}{col 95}{c |}   {it:recode}
 {col 3}{c |}{col 4} dom{col 12}Domestic?{col 22}yesno{col 31}foreign{col 45}(0=1)(1=0){col 60}origin{col 80}(0=1)(1=0){col 95}{c |}<- {it:commands}
 {col 3}{c BLC}{hline 91}{c BRC}
-{p 2 4} {it: Note: When aligning the old variable names in the same row, move the variable names. (Rather than just copy the names and leaving the old names in the original place.) } {break}
-{it: Only move the variable names (do not move old label, type, or choice information).}{p_end}
-
+{p 2 4} {it: Note: When aligning the old variable names in the same row, cut and paste the whole variable entry.}
+{break}{it:Don't just copy the names, leaving the old names in the original place.}
 
 {p 2}{it:Step 3: Read and apply the harmonization template.}{p_end}
 {p 4 4}{it:Note that the correct command is created by replacing}
@@ -216,6 +225,8 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {break}
 {p 2 2}{stata sysuse auto.dta , clear:sysuse auto.dta , clear}
 {break}{stata iecodebook export using "codebook.xlsx":iecodebook export using "codebook.xlsx"}{p_end}
+
+{hline}
 
 {title:Acknowledgements}
 
