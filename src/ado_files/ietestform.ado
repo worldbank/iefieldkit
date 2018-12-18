@@ -211,6 +211,28 @@ qui {
 	gen label_some_non_miss = (label_count_non_miss > 0)
 
 	/***********************************************
+		TEST - List names with leading or trailing
+		spaces
+	***********************************************/
+
+	*Test that the list name does not have leading or trailing spaces
+	gen lead_trail_name_space = (listname != trim(listname))
+
+	*Add item to report for any row with missing label in the label vars
+	count if lead_trail_name_space != 0
+	if `r(N)' > 0 {
+
+		noi list row `listnamevar'  if lead_trail_name_space != 0
+
+		local error_msg "The labels in [`listnamevar'] column has leading or trailing spaces in the Excel file:"
+
+		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `listnamevar' if lead_trail_name_space != 0")
+	}
+
+	*Remove leading or trailing spaces so they do not cause errors in later tests
+	replace listname = trim(listname)
+
+	/***********************************************
 		TEST - Numeric name
 		Test that all variables in the name
 		variable are numeric
