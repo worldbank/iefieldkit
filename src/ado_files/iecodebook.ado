@@ -346,8 +346,8 @@ qui {
 				if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == "drop") local allDrops "`allDrops' `theName'"
 				// Otherwise process requested changes as long as there is something there
 				else {
-												local allRenames1 	= `"`allRenames1' `theName'"'
-												local allRenames2 	= `"`allRenames2' `theRename'"'
+					if "`theRename'" 	!= ""	local allRenames1 	= `"`allRenames1' `theName'"'
+					if "`theRename'" 	!= "" 	local allRenames2 	= `"`allRenames2' `theRename'"'
 					if "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' `"label var `theName' "`theLabel'" "' "'
 					if "`theChoices'" 	!= "" 	local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
 					if "`theRecode'" 	!= "" 	local allRecodes 	= `"`allRecodes' "recode `theName' `theRecode'""'
