@@ -213,8 +213,6 @@ qui {
 	count if lead_trail_name_space != 0
 	if `r(N)' > 0 {
 
-		noi list row `listnamevar'  if lead_trail_name_space != 0
-
 		local error_msg "The labels in [`listnamevar'] column has leading or trailing spaces in the Excel file:"
 
 		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `listnamevar' if lead_trail_name_space != 0")
