@@ -156,22 +156,13 @@ qui {
 	ds
 	local choicesheetvars `r(varlist)'
 
-	*Test if old name "name" is used for value column
-	if `:list posof "name" in choicesheetvars' ! = 0 {
-		local valuevar "name"
-	}
-	*Test if new name "value" is used for value column
-	else if `:list posof "value" in choicesheetvars' ! = 0 {
-		local valuevar "value"
-	}
-	*Neither "name" or "value" is a name of a column, one must be used
-	else {
-		noi di as error "{phang}Either a column named [name] or a column named [value] is needed in the choice sheet.{p_end}"
-		noi di ""
-		error 688
-	}
+	*Test that either value or name is used for value/name column in the choice sheet, and return the one that is used
+	test_colname , var("choice_valuevar") sheetvars(`choicesheetvars') sheetname("choices")
+	local  valuevar = "`r(checked_varname)'"
 
-
+	*Test that either list_name or listname is used for the list name column in the choice sheet, and return the one that is used
+	test_colname , var("choice_list_name") sheetvars(`choicesheetvars') sheetname("choices")
+	local  listnamevar = "`r(checked_varname)'"
 
 
 	/***********************************************
@@ -193,7 +184,7 @@ qui {
 	drop if countmissing == 0
 
 	*Get a list with all the list names
-	levelsof list_name, clean local("all_list_names")
+	levelsof `listnamevar', clean local("all_list_names")
 
 	*Create a list of the variables with labels (multiple in case of multiple languages)
 	foreach var of local choicesheetvars {
@@ -249,7 +240,7 @@ qui {
 
 		local error_msg "There are non numeric values in the [`valuevar'] column of the choice sheet"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Value.2FName_Numeric") table("list row list_name `valuevar' if non_numeric != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Value.2FName_Numeric") table("list row `listnamevar' `valuevar' if non_numeric != 0")
 
 	}
 	else if _rc != 0 {
@@ -266,7 +257,7 @@ qui {
 	***********************************************/
 
 	*Test for duplicates and return error if not all combinations are unique
-	duplicates tag list_name `valuevar', gen(list_item_dup)
+	duplicates tag `listnamevar' `valuevar', gen(list_item_dup)
 
 	*Don't treat missing as duplicates, it will be tested for later.
 	replace list_item_dup = 0 if missing(`valuevar')
@@ -275,9 +266,9 @@ qui {
 	count if list_item_dup != 0
 	if `r(N)' > 0 {
 
-		local error_msg "There are duplicates in the following list_names:"
+		local error_msg "There are duplicates in the following list names in varaible `listnamevar's:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Duplicated_List_Code") table("list row list_name `valuevar' if list_item_dup != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Duplicated_List_Code") table("list row `listnamevar' `valuevar' if list_item_dup != 0")
 	}
 
 	/***********************************************
@@ -295,7 +286,7 @@ qui {
 
 		local error_msg "There is no value in the [`valuevar'] column for some choice list items that have non-missing values in the [`labelvars'] column(s):"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list row list_name `valuevar' `labelvars' if lable_with_missvalue != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list row `listnamevar' `valuevar' `labelvars' if lable_with_missvalue != 0")
 	}
 
 	/***********************************************
@@ -312,7 +303,7 @@ qui {
 
 		local error_msg "There non-missing values in the [`valuevar'] column of the choice sheet without a label in the [label] colum:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list row list_name `valuevar' `labelvars' if unlabelled != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list row `listnamevar' `valuevar' `labelvars' if unlabelled != 0")
 	}
 
 	/***********************************************
@@ -337,7 +328,7 @@ qui {
 			**Test for duplicates in the label var and display
 			* errors if any observation do not have a unique,
 			* i.e. label_dup != 0, label
-			duplicates tag `labelvar' if list_name == "`list'", gen(label_dup)
+			duplicates tag `labelvar' if `listnamevar' == "`list'", gen(label_dup)
 
 			*Was any duplicates found in this list
 			count if label_dup == 1
@@ -359,7 +350,7 @@ qui {
 
 			local error_msg "There are duplicated entries in the [`labelvar'] column of the choice sheet within the [`lists_with_dups'] list(s) for the following labels:"
 
-			noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Duplicated_List_Labels") table("list list_name `valuevar' `labelvar' filter if label_all_cols_dup == 1")
+			noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Duplicated_List_Labels") table("list row `listnamevar' `valuevar' `labelvar' filter if label_all_cols_dup == 1")
 
 		}
 	}
@@ -866,6 +857,46 @@ qui {
 			}
 		}
 
+}
+end
+
+*Program that test that exactly one of multiple allowed column names was used. Returns valid used name.
+capture program drop test_colname
+		program 	 test_colname , rclass
+
+qui {
+
+	syntax , var(string) sheetvars(string) sheetname(string)
+
+	*Load the allowed names for each column:
+	if "`var'" == "choice_valuevar" local allowed_names value name
+	if "`var'" == "choice_list_name" local allowed_names listname list_name
+
+	*Initate a local that keep track of whether a column with an allowed name was found
+	local correct_found = 0
+
+	foreach allowed_name of local allowed_names {
+
+		*Test if name exists
+		if `:list posof "`allowed_name'" in sheetvars' != 0 {
+
+			*Test that this is the first name that was found
+			if `correct_found' == 1 {
+				noi di as error "{phang}The `sheetname' sheet of may only include one of the following columns: [`allowed_names'].{p_end}"
+				error 688
+			}
+
+			*If the first name found, return it
+			return local checked_varname "`allowed_name'"
+			local correct_found = 1
+    	}
+	}
+
+	*No allowed name found for this required variable
+	if `correct_found' == 0 {
+		noi di as error "{phang}The `sheetname' sheet of must include one column named one of these names: [`allowed_names'].{p_end}"
+		error 688
+	}
 }
 end
 
