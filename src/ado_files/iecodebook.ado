@@ -88,7 +88,7 @@ qui {
 
 	// Template Setup
 		if `"`anything'"' != "" {
-			use `anything' , clear
+			use "`anything'" , clear
 		}
 
 		if "`template'" != "" {
@@ -506,7 +506,8 @@ qui {
 	foreach dataset in `anything' {
 		local ++x
 		local survey : word `x' of `surveys'
-		use `dataset' , clear
+    
+		use "`dataset'" , clear
 
 		iecodebook apply `using' , survey(`survey') `drop' `options'
 
