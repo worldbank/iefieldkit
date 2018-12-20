@@ -507,8 +507,8 @@ qui {
 		local ++x
 		local survey : word `x' of `surveys'
 		use `dataset' , clear
-		iecodebook apply `using' , survey(`survey') `drop' `options'
 
+		iecodebook apply `using' , survey(`survey') `drop' `options'
 
 		gen survey = `x'
 		tempfile next_data
