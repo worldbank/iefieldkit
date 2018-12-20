@@ -332,6 +332,17 @@ qui {
 	preserve
 	import excel `using' , clear first sheet(survey) allstring
 
+		// Check for broken things, namely quotation marks
+		foreach var of varlist * {
+			cap confirm string variable `var'
+			if _rc == 0 {
+				replace `var' = subinstr(`var', char(34), "", .) //remove " sign
+				replace `var' = subinstr(`var', char(96), "", .) //remove ` sign
+				replace `var' = subinstr(`var', char(36), "", .) //remove $ sign
+				replace `var' = subinstr(`var', char(10), "", .) //remove line end
+			}
+		}
+
 		// Check for duplicate names and return informative error
 		local theNameList ""
 		count
@@ -377,6 +388,18 @@ qui {
 			// Prepare list of values for each value label.
 			import excel `using', first clear sheet(choices) allstring
 
+			// Check for broken things, namely quotation marks
+			foreach var of varlist * {
+				cap confirm string variable `var'
+				if _rc == 0 {
+					replace `var' = subinstr(`var', char(34), "", .) //remove " sign
+					replace `var' = subinstr(`var', char(96), "", .) //remove ` sign
+					replace `var' = subinstr(`var', char(36), "", .) //remove $ sign
+					replace `var' = subinstr(`var', char(10), "", .) //remove line end
+				}
+			}
+
+			// Load all entries
 			count
 			local n_vallabs = `r(N)'
 			forvalues i = 1/`n_vallabs' {
