@@ -152,7 +152,7 @@ qui {
 		restore
 			if "`theKeepList'" == "" {
 				di as err "You are dropping all variables. This is not allowed. {bf:iecodebook} will now exit."
-				exit
+				error 198
 			}
 			keep `theKeepList' // Keep only variables mentioned in the dofiles
 			compress
@@ -233,7 +233,7 @@ qui {
 		}
 		if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
 		if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
-		if `rc' != 0 exit
+		if `rc' != 0 error 603
 	restore
 
 	// Create value labels sheet
@@ -287,7 +287,7 @@ qui {
 		}
 		if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
 		if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
-		if `rc' != 0 exit
+		if `rc' != 0 error 603
 
 	// Reload original data
 	use `allData' , clear
@@ -330,24 +330,59 @@ qui {
 
 	// Apply codebook
 	preserve
+	import excel `using' , clear first sheet(survey) allstring
+
+		// Check for broken things, namely quotation marks
+		foreach var of varlist name`survey' name label choices recode`survey' {
+			cap confirm string variable `var'
+			if _rc == 0 {
+				replace `var' = subinstr(`var', char(34), "", .) //remove " sign
+				replace `var' = subinstr(`var', char(96), "", .) //remove ` sign
+				replace `var' = subinstr(`var', char(36), "", .) //remove $ sign
+				replace `var' = subinstr(`var', char(10), "", .) //remove line end
+			}
+		}
+
+		// Check for duplicate names and return informative error
+		local theNameList ""
+		count
+		forvalues i = 2/`r(N)' {
+			local theName = name`survey'[`i']
+			local theNameList "`theNameList' `theName'"
+		}
+		if "`: list dups theNameList'" != "" {
+			di as err "You have multiple entries for the same original variable in name:`survey'."
+			di as err "The duplicates are: `: list dups theNameList'"
+			di as err "This will cause conflicts. iecodebook will now quit."
+			error 198
+		}
 
 		// Loop over survey sheet and accumulate rename, relabel, recode, vallab
-		import excel `using' , clear first sheet(survey) allstring
 		count
+		local QUITFLAG = 0
 		forvalues i = 2/`r(N)' {
 			local theName		= name`survey'[`i']
 	    	local theRename 	= name[`i']
+				if strtoname("`theRename'") != "`theRename'" di as err "Error: [`theRename'] on line `i' is not a valid Stata variable name."
+				if strtoname("`theRename'") != "`theRename'" local QUITFLAG = 1
 			local theLabel		= label[`i']
 			local theChoices	= choices[`i']
 			local theRecode		= recode`survey'[`i']
 
-			if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == "drop") local allDrops "`allDrops' `theName'"
-			if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames1 	= `"`allRenames1' `theName'"'
-			if "`theRename'" != "" & "`theName'" 	!= "" 	local allRenames2 	= `"`allRenames2' `theRename'"'
-			if "`theRename'" != "" & "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' `"label var `theName' "`theLabel'" "' "'
-			if "`theRename'" != "" & "`theChoices'" != "" 	local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
-			if "`theRename'" != "" & "`theRecode'" 	!= "" 	local allRecodes 	= `"`allRecodes' "recode `theName' `theRecode'""'
+			if "`theName'" 	!= "" {
+				// Drop if requested
+				if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == "drop") local allDrops "`allDrops' `theName'"
+				// Otherwise process requested changes as long as there is something specified
+				else {
+					if "`theRename'" 	!= ""	local allRenames1 	= `"`allRenames1' `theName'"'
+					if "`theRename'" 	!= "" 	local allRenames2 	= `"`allRenames2' `theRename'"'
+					if "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' `"label var `theName' "`theLabel'" "' "'
+					if "`theChoices'" 	!= "" 	local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
+					if "`theRecode'" 	!= "" 	local allRecodes 	= `"`allRecodes' "recode `theName' `theRecode'""'
+				}
+			}
 		}
+		if `QUITFLAG' error 198
 
 		// Loop over choices sheet and accumulate vallab definitions
 
@@ -357,6 +392,18 @@ qui {
 			// Prepare list of values for each value label.
 			import excel `using', first clear sheet(choices) allstring
 
+			// Check for broken things, namely quotation marks
+			foreach var of varlist * {
+				cap confirm string variable `var'
+				if _rc == 0 {
+					replace `var' = subinstr(`var', char(34), "", .) //remove " sign
+					replace `var' = subinstr(`var', char(96), "", .) //remove ` sign
+					replace `var' = subinstr(`var', char(36), "", .) //remove $ sign
+					replace `var' = subinstr(`var', char(10), "", .) //remove line end
+				}
+			}
+
+			// Load all entries
 			count
 			local n_vallabs = `r(N)'
 			forvalues i = 1/`n_vallabs' {
@@ -400,11 +447,11 @@ qui {
 		if _rc != 0 {
 			di as err "That codebook contains a rename conflict. Please check and retry. iecodebook will exit."
 			rename (`allRenames1') (`allRenames2')
-		exit
 		}
 
 	// Success message
 	di as err `"Applied codebook to `survey' data `using'"'
+	di as err `"{bf:Note: strings are sanitized} – any backticks, quotation marks, dollar signs, and line breaks have been removed."'
 
 } // end qui
 end
@@ -459,9 +506,10 @@ qui {
 	foreach dataset in `anything' {
 		local ++x
 		local survey : word `x' of `surveys'
+    
 		use "`dataset'" , clear
-		iecodebook apply `using' , survey(`survey') `drop' `options'
 
+		iecodebook apply `using' , survey(`survey') `drop' `options'
 
 		gen survey = `x'
 		tempfile next_data
@@ -472,10 +520,10 @@ qui {
 			label val survey survey
 			label var survey "Data Source"
 			save `final_data' , replace emptyok
+		di as err `"..."'
 	}
 
 	// Success message
-	di as err `"..."'
 	di as err `"Applied codebook `using' to `anything' – check your data carefully!"'
 
 	// Final codebook
