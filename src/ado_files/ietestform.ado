@@ -348,7 +348,7 @@ qui {
 
 			local error_msg "There are duplicated entries in the [`labelvar'] column of the choice sheet within the [`lists_with_dups'] list(s) for the following labels:"
 
-			noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Duplicated_List_Labels") table("list row `listnamevar' `valuevar' `labelvar' filter if label_all_cols_dup == 1")
+			noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Duplicated_List_Labels") table("list row `listnamevar' `valuevar' `labelvar' if label_all_cols_dup == 1")
 
 		}
 	}
