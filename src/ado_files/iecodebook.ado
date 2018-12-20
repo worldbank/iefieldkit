@@ -359,9 +359,12 @@ qui {
 
 		// Loop over survey sheet and accumulate rename, relabel, recode, vallab
 		count
+		local QUITFLAG = 0
 		forvalues i = 2/`r(N)' {
 			local theName		= name`survey'[`i']
 	    	local theRename 	= name[`i']
+				if strtoname("`theRename'") != "`theRename'" di as err "Error: [`theRename'] on line `i' is not a valid Stata variable name."
+				if strtoname("`theRename'") != "`theRename'" local QUITFLAG = 1
 			local theLabel		= label[`i']
 			local theChoices	= choices[`i']
 			local theRecode		= recode`survey'[`i']
@@ -379,6 +382,7 @@ qui {
 				}
 			}
 		}
+		if `QUITFLAG' error 198
 
 		// Loop over choices sheet and accumulate vallab definitions
 
