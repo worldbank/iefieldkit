@@ -333,7 +333,7 @@ qui {
 	import excel `using' , clear first sheet(survey) allstring
 
 		// Check for broken things, namely quotation marks
-		foreach var of varlist * {
+		foreach var of varlist name`survey' name label choices recode`survey' {
 			cap confirm string variable `var'
 			if _rc == 0 {
 				replace `var' = subinstr(`var', char(34), "", .) //remove " sign
@@ -451,6 +451,7 @@ qui {
 
 	// Success message
 	di as err `"Applied codebook to `survey' data `using'"'
+	di as err `"{bf:Note: strings are sanitized} – any backticks, quotation marks, dollar signs, and line breaks have been removed."'
 
 } // end qui
 end
@@ -518,10 +519,10 @@ qui {
 			label val survey survey
 			label var survey "Data Source"
 			save `final_data' , replace emptyok
+		di as err `"..."'
 	}
 
 	// Success message
-	di as err `"..."'
 	di as err `"Applied codebook `using' to `anything' – check your data carefully!"'
 
 	// Final codebook
