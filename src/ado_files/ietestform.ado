@@ -228,6 +228,7 @@ qui {
 	***********************************************/
 
 	*Test if variable is numeric
+	cap destring `valuevar', replace //destring if import from Excel incorrectly made string
 	cap confirm numeric variable `valuevar'
 
 	*Test if error code is 7, other codes should return other error message
