@@ -207,7 +207,7 @@ qui {
 	***********************************************/
 
 	*Test that the list name does not have leading or trailing spaces
-	gen lead_trail_name_space = (listname != trim(listname))
+	gen lead_trail_name_space = (`listnamevar' != trim(`listnamevar'))
 
 	*Add item to report for any row with missing label in the label vars
 	count if lead_trail_name_space != 0
@@ -219,7 +219,7 @@ qui {
 	}
 
 	*Remove leading or trailing spaces so they do not cause errors in later tests
-	replace listname = trim(listname)
+	replace `listnamevar' = trim(`listnamevar')
 
 	/***********************************************
 		TEST - Numeric name
