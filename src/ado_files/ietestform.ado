@@ -582,7 +582,8 @@ qui {
 			*Add begin group to stack if either begin_group or begin_repeat
 			if `isBegin' {
 
-				local type_and_name "`row_type'`row_name'#`row' `type_and_name'"
+				local begintype = substr("`row_type'", 7,.)
+				local type_and_name "`begintype'#`row_name'#`row' `type_and_name'"
 
 			}
 
@@ -597,13 +598,14 @@ qui {
 				*Get the type and name of the most recent begin_group or begin_repeat
 				local lastbegin : word 1 of `type_and_name'			//the most recent is the first in the list
 
-				*Get the begin type and row number
-				local begininfo = substr("`lastbegin'", 7,6)		//Remove the "begin_" part of the type
-				gettoken begintype beginrow : begininfo , parse("#")
-				local beginrow = subinstr("`beginrow'","#","", .)	//Remove the parse char "#"
 
-				*Get the begin name
-				local beginname = substr("`lastbegin'", strpos("`lastbegin'","#")+ 1,.) //Everything that follows the #
+				*Parse the begintype and reomve parse charecter from rest
+				gettoken begintype beginnameandrow : lastbegin , parse("#")
+				local beginnameandrow = subinstr("`beginnameandrow'","#","", 1)	//Remove the parse char "#"
+
+				*Parse name and row and remove parse charcter from row
+				gettoken beginname beginrow : beginnameandrow , parse("#")
+				local beginrow = subinstr("`beginrow'","#","", 1)	//Remove the parse char "#"
 
 				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed
 				if "`endname'" != "`beginname'"  {
