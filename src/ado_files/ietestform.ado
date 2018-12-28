@@ -81,7 +81,7 @@ qui {
 	if "`unused_lists'" != "" {
 
 		local error_msg "There are lists in the choice sheet that are not used by any field of the survey sheet. These are the unused list(s): [`unused_lists']"
-		report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Unused_Choice_Lists")
+		report_file add , report_tempfile("`report_tempfile'") testname("UNUSED CHOICE LISTS") message("`error_msg'") wikifragment("Unused_Choice_Lists")
 	}
 
 	/***********************************************
@@ -215,7 +215,7 @@ qui {
 
 		local error_msg "The labels in [`listnamevar'] column has leading or trailing spaces in the Excel file:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `listnamevar' if lead_trail_name_space != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER LIST NAME") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `listnamevar' if lead_trail_name_space != 0")
 	}
 
 	*Remove leading or trailing spaces so they do not cause errors in later tests
@@ -238,7 +238,7 @@ qui {
 
 		local error_msg "There are non numeric values in the [`valuevar'] column of the choice sheet"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Value.2FName_Numeric") table("list row `listnamevar' `valuevar' if non_numeric != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("NON NUMERIC NAME VALUES") message("`error_msg'") wikifragment("Value.2FName_Numeric") table("list row `listnamevar' `valuevar' if non_numeric != 0")
 
 	}
 	else if _rc != 0 {
@@ -266,7 +266,7 @@ qui {
 
 		local error_msg "There are duplicates in the following list names in varaible `listnamevar's:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Duplicated_List_Code") table("list row `listnamevar' `valuevar' if list_item_dup != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("NON NUMERIC LIST NAME VALUES") message("`error_msg'") wikifragment("Duplicated_List_Code") table("list row `listnamevar' `valuevar' if list_item_dup != 0")
 	}
 
 	/***********************************************
@@ -284,7 +284,7 @@ qui {
 
 		local error_msg "There is no value in the [`valuevar'] column for some choice list items that have non-missing values in the [`labelvars'] column(s):"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list row `listnamevar' `valuevar' `labelvars' if lable_with_missvalue != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("MISSING LIST VALUE") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list row `listnamevar' `valuevar' `labelvars' if lable_with_missvalue != 0")
 	}
 
 	/***********************************************
@@ -301,7 +301,7 @@ qui {
 
 		local error_msg "There non-missing values in the [`valuevar'] column of the choice sheet without a label in the [label] colum:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list row `listnamevar' `valuevar' `labelvars' if unlabelled != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("MISSING LIST LABELS") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list row `listnamevar' `valuevar' `labelvars' if unlabelled != 0")
 	}
 
 	/***********************************************
@@ -348,7 +348,7 @@ qui {
 
 			local error_msg "There are duplicated entries in the [`labelvar'] column of the choice sheet within the [`lists_with_dups'] list(s) for the following labels:"
 
-			noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Duplicated_List_Labels") table("list row `listnamevar' `valuevar' `labelvar' if label_all_cols_dup == 1")
+			noi report_file add , report_tempfile("`report_tempfile'") testname("DUPLICATED LABEL (column: `labelvar') WITHIN LIST") message("`error_msg'") wikifragment("Duplicated_List_Labels") table("list row `listnamevar' `valuevar' `labelvar' if label_all_cols_dup == 1")
 
 		}
 	}
@@ -382,7 +382,7 @@ qui {
 
 			local error_msg "There is no column in the choice sheet with the name [label:stata]. This is best practice as it allows you to automatically import choice list labels optimized for Stata's value labels, making the data set easier to read."
 
-			noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Stata_Labels_Columns") message("`error_msg'")
+			noi report_file add , report_tempfile("`report_tempfile'") testname("NO STATA LIST LABEL") message("`error_msg'") wikifragment("Stata_Labels_Columns")
 
 		}
 	}
@@ -543,7 +543,7 @@ qui {
 
 				local error_msg "It is bad practice to leave the name column empty for end_group or end_repeat fields. While this is allowed in ODK, it makes error finding harder and slower. The following repeat or end groups have empty name columns:"
 
-				noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Matching_begin_.2Fend") message("`error_msg'") table("list row type name if _n == `row'")
+				noi report_file add , report_tempfile("`report_tempfile'") testname("MISSING END_GROUP/END_REPEAT NAME") message("`error_msg'") wikifragment("Matching_begin_.2Fend") table("list row type name if _n == `row'")
 			}
 
 			*Add begin group to stack if either begin_group or begin_repeat
@@ -575,7 +575,7 @@ qui {
 
 					local error_msg "The [end_`endtype' `endname'] was found before [end_`begintype' `beginname']. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [`endname'] and [`beginname'], the [begin_`endtype' `endname'] or the [end_`begintype' `beginname'] are missing or the order of the begin and end of [`endname'] and [`beginname'] is incorrect."
 
-					noi report_file add ,  report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Matching_begin_.2Fend")
+					noi report_file add ,  report_tempfile("`report_tempfile'") testname("END_ BEGIN_ NAME MISMATCH") message("`error_msg'") wikifragment("Matching_begin_.2Fend")
 
 				}
 
@@ -584,7 +584,7 @@ qui {
 
 					local error_msg "The `begintype' [`endname'] is ended with a [end_`begintype'] which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'."
 
-					noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Matching_begin_.2Fend")
+					noi report_file add , report_tempfile("`report_tempfile'") testname("END_ BEGIN_ TYPE MISMATCH") message("`error_msg'") wikifragment("Matching_begin_.2Fend")
 
 				}
 
@@ -689,7 +689,7 @@ qui {
 
 		local error_msg "These variable names are longer then 32 characters. That is allowed in the data formats used in SurveyCTO - and is therefore allowed in their test - but will cause an error when the data is imported to Stata. The following names should be shortened:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Field_Name_Length") able("list row type name if longname == 1")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES")  message("`error_msg'") wikifragment("Field_Name_Length") able("list row type name if longname == 1")
 
 	}
 
@@ -698,7 +698,7 @@ qui {
 
 		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_x} to the variable name for each repeat group this variable is in, where {it:x} is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ({it:_x}) are needed. The following variables's name will be longer then 32 characters if two characters are added per repeat group and should therefore be shortened:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length") table("list row type name num_nested_repeats if longname1 == 1")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES WITH REPEAT SUFFIX") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length") table("list row type name num_nested_repeats if longname1 == 1")
 
 	}
 
@@ -707,7 +707,7 @@ qui {
 
 		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_xx} to the variable name for each repeat group this variable is in, where {it:xx} is the repeat count for that repeat. This test assumed that the repeat count is between 10 and 99 so that up to three characters ({it:_xx}) are needed. The following variables are are longer then 32 characters if two characters will be added per repeat group and should therefore be shortened:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length") table("list row type name num_nested_repeats if longname2 == 1")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES WITH REPEAT SUFFIX (double digit)") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length") table("list row type name num_nested_repeats if longname2 == 1")
 
 	}
 
@@ -773,7 +773,7 @@ qui {
 			*Display error
 			local error_msg "There is a potential name conflict between field [`field'] and [`fieldFound'] as `field' is in a repeat group. When variables in repeat groups are imported to Stata they will be given the suffix `field'_1, `field'_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is."
 
-			noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Repeat_Group_Field_Name_Length") message("`error_msg'")
+			noi report_file add , report_tempfile("`report_tempfile'") testname("NAME CONFLICT ACROSS REPEAT GROUP") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length")
 
 
 			**Prepare the string to recurse on. Remove eveything up to the matched
@@ -826,7 +826,7 @@ qui {
 
 				local error_msg "There is no column in the survey sheet with the name [label:stata]. This is best practice as this allows you to automatically import variable labels optimized for Stata, making the data set easier to read."
 
-				noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Stata_Labels_Columns")
+				noi report_file add , report_tempfile("`report_tempfile'") testname("NO STATA FIELD LABEL") message("`error_msg'") wikifragment("Stata_Labels_Columns")
 
 			}
 		}
@@ -850,7 +850,7 @@ qui {
 
 				local error_msg "These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the variables in the data set makes sense to a human reader. The following labels should be shortened:"
 
-				noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") wikifragment("Survey_Sheet_Stata_Labels") table("list row type name labellength `labelstata' if longlabel == 1")
+				noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD LABEL") message("`error_msg'") wikifragment("Survey_Sheet_Stata_Labels") table("list row type name labellength `labelstata' if longlabel == 1")
 
 			}
 		}
@@ -903,7 +903,7 @@ capture program drop report_file
 qui {
 
 		//noi di "report_file command ok"
-		syntax anything , report_tempfile(string) [message(string) filepath(string) wikifragment(string) table(string) metav(string) metaid(string) metatitle(string) metafile(string)]
+		syntax anything , report_tempfile(string) [testname(string) message(string) filepath(string) wikifragment(string) table(string) metav(string) metaid(string) metatitle(string) metafile(string)]
 		//noi di "report_file syntax ok [`anything']"
 
 		local allowed_tasks		"setup add write"
@@ -960,7 +960,10 @@ qui {
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' ///
 				"----------------------------------------------------------------------" _n ///
-				`""`message'""' _n
+				"----------------------------------------------------------------------" _n ///
+				"TEST: `testname'" _n ///
+				"-----------------------------------" _n _n ///
+				`""`message'""' _n _n
 			file close 		`report_handler'
 
 			*Add table if applicable
