@@ -734,7 +734,7 @@ qui {
 	cap assert longname1 == 0
 	if _rc {
 
-		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_x} to the variable name for each repeat group this variable is in, where {it:x} is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ({it:_x}) are needed. The following variables's name will be longer then 32 characters if two characters are added per repeat group and should therefore be shortened:"
+		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add [_x] to the variable name for each repeat group this variable is in, where [x] is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ([_x]) are needed. The following variables's name will be longer then 32 characters if two characters are added per repeat group and should therefore be shortened:"
 
 		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES WITH REPEAT SUFFIX") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length") table("list row type name num_nested_repeats if longname1 == 1")
 
@@ -743,7 +743,7 @@ qui {
 	cap assert longname2 == 0
 	if _rc {
 
-		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_xx} to the variable name for each repeat group this variable is in, where {it:xx} is the repeat count for that repeat. This test assumed that the repeat count is between 10 and 99 so that up to three characters ({it:_xx}) are needed. The following variables are are longer then 32 characters if two characters will be added per repeat group and should therefore be shortened:"
+		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add [_xx] to the variable name for each repeat group this variable is in, where [xx] is the repeat count for that repeat. This test assumed that the repeat count is between 10 and 99 so that up to three characters [_xx] are needed. The following variables are are longer then 32 characters if two characters will be added per repeat group and should therefore be shortened:"
 
 		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES WITH REPEAT SUFFIX (double digit)") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length") table("list row type name num_nested_repeats if longname2 == 1")
 
@@ -1011,6 +1011,8 @@ qui {
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' ///
 				"Read more about this test and why this is an error or does not follow the best practices we recommend in https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n _n
+				"Read more about this test and why this is an error or does not follow the best practices we recommend here:" _n ///
+				"https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n _n
 			file close 		`report_handler'
 		}
 
@@ -1026,8 +1028,6 @@ qui {
 				_n ///
 				"This is the end of the report." _n
 			file close 		`report_handler'
-
-
 
 			*Write temporary file to disk
 			cap copy "`report_tempfile'" "`filepath'", replace
@@ -1050,8 +1050,6 @@ qui {
 			noi di as error "Task error"
 			error 198
 		}
-
-
 }
 end
 
@@ -1105,7 +1103,7 @@ qui {
 			*Write and save report
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write append
-			file write  	`report_handler' `"`title'"' _n
+			file write  	`report_handler' _n `"`title'"' _n
 			file close 		`report_handler'
 
 			*Loop over all cases and prepare tablestrs and numbe rthem
@@ -1126,13 +1124,26 @@ qui {
 				file close 		`report_handler'
 			}
 
-			*Add line space
-			cap file close 	`report_handler'
-			file open  		`report_handler' using "`report_tempfile'", text write append
-			file write  	`report_handler' _n
-			file close 		`report_handler'
 		}
 
 	restore
 }
+
+end
+
+
+*Chops up messages in appropriate lengths, and make sure that the cutoff is always a space
+capture program drop report_message
+		program 	 report_message , rclass
+qui {
+
+	syntax , report_tempfile(string) message(string) charwidth(numlist)
+
+	tempname report_handler
+
+	*Loop over message and chop up in segments
+	while "`message'" != "" {
+
+		*Reste num_char in row to maximum
+		local num_char 	= `charwidth'
 end
