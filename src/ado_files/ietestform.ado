@@ -946,8 +946,7 @@ qui {
 				",Form ID,`metaid'" _n ///
 				",Form Title,`metatitle'" _n ///
 				",Form Version,`metav'" _n ///
-				",Form File,`metafile'" _n ///
-				"----------------------------------------------------------------------" _n
+				",Form File,`metafile'" _n _n
 
 			file close 		`report_handler'
 		}
@@ -973,8 +972,7 @@ qui {
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' ///
-				_n ///
-				"Read more about this test and why this is an error or does not follow the best practices we recommend in https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n
+				"Read more about this test and why this is an error or does not follow the best practices we recommend in https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n _n
 			file close 		`report_handler'
 		}
 
@@ -985,7 +983,6 @@ qui {
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' ///
-				_n ///
 				"----------------------------------------------------------------------" _n ///
 				"----------------------------------------------------------------------" _n ///
 				_n ///
