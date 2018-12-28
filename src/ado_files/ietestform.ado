@@ -525,6 +525,8 @@ qui {
 
 	local begin_end_error = 0
 
+
+	******************************************************************************************
 	*Loop over all rows to test if begin and end match perfectly and give helpful error if not
 	local num_rows = _N
 	forvalues row = 1/`num_rows' {
@@ -642,6 +644,7 @@ qui {
 	gen namelen = strlen(name)
 	order namelen, after(name) //jsut to make dev easier
 
+	//Generate a variable that indicates if a variable will be a variable or not
 	gen will_be_field = !((inlist(type, "start", "end" )) | (typeBeginEnd == 1))
 
 	/***********************************************
