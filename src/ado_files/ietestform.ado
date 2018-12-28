@@ -203,23 +203,28 @@ qui {
 
 	/***********************************************
 		TEST - List names with leading or trailing
-		spaces
+		spaces in string values in excel file
 	***********************************************/
 
-	*Test that the list name does not have leading or trailing spaces
-	gen lead_trail_name_space = (`listnamevar' != trim(`listnamevar'))
+	ds, has(type string)
+	local strvars `r(varlist)'
 
-	*Add item to report for any row with missing label in the label vars
-	count if lead_trail_name_space != 0
-	if `r(N)' > 0 {
+	foreach strvar of local strvars {
+		*Test that the list name does not have leading or trailing spaces
+		gen trim_`strvar' = (`strvar' != trim(`strvar'))
 
-		local error_msg "The labels in [`listnamevar'] column has leading or trailing spaces in the Excel file:"
+		*Add item to report for any row with missing label in the label vars
+		count if trim_`strvar' != 0
+		if `r(N)' > 0 {
 
-		noi report_file add , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER LIST NAME") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `listnamevar' if lead_trail_name_space != 0")
+			local error_msg "The string values in [`strvar'] column are imported as strings and has leading or trailing spaces in the Excel file"
+
+			noi report_file add , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (choice sheet; column: `strvar')") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `strvar' if trim_`strvar' != 0")
+		}
+
+		*Remove leading or trailing spaces so they do not cause errors in later tests
+		replace `strvar' = trim(`strvar')
 	}
-
-	*Remove leading or trailing spaces so they do not cause errors in later tests
-	replace `listnamevar' = trim(`listnamevar')
 
 	/***********************************************
 		TEST - Numeric name
@@ -463,6 +468,31 @@ qui {
 		tostring `var', replace
 		replace `var' = lower(itrim(trim(`var')))
 		replace `var' = "" if `var' == "."
+	}
+
+	/***********************************************
+		TEST - List names with leading or trailing
+		spaces in string values in excel file
+	***********************************************/
+
+	ds, has(type string)
+	local strvars `r(varlist)'
+
+	foreach strvar of local strvars {
+		*Test that the list name does not have leading or trailing spaces
+		gen trim_`strvar' = (`strvar' != trim(`strvar'))
+
+		*Add item to report for any row with missing label in the label vars
+		count if trim_`strvar' != 0
+		if `r(N)' > 0 {
+
+			local error_msg "The string values in [`strvar'] column are imported as strings and has leading or trailing spaces in the Excel file"
+
+			noi report_file add , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (survey sheet; column: `strvar')") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `strvar' if trim_`strvar' != 0")
+		}
+
+		*Remove leading or trailing spaces so they do not cause errors in later tests
+		replace `strvar' = trim(`strvar')
 	}
 
 
