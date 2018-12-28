@@ -892,7 +892,6 @@ qui {
 
 			}
 		}
-
 }
 end
 
@@ -999,9 +998,11 @@ qui {
 				"----------------------------------------------------------------------" _n ///
 				"----------------------------------------------------------------------" _n ///
 				"TEST: `testname'" _n ///
-				"-----------------------------------" _n _n ///
-				`""`message'""' _n _n
+				"-----------------------------------" _n _n
 			file close 		`report_handler'
+
+			*Chop the message up in charwidth
+			noi report_message , report_tempfile("`report_tempfile'") message("`message'") charwidth(80)
 
 			*Add table if applicable
 			if "`table'" != "" noi report_table `table' , report_tempfile("`report_tempfile'")
@@ -1009,8 +1010,7 @@ qui {
 			*Add link to wiki at the bottom
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write append
-			file write  	`report_handler' ///
-				"Read more about this test and why this is an error or does not follow the best practices we recommend in https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n _n
+			file write  	`report_handler' _n ///
 				"Read more about this test and why this is an error or does not follow the best practices we recommend here:" _n ///
 				"https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n _n
 			file close 		`report_handler'
@@ -1146,4 +1146,38 @@ qui {
 
 		*Reste num_char in row to maximum
 		local num_char 	= `charwidth'
+
+		*If remaining part of message is less than maximum, then move to next step
+		if (strlen("`message'")>`num_char' ) {
+
+			*Find longest string possbile chopped of at appropriate spot (a space). Start with max lenght
+			local ok_end 	= 0
+			while `ok_end' != 1 {
+
+				*Test if this length ends ond a space
+				if (substr("`message'",`num_char',1) == " ") {
+					*It ends on space, this length ends on space
+					local ok_end 	= 1
+				}
+				else {
+					*This lenght does not end on a space, make lenght 1 shorted and test again
+					local --num_char
+				}
+			}
+		}
+
+		*Use the valid lenghts to cut out this string
+		local this_row	= substr("`message'",1,`num_char')
+
+		*Write that line of the message
+		cap file close 	`report_handler'
+		file open  		`report_handler' using "`report_tempfile'", text write append
+		file write  	`report_handler' `""`this_row'""' _n
+		file close 		`report_handler'
+
+		*Remove the string we cut out from message, and repeat until all of message is used.
+		local message	= substr("`message'",`num_char'+1,.)
+	}
+}
+
 end
