@@ -582,7 +582,7 @@ qui {
 			*Add begin group to stack if either begin_group or begin_repeat
 			if `isBegin' {
 
-				local type_and_name "`row_type'#`row_name' `type_and_name'"
+				local type_and_name "`row_type'`row_name'#`row' `type_and_name'"
 
 			}
 
@@ -592,13 +592,15 @@ qui {
 				*Get the type and name of the end_group or end_repeat of this row
 				local endtype = substr("`row_type'", 5,6) //Remove the "end_" part of the type
 				local endname = "`row_name'"
+				local endrow  = "`row'"
 
 				*Get the type and name of the most recent begin_group or begin_repeat
 				local lastbegin : word 1 of `type_and_name'			//the most recent is the first in the list
 
-				*Get the begin type
-				local begintype = substr("`lastbegin'", 7,6)		//Remove the "begin_" part of the type
-				local begintype = subinstr("`begintype'","#","", .)	//Remove the # from "group" as it is one char shorter then "repeat"
+				*Get the begin type and row number
+				local begininfo = substr("`lastbegin'", 7,6)		//Remove the "begin_" part of the type
+				gettoken begintype beginrow : begininfo , parse("#")
+				local beginrow = subinstr("`beginrow'","#","", .)	//Remove the parse char "#"
 
 				*Get the begin name
 				local beginname = substr("`lastbegin'", strpos("`lastbegin'","#")+ 1,.) //Everything that follows the #
@@ -606,7 +608,7 @@ qui {
 				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed
 				if "`endname'" != "`beginname'"  {
 
-					local error_msg "The [end_`endtype' `endname'] was found before [end_`begintype' `beginname']. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [`endname'] and [`beginname'], the [begin_`endtype' `endname'] or the [end_`begintype' `beginname'] are missing or the order of the begin and end of [`endname'] and [`beginname'] is incorrect."
+					local error_msg "The [end_`endtype' `endname'] from row [`endrow'] was found before [end_`begintype' `beginname'] from row [`beginrow']. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [`endname'] and [`beginname'], the [begin_`endtype' `endname'] or the [end_`begintype' `beginname'] are missing or the order of the begin and end of [`endname'] and [`beginname'] is incorrect."
 
 					noi report_file add ,  report_tempfile("`report_tempfile'") testname("END_ BEGIN_ NAME MISMATCH") message("`error_msg'") wikifragment("Matching_begin_.2Fend")
 
@@ -615,7 +617,7 @@ qui {
 				* If name are the same but types are differnt, then it is most likely a typo in type
 				else if "`endtype'" != "`begintype'" {
 
-					local error_msg "The `begintype' [`endname'] is ended with a [end_`begintype'] which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'."
+					local error_msg "The `begintype' [`endname'] on row `endrow' is ended with a [end_`begintype'] on row `beginrow' which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'."
 
 					noi report_file add , report_tempfile("`report_tempfile'") testname("END_ BEGIN_ TYPE MISMATCH") message("`error_msg'") wikifragment("Matching_begin_.2Fend")
 
