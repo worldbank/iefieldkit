@@ -14,7 +14,30 @@ cap program drop iecodebook
 
 	// Throw error if codebook exists
 	if ("`subcommand'" == "template") {
+		* Save file path
 		local file = subinstr(`"`using'"',"using","",.)
+		
+		* Extract folder path
+		local fakefolder = `file'
+		
+		local max = 1		
+		while `max' != 0 {
+		
+			local fs = strpos("`fakefolder'","/")
+			local bs = strpos("`fakefolder'","\")
+			local max = max(`fs',`bs')
+		
+			local folder = "`folder'" + substr("`fakefolder'",1,`max')
+			local fakefolder = substr("`fakefolder'",`max'+1,.)
+		}
+		
+		* Test if folder exists
+		cap confirm file "`folder'/"
+		if _rc == 601 {
+			di as error "The folder `folder' does not exist. iecodebook cannot save a file in this location."
+			exit
+		}
+		
 		cap confirm new file `file'
 		if _rc != 0 {
 			di as err "That template already exists. iecodebook does not allow you to overwrite an existing template,"
