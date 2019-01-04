@@ -15,9 +15,9 @@ cap program drop iecodebook
 		di " / /  __/ /__/ /_/ / /_/ /  __/ /_/ / /_/ / /_/ / ,<		"
 		di "/_/\___/\___/\____/\__,_/\___/_.___/\____/\____/_/|_| 		"
 		di " "
-		di as err "Welcome to [iecodebook]!"
+		di as err "Welcome to {bf:iecodebook}!"
 		di as err "It seems you have left out something important – the codebook!"
-		di as err "If you are new to [iecodebook], please {stata h iecodebook:view the help file}."
+		di as err "If you are new to {bf:iecodebook}, please {stata h iecodebook:view the help file}."
 		di as err "Enjoy!"
 		exit
 	}
@@ -30,12 +30,19 @@ cap program drop iecodebook
 
 	// Throw error if codebook exists
 	if ("`subcommand'" == "template") {
+
 		local file = subinstr(`"`using'"',"using ","",.)
 		cap confirm new file `file'
 		if _rc != 0 {
-			di as err "That template already exists. iecodebook does not allow you to overwrite an existing template,"
+			di as err "That template already exists. {bf:iecodebook} does not allow you to overwrite an existing template,"
 			di as err " since you may already have set it up. If you are {bf:sure} that you want to delete this template,"
-			di as err `" you need to manually remove it from `file'. [iecodebook] will now exit."'
+			di as err `" you need to manually remove it from `file'. {bf:iecodebook} will now exit."'
+			exit
+		}
+		
+		cap confirm new file `file'
+		if _rc {
+			di as error "{bf:iecodebook} could not create file " `file'". Check that the file path is correctly specified."
 			exit
 		}
 	}
@@ -353,7 +360,7 @@ qui {
 		if "`: list dups theNameList'" != "" {
 			di as err "You have multiple entries for the same original variable in name:`survey'."
 			di as err "The duplicates are: `: list dups theNameList'"
-			di as err "This will cause conflicts. iecodebook will now quit."
+			di as err "This will cause conflicts. {bf:iecodebook} will now quit."
 			error 198
 		}
 
@@ -445,7 +452,7 @@ qui {
 		// Rename variables and catch errors
 		cap rename (`allRenames1') (`allRenames2')
 		if _rc != 0 {
-			di as err "That codebook contains a rename conflict. Please check and retry. iecodebook will exit."
+			di as err "That codebook contains a rename conflict. Please check and retry. {bf:iecodebook} will exit."
 			rename (`allRenames1') (`allRenames2')
 		}
 
