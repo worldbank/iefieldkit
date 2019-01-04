@@ -107,7 +107,7 @@ qui {
 	*Import the settings sheet - This is the first time the file is imported so add one layer of custom test
 	cap import excel "`form'", sheet("settings") clear first
 	if _rc == 603 {
-		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an version of Excel.{p_end}"
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an earlier version of Excel.{p_end}"
 		error 603
 	}
 	else if _rc != 0 {
@@ -444,7 +444,7 @@ qui {
 	*Variables that must be included every time
 	local name_vars 		"name"
 	local cmd_vars  		"type required readonly appearance"
-	local msg_vars  		"`labelvars' hint constraintmessage requiredmessage"
+	local msg_vars  		"`labelvars'"
 	local code_vars 		"default constraint  relevance  calculation repeat_count choice_filter"
 
 	local surveysheetvars_required "`name_vars' `cmd_vars' `msg_vars' `code_vars'"
@@ -459,7 +459,22 @@ qui {
 		error 688
 	}
 
-	keep `surveysheetvars_required' row
+	*Variables that are not required to be included but we recommend considering to do so
+	local surveysheetvars_recommended "hint constraintmessage requiredmessage"
+
+	*Test that all recommended vars are in the list and add to report if not
+	if `: list surveysheetvars_recommended in surveysheetvars' == 0 {
+
+		*Generate a list of the vars missing and output to repiort
+		local missing_vars : list surveysheetvars_recommended - surveysheetvars
+		local error_msg "The following column(s) [`missing_vars'] are not required but are often good to include to write a high quality questionnaire. Look them up in SurveyCTO's documentation and consider including them."
+		noi report_file add , report_tempfile("`report_tempfile'") testname("MISSING RECOMMENDED COLUMNS") message("`error_msg'") wikifragment("NOT_YET_CREATED")
+
+		*Remove the missing non-required variables fomr the list used when keeping below
+		local surveysheetvars_recommended : list surveysheetvars_recommended - missing_vars
+	}
+
+	keep `surveysheetvars_required' `surveysheetvars_recommended' row
 
 	*********
 	*make command vars that sometimes are not used and then loaded as numeric
@@ -757,7 +772,7 @@ qui {
 	* have name conlicts when repeat field goes from long to wide and
 	* number are suffixed to the end.
 	qui levelsof name if will_be_field == 1 , local(listofnames) clean
-	wide_name_conflicts, fieldnames("`listofnames'")
+	wide_name_conflicts, fieldnames("`listofnames'") report_tempfile("`report_tempfile'")
 
 }
 end
@@ -765,7 +780,7 @@ end
 capture program drop wide_name_conflicts
 	program wide_name_conflicts , rclass
 qui {
-		syntax , fieldnames(string)
+		syntax , fieldnames(string) report_tempfile(string)
 
 		//Loop over all field names
 		foreach field of local fieldnames {
@@ -788,7 +803,7 @@ qui {
 				local regexpress "`regexpress'_[0-9]+"
 
 				*Start the recursive regression that looks for potential conflicts
-				wide_name_conflicts_rec, field("`field'") fieldnames("`fieldnames'") regexpress("`regexpress'")
+				wide_name_conflicts_rec, field("`field'") fieldnames("`fieldnames'") regexpress("`regexpress'") report_tempfile("`report_tempfile'")
 			}
 		}
 }
@@ -797,7 +812,7 @@ end
 capture program drop wide_name_conflicts_rec
 	program wide_name_conflicts_rec , rclass
 qui {
-		syntax , field(string) fieldnames(string) regexpress(string)
+		syntax , field(string) fieldnames(string) regexpress(string) report_tempfile(string)
 
 		*Is there at least one match to the regular expression
 		local isFieldFound 	= regexm("`fieldnames'" ," `regexpress' ")
@@ -822,7 +837,7 @@ qui {
 			local newFieldnames = substr("`fieldnames'",`stringCut', .)
 
 			*Make the recursive call
-			wide_name_conflicts_rec, field("`field'") fieldnames("`newFieldnames'") regexpress("`regexpress'")
+			wide_name_conflicts_rec, field("`field'") fieldnames("`newFieldnames'") regexpress("`regexpress'") report_tempfile("`report_tempfile'")
 		}
 }
 end
