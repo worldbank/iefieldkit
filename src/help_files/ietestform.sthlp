@@ -1,91 +1,105 @@
 {smcl}
 {hline}
-help for {hi:ietesform}
+help for {hi:ietestform}
 {hline}
 
 {title:Title}
 
-{phang2}{cmdab:ietesform} {hline 2} Test Survey CTO for errors and best practices SCTO's server does not check for.
+{phang2}{cmdab:ietestform} {hline 2} Test SurveyCTO form definition file for errors and best practices the server does not check for.
 
-{phang2}For a more descriptive discussion on the intended usage and work flow of this
-command please see the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
+{phang2}{it: For a more descriptive discussion on the intended usage and workflow of this command please see the}
+{browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
 
 {title:Syntax}
 
 {phang2}
 {cmdab:ietestform}
-, {cmdab:surveyform(}{it:survey_filepath}{cmd:)} {cmdab:report(}{it:string}{cmd:)} 
-[{cmdab:statalanguage(}{it:string}{cmd:)}]
+, {cmdab:s:urveyform(}{it:"/path/to/surveyform.xlsx"}{cmd:)} /// {break}
+{cmdab:r:eport(}{it:"/path/to/report.csv"}{cmd:)} /// {break}
+[{cmdab:stata:language(}{it:column_name}{cmd:)}]
+
 
 {marker opts}{...}
 {synoptset 28}{...}
-{synopthdr:options}
+{synopthdr:Options}
 {synoptline}
-{synopt :{cmdab:surveyform(}{it:string}{cmd:)}}file path to the file with the Survey CTO form definition.{p_end}
-{synopt :{cmdab:report(}{it:string}{cmd:)}}file path to .csv report listing all issues found.{p_end}
+{phang}{it:Required}{p_end}
+{synopt :{cmdab:s:urveyform()}}Specify the filepath to the file with the SurveyCTO form definition.{p_end}
+{synopt :{cmdab:r:eport()}}Specify the filepath to the .csv report you want to create listing all issues found.{p_end}
 
-{phang}{it:Optional options}{p_end}
-{synopt :{cmdab:statalanguage(}{it:string}{cmd:)}}name of Stata label column in the form definition (if not "label:stata").{p_end}
+{phang}{it:Optional}{p_end}
+{synopt :{cmdab:stata:language()}}Specify the name of the column with Stata labels in the form definition (if it is {it:not} "label:stata").{p_end}
 {synoptline}
 
 {title:Description}
 
-{dlgtab:In brief:}
 {pstd}{cmd:ietestform} takes a SurveyCTO form definition in Excel format and parses
- it to test for errors and best practices that SCTO's server does not check for. Some 
- of these test are testing that DIME Analytics' best practices are used, especially in 
+ it to test for errors and best practices that the SurveyCTO server does not check for. Some
+ of these test are testing that DIME Analytics' best practices are used, especially in
  the context of collecting data that will be imported to Stata.
 
-{dlgtab:Tests performed:}
+{title:Tests performed:}
 
-{phang2}For a more detailed discussion on each of the test below and why they are best practices, please see
-the {browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
+{pstd}{it:For a more detailed discussion on each of the tests below and why they are best practices, please see the}
+{browse "https://dimewiki.worldbank.org/wiki/Ietestform":DIME Wiki}.
 
-{title:Choice sheet}
+{dlgtab 0:Survey}
 
-{pstd}{cmd:Numeric name/value:} test that all values in the name/value column are numeric. Having non-numeric values
-will cause conflicts when importing to Stata.
+{p 2 4}{cmd:Groups and repeats close:}{break}
+Each begin_group should have a matching end_group, and repeats should be properly structured.
+{p_end}
 
-{pstd}{cmd:No unused lists:} test that all lists in the choices sheets are used at least once in the survey sheet. 
+{p 2 4}{cmd:Group and repeats have names:}{break}
+There should be no unnamed repeat or group. This is not strictly an error but it is good practice.
+{p_end}
 
-{pstd}{cmd:No duplicated labels:} test that there are no duplicated labels within a list_name.
+{p 2 4}{cmd:Group and repeat variable names do not conflict:}{break}
+Variable names resulting from adding repeat group suffixes must not be the same as other existing variables.
+This includes when converting from long format to wide format.
+{p_end}
 
-{pstd}{cmd:Value labels with no values:} test that all non-missing entries in the label column have a non-missing value/name.
+{p 2 4}{cmd:Variable names are not too long:}{break}
+Variable names must not be too long for Stata.
+This includes variables inside repeat groups whose names will become too long once suffixes are added in wide format.
+{p_end}
 
-{pstd}{cmd:Unlabelled values:} test that all values/names have a label.
+{p 2 4}{cmd:Stata-compliant variable labels:}{break}
+There must be one column with variable labels formatted for Stata, using the multiple language support format, such as {it:label:stata}.
+These labels should be in English, be no longer than 80 characters, and use no special characters.
+{p_end}
 
-{pstd}{cmd:No duplicated name/value:} test that all combinations of list_name and name/value are unique. 
+{dlgtab 0:Choices}
 
-{pstd}{cmd:Stata language:} test that there is one column with value labels formatted for Stata.
+{p 2 4}{cmd:Stata-compliant value labels:}{break}
+There must be one column with value labels formatted for Stata, using the multiple language support format, such as {it:label:stata}.
+These labels should be in English, be no longer than 32 characters, and use no special characters.
+{p_end}
 
-{title:Survey sheet}
+{p 2 4}{cmd:All entries are unique:}{break}
+All combinations of {it:list_name} and {it:value} must be unique.
+{p_end}
 
-{pstd}{cmd:Type column:} test for not matching begin/end group/repeat.
+{p 2 4}{cmd:All values are labelled:}{break}
+All values must have a label.
+{p_end}
 
-{pstd}{cmd:Long variable names:} test for variable names that are too long for Stata. This includes variables inside 
-repeat groups whose names will become too long once suffixes are added in wide format.
+{p 2 4}{cmd:No duplicated labels:}{break}
+There should be no duplicated labels within a {it:list_name}.
+{p_end}
 
-{pstd}{cmd:Naming repeat/group:} test for unnamed repeat/group. Not an error but good practice
+{p 2 4}{cmd:All values are numeric:}{break}
+All values in the {it:value} column must be numeric. Having non-numeric values will cause conflicts when importing to Stata.
+{p_end}
 
-{pstd}{cmd:Stata language:} test that there is one column with variable labels formatted for Stata.
+{p 2 4}{cmd:No unused choice lists:}{break}
+All lists in the {it:choices} sheets must be used at least once in the survey sheet.
+{p_end}
 
-{pstd}{cmd:Long variable labels:} test that variable labels have no more than 80 characters.
+{p 2 4}{cmd:No undefined value labels:}{break}
+All entries in the {it:label} column on the {it:survey} sheet must have at least one value and name on the {it:choices} sheet.
+{p_end}
 
-{pstd}{cmd:Name conflict after long to wide:} test that variable names resulting from adding repeat group suffixes
- will not be the same as other existing variables.
-
-{space 4}{hline}
-
-{title:Options}
-
-{phang}{cmdab:surveyform(}{it:survey_filepath}{cmd:)} 
-
-{phang}{cmdab:report(}{it:string}{cmd:)} 
-
-{phang}{cmdab:statalanguage(}{it:string}{cmd:)} 
-
-
-
+ {hline}
 
 {title:Test performed}
 

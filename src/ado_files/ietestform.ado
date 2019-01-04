@@ -8,49 +8,50 @@ qui {
 	version 13
 
 	preserve
-		
-	syntax , surveyform(string) report(string) [statalanguage(string)]
-	
-	
+
+	syntax , Surveyform(string) Report(string) [STATAlanguage(string)]
+
 	/***********************************************
 		Test input
 	***********************************************/
-	
+
 	*Test that the form file exists
 	cap confirm file "`surveyform'"
 	if _rc {
-		
+
 		noi di as error "{phang}The SCTO questionnaire form file in surveyform(`surveyform') was not found.{p_end}"
 		error _rc
 	}
-	
+
 	*TODO: add test for form file is xls or xsls
 	*TODO: add test for report file
 		* folder exists
 		* file type is cvs or file type where we will add csv to name
-	
+
+	*Tempfile that will be used to write the report
+	tempfile report_tempfile
+
 	/***********************************************
 		Get form meta data and set up report file
 	***********************************************/
-	
+
 	*Get meta data on the form from the form setting sheet
 	importsettingsheet, form("`surveyform'")
-	
+
 	*Load returned values in locals
-	local meta_v		= "`r(version)'" 
-    local meta_id		= "`r(form_id)'" 
+	local meta_v		= "`r(version)'"
+    local meta_id		= "`r(form_id)'"
     local meta_title	= "`r(form_title)'"
-	
+
 	*Setup the report tempfile where all results from all tests will be written
-	tempfile report_tempfile
 	noi report_file setup , report_tempfile("`report_tempfile'") ///
 		metav("`meta_v'") metaid("`meta_id'") metatitle("`meta_title'") metafile("`surveyform'")
-	
+
 
 	/***********************************************
 		Test the choice sheet independently
 	***********************************************/
-	
+
 	noi importchoicesheet, form("`surveyform'") statalanguage(`statalanguage') report_tempfile("`report_tempfile'")
 
 	*Get all choice lists actaually used
@@ -60,7 +61,7 @@ qui {
 	/***********************************************
 		Test the survey sheet independently
 	***********************************************/
-	
+
 	noi importsurveysheet, form("`surveyform'") statalanguage(`statalanguage') report_tempfile("`report_tempfile'")
 
 	*Get all choice lists actaually used
@@ -80,40 +81,45 @@ qui {
 	if "`unused_lists'" != "" {
 
 		local error_msg "There are lists in the choice sheet that are not used by any field of the survey sheet. These are the unused list(s): [`unused_lists']"
-		report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
+		report_file add , report_tempfile("`report_tempfile'") testname("UNUSED CHOICE LISTS") message("`error_msg'") wikifragment("Unused_Choice_Lists")
 	}
 
 	/***********************************************
 		Finsish the report and write it to disk
-	***********************************************/	
-	
+	***********************************************/
+
 	*Write the file to disk
 	noi report_file write, report_tempfile("`report_tempfile'") filepath("`report'")
-	
+
 	restore
-	
+
 }
 end
 
 ** This program imports the settings sheet and get meta information to be used in report header
 capture program drop importsettingsheet
 		program 	 importsettingsheet , rclass
-		
+
 qui {
 
-	//noi di "importsettingsheet command ok"
-	syntax , form(string) 
-	//noi di "importsettingsheet syntax ok"
-	
-	*Import the choices sheet
-	import excel "`form'", sheet("settings") clear first
-	
+	syntax , form(string)
+
+	*Import the settings sheet - This is the first time the file is imported so add one layer of custom test
+	cap import excel "`form'", sheet("settings") clear first
 	if _rc == 603 {
-		noi di as error  "{phang}The file `form' cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an version of Excel.{p_end}"
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an version of Excel.{p_end}"
 		error 603
 	}
-	else if _rc {
+	else if _rc != 0 {
+		*Run the command without cap and display error message for any other error
 		import excel "`form'", sheet("settings") clear first
+	}
+
+	*test that the column version exist
+	cap confirm variable form_title form_id version
+	if _rc != 0 {
+		noi di as error  "{phang}The three variables [form_title form_id version] were not found in the settings sheet of the form. Make sure that your form was already tested at SurveyCTO's server. If you are using non-SurveyCTO ODK then the variable [version] is not requried. To make this command work in that case, simply create a new column in the settings sheet, give it the name {it:version} on first row, and the value 1 on the second row.{p_end}"
+		confirm variable form_title form_id version
 	}
 
 	*Return the settings in return locals
@@ -121,18 +127,17 @@ qui {
 	return local form_id 	= form_id[1]
 	return local version 	= version[1]
 
-} 
+}
 end
 
 
 ** This program imports the choice sheet and run tests on the information there
 capture program drop importchoicesheet
 		program 	 importchoicesheet , rclass
-		
+
 qui {
-	//noi di "importchoicesheet command ok"
+
 	syntax , form(string) [statalanguage(string) report_tempfile(string)]
-	//noi di "importchoicesheet syntax ok"
 
 	/***********************************************
 		Load choices sheet from form
@@ -151,25 +156,13 @@ qui {
 	ds
 	local choicesheetvars `r(varlist)'
 
-	*Test if old name "name" is used for value column
-	if `:list posof "name" in choicesheetvars' ! = 0 {
-		local valuevar "name"
-	}
-	*Test if new name "value" is used for value column
-	else if `:list posof "value" in choicesheetvars' ! = 0 {
-		local valuevar "value"
-	}
-	*Neither "name" or "value" is a name of a column, one must be used
-	else {
-		noi di as error "{phang}Either a column named [name] or a column named [value] is needed in the choice sheet.{p_end}"
-		noi di ""
-		error 688
-	}
+	*Test that either value or name is used for value/name column in the choice sheet, and return the one that is used
+	test_colname , var("choice_valuevar") sheetvars(`choicesheetvars') sheetname("choices")
+	local  valuevar = "`r(checked_varname)'"
 
-	*Create a list of the variables with labels (multiple in case of multiple languages)
-	foreach var of local choicesheetvars {
-		if substr("`var'", 1, 5) == "label" local labelvars "`labelvars' `var'"
-	}
+	*Test that either list_name or listname is used for the list name column in the choice sheet, and return the one that is used
+	test_colname , var("choice_list_name") sheetvars(`choicesheetvars') sheetname("choices")
+	local  listnamevar = "`r(checked_varname)'"
 
 
 	/***********************************************
@@ -179,14 +172,59 @@ qui {
 
 	*Drop rows with all values missing
 	egen 	countmissing = rownonmiss(_all), strok
+
+	** Generate a variable with row number. This must be done after the egen code
+	*  above as the variable row will have value for all rows, and it must be done
+	*  before the drop code below as otherwise the row number will not correspond
+	*  to the row in the excel file.
+	gen row = _n
+	order row
+
+	*After the row number has been created to be identical to form file, then drop empty rows
 	drop if countmissing == 0
 
 	*Get a list with all the list names
-	levelsof list_name, clean local("all_list_names")
+	levelsof `listnamevar', clean local("all_list_names")
 
-	*Count number of non-missing
-	egen 	labelmiss	 = rowmiss(`labelvars')
-	egen 	labelnonmiss = rownonmiss(`labelvars'), strok
+	*Create a list of the variables with labels (multiple in case of multiple languages)
+	foreach var of local choicesheetvars {
+		if substr("`var'", 1, 5) == "label" local labelvars "`labelvars' `var'"
+	}
+	local num_label_vars : word count `labelvars'
+
+	*Create dummies for missing status in the label vars
+	egen 	label_count_miss	 = rowmiss(`labelvars')
+	egen 	label_count_non_miss = rownonmiss(`labelvars'), strok
+
+	gen label_all_miss 		= (label_count_non_miss == 0)
+	gen label_some_miss 	= (label_count_miss > 0)
+	gen label_all_non_miss 	= (label_count_miss == 0)
+	gen label_some_non_miss = (label_count_non_miss > 0)
+
+	/***********************************************
+		TEST - List names with leading or trailing
+		spaces in string values in excel file
+	***********************************************/
+
+	ds, has(type string)
+	local strvars `r(varlist)'
+
+	foreach strvar of local strvars {
+		*Test that the list name does not have leading or trailing spaces
+		gen trim_`strvar' = (`strvar' != trim(`strvar'))
+
+		*Add item to report for any row with missing label in the label vars
+		count if trim_`strvar' != 0
+		if `r(N)' > 0 {
+
+			local error_msg "The string values in [`strvar'] column are imported as strings and has leading or trailing spaces in the Excel file"
+
+			noi report_file add , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (choice sheet; column: `strvar')") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `strvar' if trim_`strvar' != 0")
+		}
+
+		*Remove leading or trailing spaces so they do not cause errors in later tests
+		replace `strvar' = trim(`strvar')
+	}
 
 	/***********************************************
 		TEST - Numeric name
@@ -195,16 +233,18 @@ qui {
 	***********************************************/
 
 	*Test if variable is numeric
+	cap destring `valuevar', replace //destring if import from Excel incorrectly made string
 	cap confirm numeric variable `valuevar'
 
 	*Test if error code is 7, other codes should return other error message
 	if _rc == 7 {
 
-		*TODO: Find a way to list the non-numeric values identified
+		*Creates a dummy for all obs where value/name var is not numeric
+		gen non_numeric = missing(real(`valuevar'))
 
 		local error_msg "There are non numeric values in the [`valuevar'] column of the choice sheet"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("NON NUMERIC NAME VALUES") message("`error_msg'") wikifragment("Value.2FName_Numeric") table("list row `listnamevar' `valuevar' if non_numeric != 0")
 
 	}
 	else if _rc != 0 {
@@ -221,32 +261,36 @@ qui {
 	***********************************************/
 
 	*Test for duplicates and return error if not all combinations are unique
-	duplicates tag list_name `valuevar', gen(list_item_dup)
+	duplicates tag `listnamevar' `valuevar', gen(list_item_dup)
 
-	replace list_item_dup = 0 if missing(`valuevar')	//If value var is missing, it is not a duplicate, it will be tested for later.
+	*Don't treat missing as duplicates, it will be tested for later.
+	replace list_item_dup = 0 if missing(`valuevar')
 
+	*Add item to report if any duplicates were found
 	count if list_item_dup != 0
 	if `r(N)' > 0 {
 
-		local error_msg "There are duplicates in the following list_names:"
+		local error_msg "There are duplicates in the following list names in varaible `listnamevar's:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list list_name `valuevar' if list_item_dup != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("NON NUMERIC LIST NAME VALUES") message("`error_msg'") wikifragment("Duplicated_List_Code") table("list row `listnamevar' `valuevar' if list_item_dup != 0")
 	}
 
 	/***********************************************
 		TEST - Value labels with no values
 		Test that all non-missing values in the label
-		column have a name/value
+		column have a name/value.
 	***********************************************/
 
-	*Test for duplicates and return error if not all combinations are unique
-	gen lable_with_missvalue = (missing(`valuevar') & labelnonmiss != 0)
+	*Test that all rows with a label in any language as a value in the value var
+	gen lable_with_missvalue = (missing(`valuevar') & label_some_non_miss == 1)
+
+	*Add item to report for any row with missing value in the value/name var
 	count if lable_with_missvalue != 0
 	if `r(N)' > 0 {
 
-		local error_msg "There non-missing values in the [label] column of the choice sheet for rows that have missing value in the [`valuevar'] column:"
+		local error_msg "There is no value in the [`valuevar'] column for some choice list items that have non-missing values in the [`labelvars'] column(s):"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list list_name `valuevar' `labelvars' if lable_with_missvalue != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("MISSING LIST VALUE") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list row `listnamevar' `valuevar' `labelvars' if lable_with_missvalue != 0")
 	}
 
 	/***********************************************
@@ -254,14 +298,16 @@ qui {
 		Test that all values/names have a label
 	***********************************************/
 
-	*Test for duplicates and return error if not all combinations are unique
-	gen unlabelled = (!missing(`valuevar') & labelnonmiss == 0)
+	*Test that rows with non-missing value/name values have label in all label languages
+	gen unlabelled = (!missing(`valuevar') & label_some_miss == 1)
+
+	*Add item to report for any row with missing label in the label vars
 	count if unlabelled != 0
 	if `r(N)' > 0 {
 
 		local error_msg "There non-missing values in the [`valuevar'] column of the choice sheet without a label in the [label] colum:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list list_name `valuevar' `labelvars' if unlabelled != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("MISSING LIST LABELS") message("`error_msg'") wikifragment("Missing_Labels_or_Value.2FName_in_Choice_Lists") table("list row `listnamevar' `valuevar' `labelvars' if unlabelled != 0")
 	}
 
 	/***********************************************
@@ -286,7 +332,7 @@ qui {
 			**Test for duplicates in the label var and display
 			* errors if any observation do not have a unique,
 			* i.e. label_dup != 0, label
-			duplicates tag `labelvar' if list_name == "`list'", gen(label_dup)
+			duplicates tag `labelvar' if `listnamevar' == "`list'", gen(label_dup)
 
 			*Was any duplicates found in this list
 			count if label_dup == 1
@@ -308,7 +354,7 @@ qui {
 
 			local error_msg "There are duplicated entries in the [`labelvar'] column of the choice sheet within the [`lists_with_dups'] list(s) for the following labels:"
 
-			noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list list_name `valuevar' `labelvar' filter if label_all_cols_dup == 1")
+			noi report_file add , report_tempfile("`report_tempfile'") testname("DUPLICATED LABEL (column: `labelvar') WITHIN LIST") message("`error_msg'") wikifragment("Duplicated_List_Labels") table("list row `listnamevar' `valuevar' `labelvar' if label_all_cols_dup == 1")
 
 		}
 	}
@@ -341,8 +387,8 @@ qui {
 		else {
 
 			local error_msg "There is no column in the choice sheet with the name [label:stata]. This is best practice as it allows you to automatically import choice list labels optimized for Stata's value labels, making the data set easier to read."
-			
-			noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
+
+			noi report_file add , report_tempfile("`report_tempfile'") testname("NO STATA LIST LABEL") message("`error_msg'") wikifragment("Stata_Labels_Columns")
 
 		}
 	}
@@ -424,6 +470,31 @@ qui {
 		replace `var' = "" if `var' == "."
 	}
 
+	/***********************************************
+		TEST - List names with leading or trailing
+		spaces in string values in excel file
+	***********************************************/
+
+	ds, has(type string)
+	local strvars `r(varlist)'
+
+	foreach strvar of local strvars {
+		*Test that the list name does not have leading or trailing spaces
+		gen trim_`strvar' = (`strvar' != trim(`strvar'))
+
+		*Add item to report for any row with missing label in the label vars
+		count if trim_`strvar' != 0
+		if `r(N)' > 0 {
+
+			local error_msg "The string values in [`strvar'] column are imported as strings and has leading or trailing spaces in the Excel file"
+
+			noi report_file add , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (survey sheet; column: `strvar')") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `strvar' if trim_`strvar' != 0")
+		}
+
+		*Remove leading or trailing spaces so they do not cause errors in later tests
+		replace `strvar' = trim(`strvar')
+	}
+
 
 	/***********************************************
 		TEST - Type column
@@ -485,6 +556,8 @@ qui {
 
 	local begin_end_error = 0
 
+
+	******************************************************************************************
 	*Loop over all rows to test if begin and end match perfectly and give helpful error if not
 	local num_rows = _N
 	forvalues row = 1/`num_rows' {
@@ -503,13 +576,14 @@ qui {
 
 				local error_msg "It is bad practice to leave the name column empty for end_group or end_repeat fields. While this is allowed in ODK, it makes error finding harder and slower. The following repeat or end groups have empty name columns:"
 
-				noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list row type name if _n == `row'")
+				noi report_file add , report_tempfile("`report_tempfile'") testname("MISSING END_GROUP/END_REPEAT NAME") message("`error_msg'") wikifragment("Matching_begin_.2Fend") table("list row type name if _n == `row'")
 			}
 
 			*Add begin group to stack if either begin_group or begin_repeat
 			if `isBegin' {
 
-				local type_and_name "`row_type'#`row_name' `type_and_name'"
+				local begintype = substr("`row_type'", 7,.)
+				local type_and_name "`begintype'#`row_name'#`row' `type_and_name'"
 
 			}
 
@@ -519,32 +593,35 @@ qui {
 				*Get the type and name of the end_group or end_repeat of this row
 				local endtype = substr("`row_type'", 5,6) //Remove the "end_" part of the type
 				local endname = "`row_name'"
+				local endrow  = "`row'"
 
 				*Get the type and name of the most recent begin_group or begin_repeat
 				local lastbegin : word 1 of `type_and_name'			//the most recent is the first in the list
 
-				*Get the begin type
-				local begintype = substr("`lastbegin'", 7,6)		//Remove the "begin_" part of the type
-				local begintype = subinstr("`begintype'","#","", .)	//Remove the # from "group" as it is one char shorter then "repeat"
 
-				*Get the begin name
-				local beginname = substr("`lastbegin'", strpos("`lastbegin'","#")+ 1,.) //Everything that follows the #
+				*Parse the begintype and reomve parse charecter from rest
+				gettoken begintype beginnameandrow : lastbegin , parse("#")
+				local beginnameandrow = subinstr("`beginnameandrow'","#","", 1)	//Remove the parse char "#"
+
+				*Parse name and row and remove parse charcter from row
+				gettoken beginname beginrow : beginnameandrow , parse("#")
+				local beginrow = subinstr("`beginrow'","#","", 1)	//Remove the parse char "#"
 
 				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed
 				if "`endname'" != "`beginname'"  {
 
-					local error_msg "The [end_`endtype' `endname'] was found before [end_`begintype' `beginname']. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [`endname'] and [`beginname'], the [begin_`endtype' `endname'] or the [end_`begintype' `beginname'] are missing or the order of the begin and end of [`endname'] and [`beginname'] is incorrect."
+					local error_msg "The [end_`endtype' `endname'] from row [`endrow'] was found before [end_`begintype' `beginname'] from row [`beginrow']. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [`endname'] and [`beginname'], the [begin_`endtype' `endname'] or the [end_`begintype' `beginname'] are missing or the order of the begin and end of [`endname'] and [`beginname'] is incorrect."
 
-					noi report_file add ,  report_tempfile("`report_tempfile'") message("`error_msg'")
+					noi report_file add ,  report_tempfile("`report_tempfile'") testname("END_ BEGIN_ NAME MISMATCH") message("`error_msg'") wikifragment("Matching_begin_.2Fend")
 
 				}
 
 				* If name are the same but types are differnt, then it is most likely a typo in type
 				else if "`endtype'" != "`begintype'" {
 
-					local error_msg "The `begintype' [`endname'] is ended with a [end_`begintype'] which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'."
+					local error_msg "The `begintype' [`endname'] on row `endrow' is ended with a [end_`begintype'] on row `beginrow' which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'."
 
-					noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
+					noi report_file add , report_tempfile("`report_tempfile'") testname("END_ BEGIN_ TYPE MISMATCH") message("`error_msg'") wikifragment("Matching_begin_.2Fend")
 
 				}
 
@@ -602,6 +679,7 @@ qui {
 	gen namelen = strlen(name)
 	order namelen, after(name) //jsut to make dev easier
 
+	//Generate a variable that indicates if a variable will be a variable or not
 	gen will_be_field = !((inlist(type, "start", "end" )) | (typeBeginEnd == 1))
 
 	/***********************************************
@@ -649,25 +727,25 @@ qui {
 
 		local error_msg "These variable names are longer then 32 characters. That is allowed in the data formats used in SurveyCTO - and is therefore allowed in their test - but will cause an error when the data is imported to Stata. The following names should be shortened:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list row type name if longname == 1")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES")  message("`error_msg'") wikifragment("Field_Name_Length") able("list row type name if longname == 1")
 
 	}
 
 	cap assert longname1 == 0
 	if _rc {
 
-		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_x} to the variable name for each repeat group this variable is in, where {it:x} is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ({it:_x}) are needed. The following variables's name will be longer then 32 characters if two characters are added per repeat group and should therefore be shortened:"
+		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add [_x] to the variable name for each repeat group this variable is in, where [x] is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ([_x]) are needed. The following variables's name will be longer then 32 characters if two characters are added per repeat group and should therefore be shortened:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list row type name num_nested_repeats if longname1 == 1")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES WITH REPEAT SUFFIX") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length") table("list row type name num_nested_repeats if longname1 == 1")
 
 	}
 
 	cap assert longname2 == 0
 	if _rc {
 
-		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add {it:_xx} to the variable name for each repeat group this variable is in, where {it:xx} is the repeat count for that repeat. This test assumed that the repeat count is between 10 and 99 so that up to three characters ({it:_xx}) are needed. The following variables are are longer then 32 characters if two characters will be added per repeat group and should therefore be shortened:"
+		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add [_xx] to the variable name for each repeat group this variable is in, where [xx] is the repeat count for that repeat. This test assumed that the repeat count is between 10 and 99 so that up to three characters [_xx] are needed. The following variables are are longer then 32 characters if two characters will be added per repeat group and should therefore be shortened:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list row type name num_nested_repeats if longname2 == 1")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES WITH REPEAT SUFFIX (double digit)") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length") table("list row type name num_nested_repeats if longname2 == 1")
 
 	}
 
@@ -731,10 +809,9 @@ qui {
 			local fieldFound	= trim(regexs(0))
 
 			*Display error
-
 			local error_msg "There is a potential name conflict between field [`field'] and [`fieldFound'] as `field' is in a repeat group. When variables in repeat groups are imported to Stata they will be given the suffix `field'_1, `field'_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is."
 
-			noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
+			noi report_file add , report_tempfile("`report_tempfile'") testname("NAME CONFLICT ACROSS REPEAT GROUP") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length")
 
 
 			**Prepare the string to recurse on. Remove eveything up to the matched
@@ -758,7 +835,7 @@ qui {
 
 		/***********************************************
 			TEST - Stata language for variable labels
-			Test that there is one column with variable 
+			Test that there is one column with variable
 			labels formatted for stata.
 		***********************************************/
 
@@ -776,27 +853,29 @@ qui {
 
 			*The user specified stata label language name does not exist. Throw error
 			if "`statalanguage'" != "" {
+
 				noi di as error "{phang}The label langauge specified in {inp:statalanguage(`statalanguage')} does not exist in the survey sheet. A column in the survey sheet must have a name that is [label:`statalanguage'].{p_end}"
 				noi di ""
 				error 198
+
 			}
 			*The default stata label language name does not exist. Throw warning (error for now)
 			else {
 
 				local error_msg "There is no column in the survey sheet with the name [label:stata]. This is best practice as this allows you to automatically import variable labels optimized for Stata, making the data set easier to read."
 
-				noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'")
+				noi report_file add , report_tempfile("`report_tempfile'") testname("NO STATA FIELD LABEL") message("`error_msg'") wikifragment("Stata_Labels_Columns")
 
 			}
 		}
 		else {
-		
+
 		/***********************************************
 			TEST - Long variable labels
 			Test that variable labels are no longer than
 			80 characters
 		***********************************************/
-		
+
 			*Test the length of the Stata label
 			gen labellength = strlen(`labelstata')
 
@@ -807,14 +886,52 @@ qui {
 			cap assert longlabel == 0
 			if _rc {
 
-
 				local error_msg "These stata labels are longer then 80 characters which means that Stata will cut them off. The point of having a Stata label variable is to manually make sure that the labels documenting the variables in the data set makes sense to a human reader. The following labels should be shortened:"
 
-				noi report_file add , report_tempfile("`report_tempfile'") message("`error_msg'") table("list row type name labellength `labelstata' if longlabel == 1")
+				noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD LABEL") message("`error_msg'") wikifragment("Survey_Sheet_Stata_Labels") table("list row type name labellength `labelstata' if longlabel == 1")
 
 			}
 		}
+}
+end
 
+*Program that test that exactly one of multiple allowed column names was used. Returns valid used name.
+capture program drop test_colname
+		program 	 test_colname , rclass
+
+qui {
+
+	syntax , var(string) sheetvars(string) sheetname(string)
+
+	*Load the allowed names for each column:
+	if "`var'" == "choice_valuevar" local allowed_names value name
+	if "`var'" == "choice_list_name" local allowed_names listname list_name
+
+	*Initate a local that keep track of whether a column with an allowed name was found
+	local correct_found = 0
+
+	foreach allowed_name of local allowed_names {
+
+		*Test if name exists
+		if `:list posof "`allowed_name'" in sheetvars' != 0 {
+
+			*Test that this is the first name that was found
+			if `correct_found' == 1 {
+				noi di as error "{phang}The `sheetname' sheet of may only include one of the following columns: [`allowed_names'].{p_end}"
+				error 688
+			}
+
+			*If the first name found, return it
+			return local checked_varname "`allowed_name'"
+			local correct_found = 1
+    	}
+	}
+
+	*No allowed name found for this required variable
+	if `correct_found' == 0 {
+		noi di as error "{phang}The `sheetname' sheet of must include one column named one of these names: [`allowed_names'].{p_end}"
+		error 688
+	}
 }
 end
 
@@ -823,7 +940,7 @@ capture program drop report_file
 qui {
 
 		//noi di "report_file command ok"
-		syntax anything , report_tempfile(string) [message(string) filepath(string) table(string) metav(string) metaid(string) metatitle(string) metafile(string)]
+		syntax anything , report_tempfile(string) [testname(string) message(string) filepath(string) wikifragment(string) table(string) metav(string) metaid(string) metatitle(string) metafile(string)]
 		//noi di "report_file syntax ok [`anything']"
 
 		local allowed_tasks		"setup add write"
@@ -848,7 +965,7 @@ qui {
 
 		*Setup files
 		if "`task'" == "setup" {
-		
+
 			local user = c(username)
 			local date = subinstr(c(current_date)," ","",.)
 
@@ -856,8 +973,6 @@ qui {
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write replace
 			file write  	`report_handler' ///
-				"######################################################################" _n ///
-				"######################################################################" _n ///
 				_n ///
 				"This report was created by user `user' on `date' using the Stata command ietestform" _n ///
 				_n ///
@@ -868,30 +983,37 @@ qui {
 				",Form ID,`metaid'" _n ///
 				",Form Title,`metatitle'" _n ///
 				",Form Version,`metav'" _n ///
-				",Form File,`metafile'" _n ///
-				_n ///
-				"######################################################################" _n ///
-				"######################################################################" _n ///
-				_n
+				",Form File,`metafile'" _n _n
+
 			file close 		`report_handler'
 		}
 
 		*Add item to report
 		else if "`task'" == "add" {
 
-			*Add item to report
+			*Add seperator and error message
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' ///
-								"######################################################################" _n ///
-								"Read more about this test and why this is an error or does not follow the best practices we recommend in https://dimewiki.worldbank.org/wiki/Ietestform##insertanchorhere" _n ///
-								_n ///
-								`""`message'""' _n ///
-								_n ///
-
+				"----------------------------------------------------------------------" _n ///
+				"----------------------------------------------------------------------" _n ///
+				"TEST: `testname'" _n ///
+				"-----------------------------------" _n _n
 			file close 		`report_handler'
 
+			*Chop the message up in charwidth
+			noi report_message , report_tempfile("`report_tempfile'") message("`message'") charwidth(80)
+
+			*Add table if applicable
 			if "`table'" != "" noi report_table `table' , report_tempfile("`report_tempfile'")
+
+			*Add link to wiki at the bottom
+			cap file close 	`report_handler'
+			file open  		`report_handler' using "`report_tempfile'", text write append
+			file write  	`report_handler' _n ///
+				"Read more about this test and why this is an error or does not follow the best practices we recommend here:" _n ///
+				"https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n _n
+			file close 		`report_handler'
 		}
 
 		*Write final file to disk
@@ -901,14 +1023,11 @@ qui {
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write append
 			file write  	`report_handler' ///
-				_n ///
-				"######################################################################" _n ///
-				"######################################################################" _n ///
+				"----------------------------------------------------------------------" _n ///
+				"----------------------------------------------------------------------" _n ///
 				_n ///
 				"This is the end of the report." _n
 			file close 		`report_handler'
-
-	
 
 			*Write temporary file to disk
 			cap copy "`report_tempfile'" "`filepath'", replace
@@ -931,8 +1050,6 @@ qui {
 			noi di as error "Task error"
 			error 198
 		}
-
-
 }
 end
 
@@ -986,7 +1103,7 @@ qui {
 			*Write and save report
 			cap file close 	`report_handler'
 			file open  		`report_handler' using "`report_tempfile'", text write append
-			file write  	`report_handler' `"`title'"' _n
+			file write  	`report_handler' _n `"`title'"' _n
 			file close 		`report_handler'
 
 			*Loop over all cases and prepare tablestrs and numbe rthem
@@ -1007,13 +1124,60 @@ qui {
 				file close 		`report_handler'
 			}
 
-			*Add line space
-			cap file close 	`report_handler'
-			file open  		`report_handler' using "`report_tempfile'", text write append
-			file write  	`report_handler' _n
-			file close 		`report_handler'
 		}
 
 	restore
 }
+
+end
+
+
+*Chops up messages in appropriate lengths, and make sure that the cutoff is always a space
+capture program drop report_message
+		program 	 report_message , rclass
+qui {
+
+	syntax , report_tempfile(string) message(string) charwidth(numlist)
+
+	tempname report_handler
+
+	*Loop over message and chop up in segments
+	while "`message'" != "" {
+
+		*Reste num_char in row to maximum
+		local num_char 	= `charwidth'
+
+		*If remaining part of message is less than maximum, then move to next step
+		if (strlen("`message'")>`num_char' ) {
+
+			*Find longest string possbile chopped of at appropriate spot (a space). Start with max lenght
+			local ok_end 	= 0
+			while `ok_end' != 1 {
+
+				*Test if this length ends ond a space
+				if (substr("`message'",`num_char',1) == " ") {
+					*It ends on space, this length ends on space
+					local ok_end 	= 1
+				}
+				else {
+					*This lenght does not end on a space, make lenght 1 shorted and test again
+					local --num_char
+				}
+			}
+		}
+
+		*Use the valid lenghts to cut out this string
+		local this_row	= substr("`message'",1,`num_char')
+
+		*Write that line of the message
+		cap file close 	`report_handler'
+		file open  		`report_handler' using "`report_tempfile'", text write append
+		file write  	`report_handler' `""`this_row'""' _n
+		file close 		`report_handler'
+
+		*Remove the string we cut out from message, and repeat until all of message is used.
+		local message	= substr("`message'",`num_char'+1,.)
+	}
+}
+
 end
