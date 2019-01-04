@@ -444,7 +444,7 @@ qui {
 	*Variables that must be included every time
 	local name_vars 		"name"
 	local cmd_vars  		"type required readonly appearance"
-	local msg_vars  		"`labelvars' hint constraintmessage requiredmessage"
+	local msg_vars  		"`labelvars'"
 	local code_vars 		"default constraint  relevance  calculation repeat_count choice_filter"
 
 	local surveysheetvars_required "`name_vars' `cmd_vars' `msg_vars' `code_vars'"
@@ -459,7 +459,22 @@ qui {
 		error 688
 	}
 
-	keep `surveysheetvars_required' row
+	*Variables that are not required to be included but we recommend considering to do so
+	local surveysheetvars_recommended "hint constraintmessage requiredmessage"
+
+	*Test that all recommended vars are in the list and add to report if not
+	if `: list surveysheetvars_recommended in surveysheetvars' == 0 {
+
+		*Generate a list of the vars missing and output to repiort
+		local missing_vars : list surveysheetvars_recommended - surveysheetvars
+		local error_msg "The following column(s) [`missing_vars'] are not required but are often good to include to write a high quality questionnaire. Look them up in SurveyCTO's documentation and consider including them."
+		noi report_file add , report_tempfile("`report_tempfile'") testname("MISSING RECOMMENDED COLUMNS") message("`error_msg'") wikifragment("NOT_YET_CREATED")
+
+		*Remove the missing non-required variables fomr the list used when keeping below
+		local surveysheetvars_recommended : list surveysheetvars_recommended - missing_vars
+	}
+
+	keep `surveysheetvars_required' `surveysheetvars_recommended' row
 
 	*********
 	*make command vars that sometimes are not used and then loaded as numeric
