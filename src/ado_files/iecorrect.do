@@ -1,12 +1,16 @@
 cap program drop iecorrect
 	program 	 iecorrect
 		
-	syntax using
+	syntax using, [GENerate]
 		
 		preserve
 		
 			noi di "import excel file"
 			import excel `using', sheet("other") firstrow allstring clear
+			
+			foreach var of varlist strvar catvar {
+				levelsof `var', local(`var'List)
+			}
 			
 			tempname	corrections
 			tempfile	correctionsfile
@@ -48,6 +52,21 @@ cap program drop iecorrect
 		restore
 		
 		noi di "Back to original file"
+		
+		foreach varType in strvar catvar {
+			foreach var of local `varType'List {
+				cap confirm variable `var'
+				if _rc {
+					if "`generate'" != "" {
+						gen `var' = .
+					}
+					else {
+						noi di as error "There is no variable called `var'. To create this variable, use the generate option."
+						exit
+					}
+				}
+			}
+		}
 		
 		noi di "Read corretions"
 		file open corrections using "`correctionsfile'", read
