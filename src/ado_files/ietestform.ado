@@ -107,7 +107,7 @@ qui {
 	*Import the settings sheet - This is the first time the file is imported so add one layer of custom test
 	cap import excel "`form'", sheet("settings") clear first
 	if _rc == 603 {
-		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an version of Excel.{p_end}"
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an earlier version of Excel.{p_end}"
 		error 603
 	}
 	else if _rc != 0 {
