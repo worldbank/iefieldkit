@@ -757,7 +757,7 @@ qui {
 	* have name conlicts when repeat field goes from long to wide and
 	* number are suffixed to the end.
 	qui levelsof name if will_be_field == 1 , local(listofnames) clean
-	wide_name_conflicts, fieldnames("`listofnames'")
+	wide_name_conflicts, fieldnames("`listofnames'") report_tempfile("`report_tempfile'")
 
 }
 end
@@ -765,7 +765,7 @@ end
 capture program drop wide_name_conflicts
 	program wide_name_conflicts , rclass
 qui {
-		syntax , fieldnames(string)
+		syntax , fieldnames(string) report_tempfile(string)
 
 		//Loop over all field names
 		foreach field of local fieldnames {
@@ -788,7 +788,7 @@ qui {
 				local regexpress "`regexpress'_[0-9]+"
 
 				*Start the recursive regression that looks for potential conflicts
-				wide_name_conflicts_rec, field("`field'") fieldnames("`fieldnames'") regexpress("`regexpress'")
+				wide_name_conflicts_rec, field("`field'") fieldnames("`fieldnames'") regexpress("`regexpress'") report_tempfile("`report_tempfile'")
 			}
 		}
 }
@@ -797,7 +797,7 @@ end
 capture program drop wide_name_conflicts_rec
 	program wide_name_conflicts_rec , rclass
 qui {
-		syntax , field(string) fieldnames(string) regexpress(string)
+		syntax , field(string) fieldnames(string) regexpress(string) report_tempfile(string)
 
 		*Is there at least one match to the regular expression
 		local isFieldFound 	= regexm("`fieldnames'" ," `regexpress' ")
@@ -822,7 +822,7 @@ qui {
 			local newFieldnames = substr("`fieldnames'",`stringCut', .)
 
 			*Make the recursive call
-			wide_name_conflicts_rec, field("`field'") fieldnames("`newFieldnames'") regexpress("`regexpress'")
+			wide_name_conflicts_rec, field("`field'") fieldnames("`newFieldnames'") regexpress("`regexpress'") report_tempfile("`report_tempfile'")
 		}
 }
 end
