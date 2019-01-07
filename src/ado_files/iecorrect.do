@@ -21,30 +21,46 @@ cap program drop iecorrect
 			file write  corrections		  "* Write header here" _n _n
 			file close  corrections		  
 			
+		preserve
+		
+			* Numeric variables corrections
+			noi di "import 'numeric' sheet"
+		cap import excel "`using'", sheet("numeric") firstrow allstring clear
+		if !_rc {
 			
-			noi di "enter write loop"
+			foreach var of varlist numvar {
+				levelsof `var', local(`var'List)
+			}
 			
 			count
-			forvalues row = 1/`r(N)' {
-				
-				local strvar			= strvar[`row']
-				
-				local strvaluecurrent 	= strvaluecurrent[`row']
-				local strvaluecurrent	= `""`strvaluecurrent'""'
-				
-				local strvalue		 	= strvalue[`row']
-				local strvalue			= `""`strvalue'""'
-				
-				local catvar		 	= catvar[`row']
-				local catvalue		 	= catvalue[`row']
+			if `r(N)' > 0 {						
+			noi di "enter write loop"
+		cap	file close 	corrections	
+			file open  	corrections using "`correctionsfile'", text write append
+			file write  corrections		  "** Correct entries in numeric variables " _n
+				forvalues row = 1/`r(N)' {
+					
+					local var			= numvar[`row']
+					local valuecurrent 	= valuecurrent[`row']
+					local value		 	= value[`row']
+					local idvalue		= idvalue[`row']
 
-				if "`catvar'" != ""	{
-					noi di "enter first if"
-					file write corrections		`"replace `catvar' = `catvalue' if `strvar' == `strvaluecurrent'"' _n
-				}
-				if !(regex(`strvalue',`strvaluecurrent') & regex(`strvalue',`strvaluecurrent'))	{
-					noi di "enter second if"
-					file write corrections		`"replace `strvar' = `strvalue' if `strvar' == `strvaluecurrent'"' _n
+					file write corrections		`"replace `var' = `value' if "'
+					
+					if "`idvar'" != "" {
+						file write corrections	`"`idvar' == `idvalue' "'
+						
+						if "`valuecurrent'" != "" {
+							file write corrections	`"& "'
+						}
+					}
+					
+					if "`valuecurrent'" != "" {
+						noi di "enter valuecurrent"
+						file write corrections	 `"`var' == `valuecurrent'"'
+					}
+					
+					file write corrections	_n
 				}
 
 			}
