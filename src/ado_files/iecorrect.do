@@ -168,7 +168,8 @@ cap program drop iecorrect
 		
 		noi di "Back to original file"
 		
-		foreach varType in strvar catvar {
+		* Test if variables exist
+		foreach varType in strvar catvar numvar idvar {
 			foreach var of local `varType'List {
 				cap confirm variable `var'
 				if _rc {
@@ -182,6 +183,9 @@ cap program drop iecorrect
 				}
 			}
 		}
+		
+		* Test if numeric variable is numeric
+		
 		
 		noi di "Read corretions"
 		file open corrections using "`correctionsfile'", read
