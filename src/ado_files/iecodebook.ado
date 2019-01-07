@@ -298,7 +298,7 @@ qui {
 	use `allData' , clear
 	// Success message
 	if "`template'" == "" local template "current"
-	if `c(N)' > 1 di as err `"Codebook for `template' data created using `using'"'
+	if `c(N)' > 1 di as err `"Codebook for `template' data created using {browse "`using'": `using'}"'
 
 } // end qui
 end
