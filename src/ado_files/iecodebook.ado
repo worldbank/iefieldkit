@@ -2,8 +2,8 @@
 
 // Main syntax *********************************************************************************
 
-cap program drop iecodebook2
-	program def  iecodebook2
+cap program drop iecodebook
+	program def  iecodebook
 
 	version 13 // Requires 13.1 due to use of long macros
 
