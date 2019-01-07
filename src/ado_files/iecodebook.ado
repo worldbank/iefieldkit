@@ -2,12 +2,12 @@
 
 // Main syntax *********************************************************************************
 
-cap program drop iecodebook
-	program def  iecodebook
+cap program drop iecodebook2
+	program def  iecodebook2
 
 	version 13 // Requires 13.1 due to use of long macros
 
-	cap syntax [anything] using , [*]
+	cap syntax [anything] using/ , [*]
 	if _rc == 100 {
 		di "    _                     __     __                __		"
 		di "   (_)__  _________  ____/ /__  / /_  ____  ____  / /__		"
@@ -22,7 +22,7 @@ cap program drop iecodebook
 		exit
 	}
 	else if _rc != 0 {
-		syntax [anything] using , [*]
+		syntax [anything] using/ , [*]
 	}
 
 	// Select subcommand
@@ -31,8 +31,7 @@ cap program drop iecodebook
 	// Throw error if codebook exists
 	if ("`subcommand'" == "template") {
 
-		local file = subinstr(`"`using'"',"using ","",.)
-		cap confirm new file `file'
+		cap confirm new file "`using'"
 		if _rc != 0 {
 			di as err "That template already exists. {bf:iecodebook} does not allow you to overwrite an existing template,"
 			di as err " since you may already have set it up. If you are {bf:sure} that you want to delete this template,"
@@ -40,9 +39,9 @@ cap program drop iecodebook
 			exit
 		}
 		
-		cap confirm new file `file'
+		cap confirm new file "`using'"
 		if _rc {
-			di as error "{bf:iecodebook} could not create file " `file'". Check that the file path is correctly specified."
+			di as error "{bf:iecodebook} could not create file `using'. Check that the file path is correctly specified."
 			exit
 		}
 	}
@@ -53,7 +52,7 @@ cap program drop iecodebook
 	}
 
 	// Execute subcommand
-	iecodebook_`subcommand' `anything' `using' , `options'
+	iecodebook_`subcommand' `anything' using "`using'" , `options'
 
 end
 
@@ -62,14 +61,14 @@ end
 cap program drop iecodebook_template
 program iecodebook_template
 
-	syntax [anything] [using] , [*]
+	syntax [anything] [using/] , [*]
 
 	// Select the right syntax and pass through to templating options
 	if `"`anything'"' == `""' {
-		iecodebook apply `using' , `options' template
+		iecodebook apply using "`using'" , `options' template
 	}
 	else {
-		iecodebook append `anything' `using' , `options' template
+		iecodebook append `anything' using "`using'" , `options' template
 	}
 
 end
@@ -79,7 +78,7 @@ end
 cap program drop iecodebook_export
 	program 	 iecodebook_export
 
-	syntax [anything] [using] [if] [in], [template(string asis)] [trim(string asis)]
+	syntax [anything] [using/] [if] [in], [template(string asis)] [trim(string asis)]
 qui {
 
 	// Return a warning if there are lots of variables
@@ -164,7 +163,6 @@ qui {
 			keep `theKeepList' // Keep only variables mentioned in the dofiles
 			compress
 			local savedta = subinstr(`"`using'"',".xlsx",".dta",.)
-			local savedta = subinstr(`"`savedta'"',"using ","",.)
 			save `savedta' , replace
 	}
 
@@ -197,7 +195,7 @@ qui {
 
 			local templateN ""
 			if `TEMPLATE' {
-				import excel `using' , clear first sheet("survey")
+				import excel "`using'", clear first sheet("survey")
 
 				count
 				local templateN "+ `r(N)'"
@@ -229,12 +227,12 @@ qui {
 			}
 
 		// Export variable information to "survey" sheet
-		cap export excel `using' , sheet("survey") sheetreplace first(varl)
+		cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
 		local rc = _rc
 		forvalues i = 1/10 {
 			if `rc' != 0 {
 				sleep `i'000
-				cap export excel `using' , sheet("survey") sheetreplace first(varl)
+				cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
 				local rc = _rc
 			}
 		}
@@ -283,12 +281,12 @@ qui {
 		}
 
 		// Export value labels to "choices" sheet
-		cap export excel `using' , sheet("choices`template_us'") sheetreplace first(var)
+		cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
 		local rc = _rc
 		forvalues i = 1/10 {
 			if `rc' != 0 {
 				sleep `i'000
-				cap export excel `using' , sheet("choices`template_us'") sheetreplace first(var)
+				cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
 				local rc = _rc
 			}
 		}
@@ -300,7 +298,7 @@ qui {
 	use `allData' , clear
 	// Success message
 	if "`template'" == "" local template "current"
-	if `c(N)' > 1 di as err `"Codebook for `template' data created `using'"'
+	if `c(N)' > 1 di as err `"Codebook for `template' data created using `using'"'
 
 } // end qui
 end
@@ -310,7 +308,7 @@ end
 cap program drop iecodebook_apply
 	program 	 iecodebook_apply
 
-	syntax [anything] [using] , [template] [drop] [survey(string asis)] [MISSingvalues(string asis)]
+	syntax [anything] [using/] , [template] [drop] [survey(string asis)] [MISSingvalues(string asis)]
 qui {
 	// Setups
 
@@ -326,18 +324,18 @@ qui {
 					label var survey "(Ignore this placeholder, but do not delete it. Thanks!)"
 					label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
 					label val survey yesno
-				iecodebook export `using'
+				iecodebook export using "`using'"
 			restore
 		// Append current dataset
 		tempfile current
 		save `current' , replace
-		iecodebook export `current' `using' , template(`survey')
+		iecodebook export `current' using "`using'" , template(`survey')
 	exit
 	}
 
 	// Apply codebook
 	preserve
-	import excel `using' , clear first sheet(survey) allstring
+	import excel "`using'" , clear first sheet(survey) allstring
 
 		// Check for broken things, namely quotation marks
 		foreach var of varlist name`survey' name label choices recode`survey' {
@@ -397,7 +395,7 @@ qui {
 			levelsof choices , local(theValueLabels)
 
 			// Prepare list of values for each value label.
-			import excel `using', first clear sheet(choices) allstring
+			import excel "`using'" , first clear sheet(choices) allstring
 
 			// Check for broken things, namely quotation marks
 			foreach var of varlist * {
@@ -457,7 +455,7 @@ qui {
 		}
 
 	// Success message
-	di as err `"Applied codebook to `survey' data `using'"'
+	di as err `"Applied codebook to `survey' data using `using'"'
 	di as err `"{bf:Note: strings are sanitized} – any backticks, quotation marks, dollar signs, and line breaks have been removed."'
 
 } // end qui
@@ -468,7 +466,7 @@ end
 cap program drop iecodebook_append
 	program 	 iecodebook_append
 
-	syntax [anything] [using] , surveys(string asis) [template] [noDROP] [*]
+	syntax [anything] [using/] , surveys(string asis) [template] [noDROP] [*]
 qui {
 
 	// Optional no-drop
@@ -496,14 +494,14 @@ qui {
 				label var survey "(Ignore this placeholder, but do not delete it. Thanks!)"
 				label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
 				label val survey yesno
-			iecodebook export `using'
+			iecodebook export using "`using'"
 		restore
 		// append one codebook per survey
 		local x = 0
 		foreach survey in `surveys' {
 			local ++x
 			local filepath : word `x' of `anything'
-			iecodebook export "`filepath'" `using' , template(`survey')
+			iecodebook export "`filepath'" using "`using'", template(`survey')
 		}
 	exit
 	}
@@ -516,7 +514,7 @@ qui {
     
 		use "`dataset'" , clear
 
-		iecodebook apply `using' , survey(`survey') `drop' `options'
+		iecodebook apply using "`using'" , survey(`survey') `drop' `options'
 
 		gen survey = `x'
 		tempfile next_data
@@ -531,11 +529,11 @@ qui {
 	}
 
 	// Success message
-	di as err `"Applied codebook `using' to `anything' – check your data carefully!"'
+	di as err `"Applied codebook using `using' to `anything' – check your data carefully!"'
 
 	// Final codebook
-	local using = subinstr(`"`using'"',".xlsx","_appended.xlsx",.)
-		iecodebook export `using'
+	local using = subinstr("`using'",".xlsx","_appended.xlsx",.)
+		iecodebook export using "`using'"
 		use `final_data' , clear
 
 } // end qui
