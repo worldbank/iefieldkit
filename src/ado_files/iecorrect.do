@@ -18,6 +18,8 @@ cap program drop iecorrect
 
 		cap	file close 	corrections
 			file open  	corrections using "`correctionsfile'", text write replace
+			file write  corrections		  "* Write header here" _n _n
+			file close  corrections		  
 			
 			
 			noi di "enter write loop"
