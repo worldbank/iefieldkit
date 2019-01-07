@@ -62,7 +62,63 @@ cap program drop iecorrect
 					
 					file write corrections	_n
 				}
+			file write  corrections		  _n _n
+			
+			noi di "exit write loop"
+			file close corrections
+			}		
+	}		
+			* String variables corrections
+			noi di "import 'string' sheet"
+		cap	import excel "`using'", sheet("string") firstrow allstring clear
+		if !_rc {
+		
+			foreach var of varlist strvar {
+				levelsof `var', local(`var'List)
+			}
+			
+			count
+			if `r(N)' > 0 {
+		cap	file close 	corrections
+			file open  	corrections using "`correctionsfile'", text write append
+						
+			noi di "enter write loop"
+			file write  corrections		  "** Correct entries in string variables " _n
+				forvalues row = 1/`r(N)' {
+					
+					local var			= strvar[`row']
+					
+					local valuecurrent 	= valuecurrent[`row']
+					local valuecurrent	= `""`valuecurrent'""'
+					
+					local value		 	= value[`row']
+					local value			= `""`value'""'
+					
+					local idvalue		= idvalue[`row']
 
+					file write corrections		`"replace `var' = `value' if "'
+					
+					if "`idvar'" != "" {
+						file write corrections	`"`idvar' == `idvalue' "'
+						
+						if "`valuecurrent'" != "" {
+							file write corrections	`"& "'
+						}
+					}
+					
+					if "`valuecurrent'" != "" {
+						noi di "enter valuecurrent"
+						file write corrections	 `"`var' == `valuecurrent'"'
+					}
+					
+					file write corrections	_n
+				}
+			file write  corrections		  _n _n
+			
+			noi di "exit write loop"
+			file close corrections
+			}		
+		}	
 			}
 			
 			noi di "exit write loop"
