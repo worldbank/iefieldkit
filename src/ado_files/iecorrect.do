@@ -119,11 +119,51 @@ cap program drop iecorrect
 			file close corrections
 			}		
 		}	
+			* 'Other' variables
+			noi di "import 'other' sheet"
+		cap	import excel "`using'", sheet("other") firstrow allstring clear
+		if !_rc {
+			
+			foreach var of varlist strvar catvar {
+				levelsof `var', local(`var'List)
 			}
+			
+			count
+			if `r(N)' > 0 {
+		cap	file close 	corrections
+			file open  	corrections using "`correctionsfile'", text write append
+						
+			noi di "enter write loop"
+			
+			file write  corrections		  "** Adjust categorical variables to include 'other' values " _n
+				forvalues row = 1/`r(N)' {
+					
+					local strvar			= strvar[`row']
+					
+					local strvaluecurrent 	= strvaluecurrent[`row']
+					local strvaluecurrent	= `""`strvaluecurrent'""'
+					
+					local strvalue		 	= strvalue[`row']
+					local strvalue			= `""`strvalue'""'
+					
+					local catvar		 	= catvar[`row']
+					local catvalue		 	= catvalue[`row']
+
+					if "`catvar'" != ""	{
+						noi di "enter first if"
+						file write corrections		`"replace `catvar' = `catvalue' if `strvar' == `strvaluecurrent'"' _n
+					}
+					if !(regex(`strvalue',`strvaluecurrent') & regex(`strvalue',`strvaluecurrent'))	{
+						noi di "enter second if"
+						file write corrections		`"replace `strvar' = `strvalue' if `strvar' == `strvaluecurrent'"' _n
+					}
+				}
+			file write  corrections		  _n _n
 			
 			noi di "exit write loop"
 			file close corrections
-		
+			}			
+		}	
 		restore
 		
 		noi di "Back to original file"
