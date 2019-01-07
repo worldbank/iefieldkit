@@ -1,9 +1,8 @@
 cap program drop iecorrect
 	program 	 iecorrect
 		
-	syntax using, [GENerate]
+	syntax using/, [GENerate idvar(varlist) save(string) replace]
 		
-		preserve
 		
 		cap confirm file "`using'"
 		noi di _rc
@@ -201,4 +200,8 @@ cap program drop iecorrect
 		noi di "Close corrections"
 		file close corrections
 		
+		if "`save'" != "" {
+			copy "`correctionsfile'" `"`save'"', `replace'
+		}
+	}
 	end
