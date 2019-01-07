@@ -5,13 +5,14 @@ cap program drop iecorrect
 		
 		preserve
 		
-			noi di "import excel file"
-			import excel `using', sheet("other") firstrow allstring clear
-			
-			foreach var of varlist strvar catvar {
-				levelsof `var', local(`var'List)
-			}
-			
+		cap confirm file "`using'"
+		noi di _rc
+		if _rc {
+			noi di as error "file does not exist"
+			error 601
+		}
+		else {
+		
 			tempname	corrections
 			tempfile	correctionsfile
 
