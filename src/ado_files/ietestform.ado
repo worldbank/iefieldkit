@@ -486,6 +486,21 @@ qui {
 	}
 
 	/***********************************************
+		Test that variables that mustn't contain special
+		charcters, like UTF-8 chars, do not contain them
+	***********************************************/
+
+	local only_simple_char_vars name
+
+	foreach only_simple_char_var of local only_simple_char_vars {
+
+		*Testing that all values in these vars are only a-z, A-Z, 0-9 and _
+		noi test_illegal_chars `only_simple_char_var', sheet("survey")
+	}
+
+
+
+	/***********************************************
 		TEST - List names with leading or trailing
 		spaces in string values in excel file
 	***********************************************/
@@ -772,7 +787,7 @@ qui {
 	* have name conlicts when repeat field goes from long to wide and
 	* number are suffixed to the end.
 	qui levelsof name if will_be_field == 1 , local(listofnames) clean
-	wide_name_conflicts, fieldnames("`listofnames'") report_tempfile("`report_tempfile'")
+	noi wide_name_conflicts, fieldnames("`listofnames'") report_tempfile("`report_tempfile'")
 
 }
 end
@@ -792,7 +807,7 @@ qui {
 			**Names are unique so this is to get the number of nested repeat
 			* groups deep this field is. If it is zero the name loop below is
 			* skipped as this only relates to field inside loops
-			qui sum num_nested_repeats if name == "`field'"
+			sum num_nested_repeats if name == "`field'"
 			local numNestThisField = `r(mean)'
 
 			**Loop over each level of nesting and add the _# regular
@@ -803,7 +818,7 @@ qui {
 				local regexpress "`regexpress'_[0-9]+"
 
 				*Start the recursive regression that looks for potential conflicts
-				wide_name_conflicts_rec, field("`field'") fieldnames("`fieldnames'") regexpress("`regexpress'") report_tempfile("`report_tempfile'")
+				noi wide_name_conflicts_rec, field("`field'") fieldnames("`fieldnames'") regexpress("`regexpress'") report_tempfile("`report_tempfile'")
 			}
 		}
 }
@@ -949,6 +964,29 @@ qui {
 	}
 }
 end
+
+*Program that test if column has illegal chars that will cause this command to
+capture program drop test_illegal_chars
+		program 	 test_illegal_chars , rclass
+qui {
+
+		syntax varname, sheet(string)
+
+		**Test if three are any illegal characters in varname. This is done by removing all
+		* legal characters and test if the trimmed result is the empty string.
+		tempvar  illegal_char
+		gen		`illegal_char' = (trim(regexr(`varlist',"[a-zA-Z0-9_/-]*","")) != "")
+
+		*Test if any observation had illegal characters. If so display those cases and an error message.
+		cap assert `illegal_char' == 0
+		if _rc {
+			noi di as error "{phang}The following values in column `varlist' in the `sheet' sheet contains non-standard characters or have a space in the middle. The only characters allowed are a-z, A-Z, 0-9 and _ (underscore). The value has been cleaned from regular spaces before and after the value, but Excel allows for different types of spaces. SurveyCTO's server is able to remove them, but these characters must be removed for this command to work properly. These characters are sometimes the result of copying and pasting text from other resources, so one way to make sure they are not included is to go to the cell with the value in Excel and manually re-enter the text.{p_end}"
+			noi list row `varlist' if `illegal_char' == 1
+			error 688
+		}
+}
+end
+
 
 capture program drop report_file
 		program 	 report_file , rclass
