@@ -177,7 +177,7 @@ qui {
 	*  above as the variable row will have value for all rows, and it must be done
 	*  before the drop code below as otherwise the row number will not correspond
 	*  to the row in the excel file.
-	gen row = _n
+	gen row = _n + 1 //Plus 1 as column name is the first row in the Excel file
 	order row
 
 	*After the row number has been created to be identical to form file, then drop empty rows
@@ -418,8 +418,8 @@ qui {
 	*Import the choices sheet
 	import excel "`form'", sheet("survey") clear first
 
-	*Gen
-	gen row = _n
+	*Gen row number that corresponds to the row number in the excel file
+	gen row = _n + 1 //Plus 1 as column name is the first row in the Excel file
 	order row
 
 	*Drop rows with all values missing
