@@ -929,11 +929,63 @@ qui {
 		TEST - Name conflict after long to wide
 	***********************************************/
 
+	*Keep track if any cases are found
+	local cases_found 0
+
 	**List all field names and test if there is a risk that any fieldnames
 	* have name conlicts when repeat field goes from long to wide and
 	* number are suffixed to the end.
 	qui levelsof name if will_be_field == 1 , local(listofnames) clean
-	noi wide_name_conflicts, fieldnames("`listofnames'") report_tempfile("`report_tempfile'")
+	noi wide_name_conflicts, fieldnames("`listofnames'")
+
+	*Get any conflicts
+	local conflicts "`r(conflicts)'"
+
+	*Loop over all identified conflicts. This is skipped if there are none
+	while ("`conflicts'" != "") {
+
+		*Get the next conflict
+		gettoken two_fields conflicts : conflicts
+
+		*Get the two field names from this conflict
+		gettoken field fieldFound : two_fields, parse("@")
+		local fieldFound = subinstr("`fieldFound'", "@", "", .)
+
+		*Get name and row num from field
+		gettoken fieldName fieldRow : field, parse("#")
+		local fieldRow = subinstr("`fieldRow'", "#", "", .)
+
+		*Get name and row num from fieldFound
+		gettoken fieldFoundName fieldFoundRow : fieldFound, parse("#")
+		local fieldFoundRow = subinstr("`fieldFoundRow'", "#", "", .)
+
+
+		*Prepare the error message for this case
+		local error_msg "Repeat field [`fieldName'] on row `fieldRow' and field [`fieldFoundName'] on row `fieldFoundRow'"
+
+		*Write header and intro if this is the first case
+		if `cases_found' == 0 {
+
+			noi report_title , report_tempfile("`report_tempfile'") testname("NAME CONFLICT ACROSS REPEAT GROUP")
+
+			*Display introduction
+			local intro_msg "There is a potential name conflict between field a field inside a repeat group with a field outside the repeat group. When variables in repeat groups are imported to Stata they will be given the suffix fieldname_1, fieldname_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is. The potential conflicts are:"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`intro_msg'")
+
+			*Display error for the first case
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'")
+
+			*Indicate that a case have been found
+			local cases_found 1
+		}
+		else {
+			*Display error for all other cases but the first
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") remove_space_before
+		}
+	}
+
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Repeat_Group_Name_Conflict")
 
 }
 end
@@ -941,7 +993,7 @@ end
 capture program drop wide_name_conflicts
 	program wide_name_conflicts , rclass
 qui {
-		syntax , fieldnames(string) report_tempfile(string)
+		syntax , fieldnames(string)
 
 		//Loop over all field names
 		foreach field of local fieldnames {
@@ -964,16 +1016,22 @@ qui {
 				local regexpress "`regexpress'_[0-9]+"
 
 				*Start the recursive regression that looks for potential conflicts
-				noi wide_name_conflicts_rec, field("`field'") fieldnames("`fieldnames'") regexpress("`regexpress'") report_tempfile("`report_tempfile'")
+				noi wide_name_conflicts_rec, field("`field'") fieldnames("`fieldnames'") regexpress("`regexpress'")
+
+				*Concatenate any conflicts found
+				local conflicts "`conflicts' `r(conflicts)'"
 			}
 		}
+
+		*Return cases found
+		return local conflicts	=trim(itrim("`conflicts'"))
 }
 end
 
 capture program drop wide_name_conflicts_rec
 	program wide_name_conflicts_rec , rclass
-qui {
-		syntax , field(string) fieldnames(string) regexpress(string) report_tempfile(string)
+	qui {
+		syntax , field(string) fieldnames(string) regexpress(string)
 
 		*Is there at least one match to the regular expression
 		local isFieldFound 	= regexm("`fieldnames'" ," `regexpress' ")
@@ -984,12 +1042,6 @@ qui {
 			*Get the name of the matched field
 			local fieldFound	= trim(regexs(0))
 
-			*Display error
-			local error_msg "There is a potential name conflict between field [`field'] and [`fieldFound'] as `field' is in a repeat group. When variables in repeat groups are imported to Stata they will be given the suffix `field'_1, `field'_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is."
-
-			noi report_file add , report_tempfile("`report_tempfile'") testname("NAME CONFLICT ACROSS REPEAT GROUP") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length")
-
-
 			**Prepare the string to recurse on. Remove eveything up to the matched
 			* field [strpos("`fieldnames'","`fieldFound'")] and the field
 			* itself [strlen("`fieldFound'")] and use only everything after
@@ -998,10 +1050,22 @@ qui {
 			local newFieldnames = substr("`fieldnames'",`stringCut', .)
 
 			*Make the recursive call
-			wide_name_conflicts_rec, field("`field'") fieldnames("`newFieldnames'") regexpress("`regexpress'") report_tempfile("`report_tempfile'")
+			noi wide_name_conflicts_rec, field("`field'") fieldnames("`newFieldnames'") regexpress("`regexpress'")
+
+			*Get row for the main field
+			sum row if name == "`field'"
+			local fieldRow `r(mean)'
+
+			*Get row for the field found
+			sum row if name == "`fieldFound'"
+			local fieldFoundRow `r(mean)'
+
+			*Return cases found
+			return local conflicts	"`field'#`fieldRow'@`fieldFound'#`fieldFoundRow' `r(conflicts)'"
 		}
-}
+	}
 end
+
 
 capture program drop test_survey_label
 		program 	 test_survey_label , rclass
