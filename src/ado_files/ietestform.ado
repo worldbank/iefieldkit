@@ -587,8 +587,21 @@ qui {
 	local begin_end_error = 0
 
 
-	******************************************************************************************
-	*Loop over all rows to test if begin and end match perfectly and give helpful error if not
+	*********
+
+	**********************
+	* Test if any end_repeat or end_group has no name (begin are tested by server). This is not incorrect, but bad practice as it makes bug finding much more difficult.
+
+	gen end_has_no_name = (typeEnd == 1 & missing(name))
+	count if end_has_no_name != 0
+	if `r(N)' > 0 {
+
+		*Prepare message and write it
+		local error_msg "It is bad practice to leave the name column empty for end_group or end_repeat fields. While this is allowed in ODK, it makes error finding harder and slower. The following repeat or end groups have empty name columns:"
+		noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Matching_begin_.2Fend") message("`error_msg'")  table("list row type name if end_has_no_name == 1") testname("MISSING END_GROUP/END_REPEAT NAME")
+
+	}
+
 	local num_rows = _N
 	forvalues row = 1/`num_rows' {
 
