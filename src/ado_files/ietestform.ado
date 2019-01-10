@@ -7,7 +7,7 @@ qui {
 
 	version 13
 
-	preserve
+	//preserve
 
 	syntax , Surveyform(string) Report(string) [STATAlanguage(string)]
 
@@ -91,7 +91,7 @@ qui {
 	*Write the file to disk
 	noi report_file write, report_tempfile("`report_tempfile'") filepath("`report'")
 
-	restore
+	//restore
 
 }
 end
@@ -209,6 +209,9 @@ qui {
 	ds, has(type string)
 	local strvars `r(varlist)'
 
+	*Keep track if any cases are found
+	local cases_found 0
+
 	foreach strvar of local strvars {
 		*Test that the list name does not have leading or trailing spaces
 		gen trim_`strvar' = (`strvar' != trim(`strvar'))
@@ -217,14 +220,23 @@ qui {
 		count if trim_`strvar' != 0
 		if `r(N)' > 0 {
 
-			local error_msg "The string values in [`strvar'] column are imported as strings and has leading or trailing spaces in the Excel file"
+			*Write header if this is the first case found
+			if `cases_found' == 0 noi report_title , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (choice sheet)")
 
-			noi report_file add , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (choice sheet; column: `strvar')") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `strvar' if trim_`strvar' != 0")
+			*Prepare message and write it
+			local error_msg "The string values in [`strvar'] column are imported as strings and has leading or trailing spaces in the Excel file in the following cases:"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `strvar' if trim_`strvar' != 0")
+
+			*Indicate that a case have been found
+			local cases_found 1
 		}
 
 		*Remove leading or trailing spaces so they do not cause errors in later tests
 		replace `strvar' = trim(`strvar')
 	}
+
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("NOT_YET_CREATED")
 
 	/***********************************************
 		TEST - Numeric name
@@ -319,6 +331,9 @@ qui {
 	*Initialize the dummy that indicate if there are duplicates to 0. This is used to store errors on
 	gen label_all_cols_dup = 0
 
+	*Keep track if any cases are found
+	local cases_found 0
+
 	** Loop over each label language column
 	foreach labelvar of local labelvars {
 
@@ -352,13 +367,20 @@ qui {
 		count if label_all_cols_dup == 1
 		if `r(N)' > 0 {
 
+			*Write header if this is the first case found
+			if `cases_found' == 0 noi report_title , report_tempfile("`report_tempfile'") testname("DUPLICATED LABEL WITHIN LIST")
+
+			*Prepare message and write it
 			local error_msg "There are duplicated entries in the [`labelvar'] column of the choice sheet within the [`lists_with_dups'] list(s) for the following labels:"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `listnamevar' `valuevar' `labelvar' if label_all_cols_dup == 1")
 
-			noi report_file add , report_tempfile("`report_tempfile'") testname("DUPLICATED LABEL (column: `labelvar') WITHIN LIST") message("`error_msg'") wikifragment("Duplicated_List_Labels") table("list row `listnamevar' `valuevar' `labelvar' if label_all_cols_dup == 1")
-
+			*Indicate that a case have been found
+			local cases_found 1
 		}
 	}
 
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Duplicated_List_Labels")
 
 	/***********************************************
 		TEST - Stata language for value labels
@@ -508,6 +530,9 @@ qui {
 	ds, has(type string)
 	local strvars `r(varlist)'
 
+	*Keep track if any cases are found
+	local cases_found 0
+
 	foreach strvar of local strvars {
 		*Test that the list name does not have leading or trailing spaces
 		gen trim_`strvar' = (`strvar' != trim(`strvar'))
@@ -516,15 +541,23 @@ qui {
 		count if trim_`strvar' != 0
 		if `r(N)' > 0 {
 
-			local error_msg "The string values in [`strvar'] column are imported as strings and has leading or trailing spaces in the Excel file"
+			*Write header if this is the first case found
+			if `cases_found' == 0 noi report_title , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (survey sheet)")
 
-			noi report_file add , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (survey sheet; column: `strvar')") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `strvar' if trim_`strvar' != 0")
+			*Prepare message and write it
+			local error_msg "The string values in [`strvar'] column are imported as strings and has leading or trailing spaces in the Excel file"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `strvar' if trim_`strvar' != 0")
+
+			*Indicate that a case have been found
+			local cases_found 1
 		}
 
 		*Remove leading or trailing spaces so they do not cause errors in later tests
 		replace `strvar' = trim(`strvar')
 	}
 
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("NOT_YET_CREATED")
 
 	/***********************************************
 		TEST - Type column
