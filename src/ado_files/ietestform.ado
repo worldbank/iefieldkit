@@ -635,6 +635,14 @@ qui {
 
 	}
 
+
+	**********************
+	*Loop over all rows to test if begin and end match NAME prefectly
+
+	*Keep track if any cases are found
+	local cases_found 0
+
+	*Loop over all rows
 	local num_rows = _N
 	forvalues row = 1/`num_rows' {
 
@@ -645,15 +653,6 @@ qui {
 			local row_type = type[`row']
 			local row_name = name[`row']
 			local isBegin = typeBegin[`row']
-
-
-			* Test if any end_repeat or end_group has no name (begin are tested by server). This is not incorrect, but bad practice as it makes bug finding much more difficult.
-			if "`row_name'" == "" {
-
-				local error_msg "It is bad practice to leave the name column empty for end_group or end_repeat fields. While this is allowed in ODK, it makes error finding harder and slower. The following repeat or end groups have empty name columns:"
-
-				noi report_file add , report_tempfile("`report_tempfile'") testname("MISSING END_GROUP/END_REPEAT NAME") message("`error_msg'") wikifragment("Matching_begin_.2Fend") table("list row type name if _n == `row'")
-			}
 
 			*Add begin group to stack if either begin_group or begin_repeat
 			if `isBegin' {
@@ -669,7 +668,7 @@ qui {
 				*Get the type and name of the end_group or end_repeat of this row
 				local endtype = substr("`row_type'", 5,6) //Remove the "end_" part of the type
 				local endname = "`row_name'"
-				local endrow  = "`row'"
+				local endrow  = `row' + 1 //First row in Excel is column name
 
 				*Get the type and name of the most recent begin_group or begin_repeat
 				local lastbegin : word 1 of `type_and_name'			//the most recent is the first in the list
@@ -686,18 +685,28 @@ qui {
 				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed
 				if "`endname'" != "`beginname'"  {
 
-					local error_msg "The [end_`endtype' `endname'] from row [`endrow'] was found before [end_`begintype' `beginname'] from row [`beginrow']. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [`endname'] and [`beginname'], the [begin_`endtype' `endname'] or the [end_`begintype' `beginname'] are missing or the order of the begin and end of [`endname'] and [`beginname'] is incorrect."
+					local error_msg "begin_`begintype' [`beginname'] on row `beginrow' and end_`endtype' [`endname'] on row `endrow'"
 
-					noi report_file add ,  report_tempfile("`report_tempfile'") testname("END_ BEGIN_ NAME MISMATCH") message("`error_msg'") wikifragment("Matching_begin_.2Fend")
+					*Write header and intro if this is the first case
+					if `cases_found' == 0 {
 
-				}
+						*Create title
+						noi report_title , report_tempfile("`report_tempfile'") testname("END/BEGIN NAME MISMATCH")
 
-				* If name are the same but types are differnt, then it is most likely a typo in type
-				else if "`endtype'" != "`begintype'" {
+						*Display introduction
+						local intro_msg "The name in the end group/repeat does not match the name in the most recent begin group/repeat. This does not cause an error in ODK, but is recommended to solve programming errors with missmatching group/repeats fields. These cases were found:"
+						noi report_file add , report_tempfile("`report_tempfile'")  message("`intro_msg'")
 
-					local error_msg "The `begintype' [`endname'] on row `endrow' is ended with a [end_`begintype'] on row `beginrow' which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'."
+						*Display error for the first case
+						noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'")
 
-					noi report_file add , report_tempfile("`report_tempfile'") testname("END_ BEGIN_ TYPE MISMATCH") message("`error_msg'") wikifragment("Matching_begin_.2Fend")
+						*Indicate that a case have been found
+						local cases_found 1
+					}
+					else {
+						*Display error for all other cases but the first
+						noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") remove_space_before
+					}
 
 				}
 
@@ -709,6 +718,97 @@ qui {
 			}
 		}
 	}
+
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Matching_begin_.2Fend")
+
+
+	**********************
+	*Loop over all rows to test if begin and end match TYPE prefectly
+
+	*Keep track if any cases are found
+	local cases_found 0
+
+	*Loop over all rows
+	local num_rows = _N
+	forvalues row = 1/`num_rows' {
+
+		*This only applies to rows that end or begin a group or a repeat
+		if typeBeginEnd[`row'] == 1 {
+
+			* Get type and name for this row
+			local row_type = type[`row']
+			local row_name = name[`row']
+			local isBegin = typeBegin[`row']
+
+			*Add begin group to stack if either begin_group or begin_repeat
+			if `isBegin' {
+
+				local begintype = substr("`row_type'", 7,.)
+				local type_and_name "`begintype'#`row_name'#`row' `type_and_name'"
+
+			}
+
+			*If end_group or end_repeat, test that the corresponding group or repeat group was the most recent begin, otherwise throw an error.
+			else {
+
+				*Get the type and name of the end_group or end_repeat of this row
+				local endtype = substr("`row_type'", 5,6) //Remove the "end_" part of the type
+				local endname = "`row_name'"
+				local endrow  = `row' + 1 //First row in Excel is column name
+
+				*Get the type and name of the most recent begin_group or begin_repeat
+				local lastbegin : word 1 of `type_and_name'			//the most recent is the first in the list
+
+
+				*Parse the begintype and reomve parse charecter from rest
+				gettoken begintype beginnameandrow : lastbegin , parse("#")
+				local beginnameandrow = subinstr("`beginnameandrow'","#","", 1)	//Remove the parse char "#"
+
+				*Parse name and row and remove parse charcter from row
+				gettoken beginname beginrow : beginnameandrow , parse("#")
+				local beginrow = subinstr("`beginrow'","#","", 1)	//Remove the parse char "#"
+
+				* If name are the same but types are differnt, then it is most likely a typo in type
+				if "`endtype'" != "`begintype'" {
+
+					*Prepare error message from this case.
+					local error_msg "begin_`begintype' [`beginname'] on row `beginrow' and end_`endtype' [`endname'] on row `endrow'"
+
+					*Write header and intro if this is the first case
+					if `cases_found' == 0 {
+
+						*Create test title
+						noi report_title , report_tempfile("`report_tempfile'") testname("END/BEGIN TYPE MISMATCH")
+
+						*Display introduction
+						local intro_msg "The type in the end group/repeat does not match the type in the most recent begin group/repeat. This is an error in ODK, and is caught by SurveyCTO's server, but here row numbers are listed so it is easier to solve. These cases were found:"
+						noi report_file add , report_tempfile("`report_tempfile'")  message("`intro_msg'")
+
+						*Display error for the first case
+						noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'")
+
+						*Indicate that a case have been found
+						local cases_found 1
+					}
+					else {
+						*Display error for all other cases but the first
+						noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") remove_space_before
+					}
+				}
+
+				*Name and type are the same, this is a correct ending of the group or repeat group
+				else {
+					* The begin_group or begin_repeat is no longer the most recent, so remove it from the string
+					local type_and_name = trim(substr("`type_and_name'", strlen("`lastbegin'")+1, .))
+				}
+			}
+		}
+	}
+
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Matching_begin_.2Fend")
+
 
 	/***********************************************
 		Parse select_one, select_multiple values
