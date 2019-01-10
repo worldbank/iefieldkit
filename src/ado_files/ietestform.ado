@@ -1006,7 +1006,7 @@ capture program drop report_file
 qui {
 
 		//noi di "report_file command ok"
-		syntax anything , report_tempfile(string) [testname(string) message(string) filepath(string) wikifragment(string) table(string) metav(string) metaid(string) metatitle(string) metafile(string)]
+		syntax anything , report_tempfile(string) [testname(string) message(string) filepath(string) wikifragment(string) table(string) metav(string) metaid(string) metatitle(string) metafile(string) remove_space_before]
 		//noi di "report_file syntax ok [`anything']"
 
 		local allowed_tasks		"setup add write"
@@ -1043,13 +1043,8 @@ qui {
 				"This report was created by user `user' on `date' using the Stata command ietestform" _n ///
 				_n ///
 				"Use either of these links to read more about this command:" _n ///
-				",https://github.com/worldbank/iefieldkit" _n ///
-				",https://dimewiki.worldbank.org/wiki/Ietestform" _n ///
-				_n ///
-				",Form ID,`metaid'" _n ///
-				",Form Title,`metatitle'" _n ///
-				",Form Version,`metav'" _n ///
-				",Form File,`metafile'" _n _n
+				",https://github.com/worldbank/iefieldkit" _n ",https://dimewiki.worldbank.org/wiki/Ietestform" _n _n ///
+				",Form ID,`metaid'" _n ",Form Title,`metatitle'" _n ",Form Version,`metav'" _n ",Form File,`metafile'" _n _n
 
 			file close 		`report_handler'
 		}
@@ -1057,29 +1052,18 @@ qui {
 		*Add item to report
 		else if "`task'" == "add" {
 
-			*Add seperator and error message
-			cap file close 	`report_handler'
-			file open  		`report_handler' using "`report_tempfile'", text write append
-			file write  	`report_handler' ///
-				"----------------------------------------------------------------------" _n ///
-				"----------------------------------------------------------------------" _n ///
-				"TEST: `testname'" _n ///
-				"-----------------------------------" _n _n
-			file close 		`report_handler'
+			*Add table if applicable
+			if "`testname'" != "" noi report_title , report_tempfile("`report_tempfile'") testname("`testname'")
 
 			*Chop the message up in charwidth
-			noi report_message , report_tempfile("`report_tempfile'") message("`message'") charwidth(80)
+			noi report_message , report_tempfile("`report_tempfile'") message("`message'") charwidth(100) `remove_space_before'
 
 			*Add table if applicable
 			if "`table'" != "" noi report_table `table' , report_tempfile("`report_tempfile'")
 
-			*Add link to wiki at the bottom
-			cap file close 	`report_handler'
-			file open  		`report_handler' using "`report_tempfile'", text write append
-			file write  	`report_handler' _n ///
-				"Read more about this test and why this is an error or does not follow the best practices we recommend here:" _n ///
-				"https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n _n
-			file close 		`report_handler'
+			*Add table if applicable
+			if "`wikifragment'" != "" noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("`wikifragment'")
+
 		}
 
 		*Write final file to disk
@@ -1118,6 +1102,47 @@ qui {
 		}
 }
 end
+
+*Write the title of each test section
+capture program drop report_title
+		program 	 report_title , rclass
+
+	qui {
+
+		syntax, report_tempfile(string) testname(string)
+
+			tempname report_handler
+			*Add seperator and error message
+			cap file close 	`report_handler'
+			file open  		`report_handler' using "`report_tempfile'", text write append
+			file write  	`report_handler' ///
+				"----------------------------------------------------------------------" _n ///
+				"----------------------------------------------------------------------" _n ///
+				"TEST: `testname'" _n ///
+				"----------------------------------------------------------------------" _n
+			file close 		`report_handler'
+	}
+end
+
+*Write the ending of each test section
+capture program drop report_wikilink
+		program 	 report_wikilink , rclass
+
+	qui {
+
+		syntax, report_tempfile(string) wikifragment(string)
+
+			tempname report_handler
+			*Add link to wiki at the bottom
+			cap file close 	`report_handler'
+			file open  		`report_handler' using "`report_tempfile'", text write append
+			file write  	`report_handler' _n _n ///
+				"Read more about this test and why this is an error or does not follow the best practices we recommend here:" _n ///
+				"https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n _n
+			file close 		`report_handler'
+	}
+end
+
 
 
 capture program drop report_table
@@ -1203,9 +1228,17 @@ capture program drop report_message
 		program 	 report_message , rclass
 qui {
 
-	syntax , report_tempfile(string) message(string) charwidth(numlist)
+	syntax , report_tempfile(string) message(string) charwidth(numlist) [remove_space_before]
 
 	tempname report_handler
+
+	if "`remove_space_before'" == "" {
+		*Create one empty row above
+		cap file close 	`report_handler'
+		file open  		`report_handler' using "`report_tempfile'", text write append
+		file write  	`report_handler' _n
+		file close 		`report_handler'
+	}
 
 	*Loop over message and chop up in segments
 	while "`message'" != "" {
