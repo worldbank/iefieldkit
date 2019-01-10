@@ -443,9 +443,9 @@ qui {
 
 	*Variables that must be included every time
 	local name_vars 		"name"
-	local cmd_vars  		"type required readonly appearance"
+	local cmd_vars  		"type required" // Include as needed eventually. "readonly appearance"
 	local msg_vars  		"`labelvars'"
-	local code_vars 		"default constraint  relevance  calculation repeat_count choice_filter"
+	local code_vars 		"" // Include as needed eventually. " constraint  relevance  calculation repeat_count choice_filter"
 
 	local surveysheetvars_required "`name_vars' `cmd_vars' `msg_vars' `code_vars'"
 
