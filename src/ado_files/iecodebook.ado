@@ -84,14 +84,6 @@ qui {
 	// Return a warning if there are lots of variables
 	if `c(k)' >= 1000 di as err "This dataset has `c(k)' variables. This may take a long time! Consider subsetting your variables first."
 
-	// Store current data and apply if/in via [marksample]
-		tempfile allData
-		save `allData' , emptyok
-
-		marksample touse
-		keep if `touse'
-			drop `touse'
-
 	// Template Setup
 		if `"`anything'"' != "" {
 			use `anything' , clear
@@ -103,6 +95,14 @@ qui {
 			local TEMPLATE = 1					// flag for template functions
 		}
 		else local TEMPLATE = 0
+
+ 	// Store current data and apply if/in via [marksample]
+ 		tempfile allData
+ 		save `allData' , emptyok replace
+
+ 		marksample touse
+ 		keep if `touse'
+ 			drop `touse'
 
 	// Set up temps
 	preserve
