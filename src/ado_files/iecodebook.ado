@@ -94,7 +94,7 @@ qui {
 
 	// Template Setup
 		if `"`anything'"' != "" {
-			use "`anything'" , clear
+			use `anything' , clear
 		}
 
 		if "`template'" != "" {
