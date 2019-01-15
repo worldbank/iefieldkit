@@ -38,7 +38,7 @@ cap program drop iecodebook
 			di as err `" you need to manually remove it from `file'. {bf:iecodebook} will now exit."'
 			exit
 		}
-		
+
 		cap confirm new file "`using'"
 		if _rc {
 			di as error "{bf:iecodebook} could not create file `using'. Check that the file path is correctly specified."
@@ -245,16 +245,14 @@ qui {
 
 		// Fill temp dataset with value labels
 		foreach var of varlist * {
+      use `var' using `allData' in 1 , clear
 			local theLabel : value label `var'
 			if "`theLabel'" != "" {
 				cap label save `theLabel' using `theLabels' ,replace
 				if _rc==0 {
-					preserve
 					import delimited using `theLabels' , clear delimit(", modify", asstring)
 					append using `theCommands'
 						save `theCommands' , replace emptyok
-
-					restore
 				}
 			}
 		}
@@ -511,7 +509,7 @@ qui {
 	foreach dataset in `anything' {
 		local ++x
 		local survey : word `x' of `surveys'
-    
+
 		use "`dataset'" , clear
 
 		iecodebook apply using "`using'" , survey(`survey') `drop' `options'
