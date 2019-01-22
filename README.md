@@ -1,7 +1,7 @@
 # iefieldkit
 
 ## installation - beta version
-This is just a beta release. We know that there are still bugs to be resolved, output to be improved etc. before this package of commands is as user-friendly as we aim for it to be when the first non-beta version is released. With that said, we are immensely grateful for anyone who wants to help us test this command and report bugs, suggest improvements, ask for clarifications where documentation is not great etc. The non-beta version of the command will be released on _SSC_ but until then, the command is installed using the code below:
+This is just a beta release for testing purposes. We know that there are still bugs to be resolved, output to be improved etc. before this package of commands is as user-friendly as we aim for it to be when the first non-beta version is released. With that said, we are immensely grateful for anyone who wants to help us test this command and report bugs, suggest improvements, ask for clarifications where documentation is not great etc. The non-beta version of the command will be released on _SSC_ but until then, the command is installed using the code below:
 ```
     net install iefieldkit , from("https://raw.githubusercontent.com/worldbank/iefieldkit/master/src") replace
 ```
