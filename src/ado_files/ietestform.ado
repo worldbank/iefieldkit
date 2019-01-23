@@ -256,7 +256,7 @@ qui {
 
 		local error_msg "There are non numeric values in the [`valuevar'] column of the choice sheet"
 
-		noi report_file add , report_tempfile("`report_tempfile'") testname("NON NUMERIC NAME VALUES") message("`error_msg'") wikifragment("Value.2FName_Numeric") table("list row `listnamevar' `valuevar' if non_numeric != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("NON NUMERIC NAME VALUES") message("`error_msg'") wikifragment("Value.2FName_Numeric") table("list row `listnamevar' `valuevar' `labelvars' if non_numeric != 0")
 
 	}
 	else if _rc != 0 {
@@ -284,7 +284,7 @@ qui {
 
 		local error_msg "There are duplicates in the following list names in varaible `listnamevar's:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") testname("DUPLICATED LIST CODES") message("`error_msg'") wikifragment("Duplicated_List_Code") table("list row `listnamevar' `valuevar' if list_item_dup != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("DUPLICATED LIST CODES") message("`error_msg'") wikifragment("Duplicated_List_Code") table("list row `listnamevar' `valuevar' `labelvars' if list_item_dup != 0")
 	}
 
 	/***********************************************
