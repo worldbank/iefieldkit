@@ -203,40 +203,40 @@ qui {
 
 	/***********************************************
 		TEST - List names with leading or trailing
-		spaces in string values in excel file
+		spaces in columns where that can lead to errors
 	***********************************************/
 
-	ds, has(type string)
-	local strvars `r(varlist)'
+	*Values in these columns can cause errors if they include leading or trailing spaces
+	local nospacevars `listnamevar'	`valuevar'
 
 	*Keep track if any cases are found
 	local cases_found 0
 
-	foreach strvar of local strvars {
+	foreach nospacevar of local nospacevars {
 		*Test that the list name does not have leading or trailing spaces
-		gen trim_`strvar' = (`strvar' != trim(`strvar'))
+		gen trim_`nospacevar' = (`nospacevar' != trim(`nospacevar'))
 
 		*Add item to report for any row with missing label in the label vars
-		count if trim_`strvar' != 0
+		count if trim_`nospacevar' != 0
 		if `r(N)' > 0 {
 
 			*Write header if this is the first case found
 			if `cases_found' == 0 noi report_title , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (choice sheet)")
 
 			*Prepare message and write it
-			local error_msg "The string values in [`strvar'] column are imported as strings and has leading or trailing spaces in the Excel file in the following cases:"
-			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `strvar' if trim_`strvar' != 0")
+			local error_msg "The string values in [`nospacevar'] column in the choice sheet are imported as strings and has leading or trailing spaces in the Excel file in the following cases:"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `nospacevar' if trim_`nospacevar' != 0")
 
 			*Indicate that a case have been found
 			local cases_found 1
 		}
 
 		*Remove leading or trailing spaces so they do not cause errors in later tests
-		replace `strvar' = trim(`strvar')
+		replace `nospacevar' = trim(`nospacevar')
 	}
 
 	*If any cases were found, then write link to close this section
-	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("NOT_YET_CREATED")
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Leading_and_Trailing_Spaces")
 
 	/***********************************************
 		TEST - Numeric name
@@ -524,40 +524,40 @@ qui {
 
 	/***********************************************
 		TEST - List names with leading or trailing
-		spaces in string values in excel file
+		spaces in columns where that can lead to errors
 	***********************************************/
 
-	ds, has(type string)
-	local strvars `r(varlist)'
+	*The type and name variables should not be written with leading or trailing spaces
+	local nospacevars type name required
 
 	*Keep track if any cases are found
 	local cases_found 0
 
-	foreach strvar of local strvars {
+	foreach nospacevar of local nospacevars {
 		*Test that the list name does not have leading or trailing spaces
-		gen trim_`strvar' = (`strvar' != trim(`strvar'))
+		gen trim_`nospacevar' = (`nospacevar' != trim(`nospacevar'))
 
 		*Add item to report for any row with missing label in the label vars
-		count if trim_`strvar' != 0
+		count if trim_`nospacevar' != 0
 		if `r(N)' > 0 {
 
 			*Write header if this is the first case found
 			if `cases_found' == 0 noi report_title , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (survey sheet)")
 
 			*Prepare message and write it
-			local error_msg "The string values in [`strvar'] column are imported as strings and has leading or trailing spaces in the Excel file"
-			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `strvar' if trim_`strvar' != 0")
+			local error_msg "The string values in [`nospacevar'] column in the survey sheet are imported as strings and has leading or trailing spaces in the Excel file"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `nospacevar' if trim_`nospacevar' != 0")
 
 			*Indicate that a case have been found
 			local cases_found 1
 		}
 
 		*Remove leading or trailing spaces so they do not cause errors in later tests
-		replace `strvar' = trim(`strvar')
+		replace `nospacevar' = trim(`nospacevar')
 	}
 
 	*If any cases were found, then write link to close this section
-	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("NOT_YET_CREATED")
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Leading_and_Trailing_Spaces")
 
 	/***********************************************
 		TEST - Type column
