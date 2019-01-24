@@ -582,6 +582,38 @@ qui {
 
 	noi test_survey_label, surveysheetvars(`surveysheetvars_required') statalanguage(`statalanguage') report_tempfile("`report_tempfile'")
 
+
+	/***********************************************
+		TEST - require column
+	***********************************************/
+
+	*Create a dummy that is 1 for fields that the required column test is applicable to
+	gen req_relevant = !(typeBeginEnd == 1 | /// begin_group, begin_repeat, end_group, end_repeat does not need to be required
+		inlist(type, "calculate", "calculate_here") | /// calculate fields does not need to be required
+		inlist(type, "audio_audit", "text_audit") | /// quality control meta fields does not need to be reqired
+		inlist(type, "start", "end", "deviceid", "subscriberid", "simserial", "phonenumber", "username", "caseid") | /// Default meta types doen not need to be required
+		missing(type)) /// Rows that are not fields shold be skipped
+
+	*List and output non-note fields that are not required
+	gen nonnote_nonrequired = (req_relevant == 1 & type != "note" & required != "yes")
+	count if nonnote_nonrequired == 1
+	if `r(N)' > 0 {
+
+		*Prepare message and write it
+		local error_msg "Fields of types other than note should all be required so that it cannot be skipped during the interview. The following fields are not required and could therfore be skipped by the enumerator:"
+		noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Required_Column") message("`error_msg'")  table("list row type name if nonnote_nonrequired == 1") testname("NON-REQUIRED NON-NOTE TYPE FIELD")
+	}
+
+	*List and output note fields that are required
+	gen note_required 		= (req_relevant == 1 & type == "note" & required == "yes")
+	count if note_required == 1
+	if `r(N)' > 0 {
+
+		*Prepare message and write it
+		local error_msg "Fields of type note creates an impassable view that are impossible for the enumerator to sweep pass. Make sure that is the inentional behavior for the following fields:"
+		noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Required_Column") message("`error_msg'")  table("list row type name if note_required == 1") testname("REQUIRED NOTE TYPE FIELD")
+	}
+
 }
 end
 
