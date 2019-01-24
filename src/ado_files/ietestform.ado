@@ -207,7 +207,7 @@ qui {
 	***********************************************/
 
 	*Values in these columns can cause errors if they include leading or trailing spaces
-	local nospacevars `listnamevar'	`valuevar'
+	local nospacevars `listnamevar'
 
 	*Keep track if any cases are found
 	local cases_found 0
