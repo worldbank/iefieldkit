@@ -27,6 +27,7 @@ cap program drop iecorrect
 		cap import excel "`using'", sheet("numeric") firstrow allstring clear
 		if !_rc {
 			
+			drop if missing(numvar)
 			foreach var of varlist numvar {
 				levelsof `var', local(`var'List)
 			}
@@ -72,6 +73,7 @@ cap program drop iecorrect
 		cap	import excel "`using'", sheet("string") firstrow allstring clear
 		if !_rc {
 		
+			drop if missing(strvar)
 			foreach var of varlist strvar {
 				levelsof `var', local(`var'List)
 			}
@@ -123,6 +125,7 @@ cap program drop iecorrect
 		cap	import excel "`using'", sheet("other") firstrow allstring clear
 		if !_rc {
 			
+			drop if missing(strvar)
 			foreach var of varlist strvar catvar {
 				levelsof `var', local(`var'List)
 			}
