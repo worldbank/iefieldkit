@@ -55,8 +55,16 @@ qui {
 	noi importchoicesheet, form("`surveyform'") statalanguage(`statalanguage') report_tempfile("`report_tempfile'")
 
 	*Get all choice lists actaually used
-	local all_list_names `r(all_list_names)'
+	local all_list_names 	`r(all_list_names)'
 
+	*Names used in choice sheet, used if outputting unused choice lists
+	local choice_listnamevar		`r(listnamevar)'
+	local choice_valuevar			`r(valuevar)'
+	local choice_labelvars			`r(labelvars)'
+
+	*Create a temp data set that can be reloaded when displaying unused choice lists.
+	tempfile choicesheet
+	save `choicesheet'
 
 	/***********************************************
 		Test the survey sheet independently
@@ -80,8 +88,16 @@ qui {
 	local unused_lists : list all_list_names - all_lists_used
 	if "`unused_lists'" != "" {
 
-		local error_msg "There are lists in the choice sheet that are not used by any field of the survey sheet. These are the unused list(s): [`unused_lists']"
-		report_file add , report_tempfile("`report_tempfile'") testname("UNUSED CHOICE LISTS") message("`error_msg'") wikifragment("Unused_Choice_Lists")
+		*Reload the data to be able to show the unsused lists
+		use `choicesheet', clear
+
+		*Indicate which lists were unused
+		gen unused_list = strpos(" " + "`unused_lists'" + " ", " " + list_name + " ") > 0
+
+		*Write error message and list of unused lists to the report
+		local error_msg "There are lists in the choice sheet that are not used by any field in the survey sheet. While that is allowed in ODK syntax it is an indication of a typo that might casue errors later. Make sure that the following list items are indeed not supposed to be used:"
+		noi report_file add , report_tempfile("`report_tempfile'") testname("UNUSED CHOICE LISTS") message("`error_msg'") wikifragment("Unused_Choice_Lists") table("list row `choice_listnamevar' `choice_valuevar' `choice_labelvars' if unused_list == 1")
+
 	}
 
 	/***********************************************
@@ -163,7 +179,6 @@ qui {
 	*Test that either list_name or listname is used for the list name column in the choice sheet, and return the one that is used
 	test_colname , var("choice_list_name") sheetvars(`choicesheetvars') sheetname("choices")
 	local  listnamevar = "`r(checked_varname)'"
-
 
 	/***********************************************
 		Get info from rows/labels and
@@ -420,6 +435,10 @@ qui {
 	***********************************************/
 
 	return local all_list_names				"`all_list_names'"
+
+	return local listnamevar				"`listnamevar'"
+	return local valuevar					"`valuevar'"
+	return local labelvars					"`labelvars'"
 
 }
 end
