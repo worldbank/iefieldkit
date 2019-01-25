@@ -614,7 +614,7 @@ qui {
 		missing(type)) /// Rows that are not fields shold be skipped
 
 	*List and output non-note fields that are not required
-	gen nonnote_nonrequired = (req_relevant == 1 & type != "note" & required != "yes")
+	gen nonnote_nonrequired = (req_relevant == 1 & type != "note" & lower(required) != "yes")
 	count if nonnote_nonrequired == 1
 	if `r(N)' > 0 {
 
@@ -624,7 +624,7 @@ qui {
 	}
 
 	*List and output note fields that are required
-	gen note_required 		= (req_relevant == 1 & type == "note" & required == "yes")
+	gen note_required 		= (req_relevant == 1 & type == "note" & lower(required) == "yes")
 	count if note_required == 1
 	if `r(N)' > 0 {
 
