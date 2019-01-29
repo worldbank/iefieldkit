@@ -19,7 +19,7 @@ I do not know how frequently they are used, but this is a list of keywords that 
 * survey data
 
 ### Required Stata Version      
-Stata 11
+Stata 13
 
 ### Author and Email
 * Author: DIME Analytics, The World Bank, DECIE
