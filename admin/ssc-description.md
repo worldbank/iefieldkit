@@ -12,7 +12,7 @@ This is an explanation to the keywords used below. I do not know how frequently 
 
 ### Description
 
-iefieldkit provides a set of commands that address different aspects of primary data collection. Some of these commands are written for data collection using opendatakit.org (specifically surveycto.com) but the commands are developed to be possible to use in many other contexts as well. See https://github.com/worldbank/iefieldkit for more details. These commands are developed by the World Bank's unit for impact evaluations (DIME).
+iefieldkit provides a set of commands that address different aspects of primary data collection. The package is developed to facilitate a work flow including (1) data collection (in particular using opendatakit.org, more specifically surveycto.com); (2) basic data cleaning, such as labelling and recoding; (3) reconciling survey rounds; (4) preparing codebooks to document data sets. The commands can also be used independently, and are developed to be applicable to many other contexts as well. See https://github.com/worldbank/iefieldkit for more details. These commands are developed by the World Bank's unit for impact evaluations (DIME).
 
 ### Keywords
 * impact evaluations
