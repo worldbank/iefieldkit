@@ -14,6 +14,7 @@ help for {hi:iecodebook}
 {title:Title}
 
 {p}{cmdab:iecodebook} {hline 2} performs common data cleaning tasks using dataset definitions (codebooks) written in Excel files. {p_end}
+{p}For more detailed instructions, please refer to the {browse "https://dimewiki.worldbank.org/wiki/Iecodebook":iecodebook DIME Wiki entry}.
 
 {title:Description}
 {marker description}{...}
