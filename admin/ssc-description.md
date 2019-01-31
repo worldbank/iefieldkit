@@ -16,7 +16,7 @@ IEFIELDKIT : module providing Stata commands for primary data collection and cle
 
 ### Description
 
-iefieldkit provides a set of commands that enable a reproducible primary data collection and cleaning workflow. The package is developed to facilitate a workflow including (1) data collection (in particular using opendatakit.org, more specifically surveycto.com); (2) basic data cleaning, such as labelling and recoding; (3) reconciling survey rounds; (4) preparing codebooks to document data sets. iefieldkit was developed to standardize and simplify best practices for high-quality primary data collection across the World Bank's Development Research Group Impact Evaluations team (DIME). The commands can also be used independently, and are developed to be applicable to many other contexts as well. See https://github.com/worldbank/iefieldkit for more details.
+iefieldkit provides a set of commands that enable a reproducible primary data collection and cleaning workflow. The package is developed to facilitate a workflow including (1) data collection (in particular using opendatakit.org, more specifically surveycto.com); (2) basic data cleaning, such as labeling and recoding; (3) reconciling survey rounds; (4) preparing codebooks to document data sets. iefieldkit was developed to standardize and simplify best practices for high-quality primary data collection across the World Bank's Development Research Group Impact Evaluations team (DIME). The commands can also be used independently, and are developed to be applicable to many other contexts as well. See https://github.com/worldbank/iefieldkit for more details.
 
 ### Keywords
 * impact evaluations
