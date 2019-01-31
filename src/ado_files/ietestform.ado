@@ -1,4 +1,4 @@
-*! version 0.1 12DEC2018  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.0 31JAN2018  DIME Analytics dimeanalytics@worldbank.org
 
 capture program drop ietestform
 		program ietestform , rclass

@@ -1,11 +1,11 @@
-//! version 0.1 31DEC2018  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.0 31JAN2018  DIME Analytics dimeanalytics@worldbank.org
 
 // Main syntax *********************************************************************************
 
 cap program drop iecodebook
 	program def  iecodebook
 
-	version 13 // Requires 13.1 due to use of long macros
+	version 13 // Requires 13.0 due to use of long macros
 
 	cap syntax [anything] using/ , [*]
 	if _rc == 100 {
