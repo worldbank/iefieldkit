@@ -31,7 +31,7 @@ iefieldkit provides a set of commands that enable a reproducible primary data co
 * codebooks
 
 ### Required Stata Version
-Stata 13.1
+Stata 13.0
 
 ### Author and Email
 * Author: DIME Analytics, The World Bank, DECIE
