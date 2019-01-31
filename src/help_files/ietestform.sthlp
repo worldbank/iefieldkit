@@ -75,7 +75,7 @@ help for {hi:ietestform}
 
 {title:Author}
 
-{phang}All commands in ietoolkit is developed by DIME Analytics at DECIE, The World Bank's unit for Development Impact Evaluations.
+{phang}All commands in iefieldkit is developed by DIME Analytics at DECIE, The World Bank's unit for Development Impact Evaluations.
 
 {phang}Author: Kristoffer Bjarkefur, DIME Analytics, The World Bank Group
 
