@@ -9,7 +9,7 @@ qui {
 
 	//preserve
 
-	syntax , Surveyform(string) Report(string) [STATAlanguage(string)]
+	syntax , Surveyform(string) Report(string) [STATAlanguage(string) replace]
 
 	/***********************************************
 		Test input
@@ -105,7 +105,7 @@ qui {
 	***********************************************/
 
 	*Write the file to disk
-	noi report_file write, report_tempfile("`report_tempfile'") filepath("`report'")
+	noi report_file write, report_tempfile("`report_tempfile'") filepath("`report'") `replace'
 
 	//restore
 
@@ -1254,7 +1254,7 @@ capture program drop report_file
 qui {
 
 		//noi di "report_file command ok"
-		syntax anything , report_tempfile(string) [testname(string) message(string) filepath(string) wikifragment(string) table(string) metav(string) metaid(string) metatitle(string) metafile(string) remove_space_before]
+		syntax anything , report_tempfile(string) [testname(string) message(string) filepath(string) wikifragment(string) table(string) metav(string) metaid(string) metatitle(string) metafile(string) remove_space_before replace]
 		//noi di "report_file syntax ok [`anything']"
 
 		local allowed_tasks		"setup add write"
@@ -1328,18 +1328,22 @@ qui {
 			file close 		`report_handler'
 
 			*Write temporary file to disk
-			cap copy "`report_tempfile'" "`filepath'", replace
+			cap copy "`report_tempfile'" "`filepath'",  `replace'
 
 			if _rc == 608 {
 				noi di as error "{phang}The file `filepath' cannot be overwritten. If you have this file open, close it and run the command again.{p_end}"
 				error 608
+			}
+			else if _rc == 602 {
+				noi di as error "{phang}The file `filepath' already exists. Either use a different name in {cmd:report()} or use the {cmd:replace} option if you want to overwrite the file.{p_end}"
+				error 602
 			}
 			else if !_rc {
 				noi di as result `"{phang}Report saved to: {browse "`filepath'":`filepath'} "'
 			}
 			else {
 				*Something did not work, run the command again to get full error message and return error code
-				copy "`report_tempfile'" "`filepath'", replace
+				copy "`report_tempfile'" "`filepath'", `replace'
 			}
 		}
 
