@@ -9,7 +9,7 @@ qui {
 
 	//preserve
 
-	syntax , Surveyform(string) Report(string) [STATAlanguage(string) replace]
+	syntax , Surveyform(string) Report(string) [STATAlanguage(string) date replace]
 
 	/***********************************************
 		Test input
@@ -103,6 +103,12 @@ qui {
 	/***********************************************
 		Finsish the report and write it to disk
 	***********************************************/
+
+	*Option date is used, add today's date to file name
+	if "`date'" != ""{
+		local date = subinstr(c(current_date)," ","",.)
+		local report = subinstr("`report'",".csv","_`date'.csv",.)
+	}
 
 	*Write the file to disk
 	noi report_file write, report_tempfile("`report_tempfile'") filepath("`report'") `replace'
