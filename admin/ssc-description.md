@@ -12,20 +12,26 @@ If you are not updating this meta information when updating the files in the `sc
 ***
 
 ### Title
-IEFIELDKIT : module providing commands specially developed for primary data collection
+IEFIELDKIT : module providing Stata commands for primary data collection and cleaning
 
 ### Description
 
-iefieldkit provides a set of commands that address different aspects of primary data collection. The package is developed to facilitate a work flow including (1) data collection (in particular using opendatakit.org, more specifically surveycto.com); (2) basic data cleaning, such as labelling and recoding; (3) reconciling survey rounds; (4) preparing codebooks to document data sets. The commands can also be used independently, and are developed to be applicable to many other contexts as well. See https://github.com/worldbank/iefieldkit for more details. These commands are developed by the World Bank's unit for impact evaluations (DIME).
+iefieldkit provides a set of commands that enable a reproducible primary data collection and cleaning workflow. The package is developed to facilitate a workflow including (1) data collection (in particular using opendatakit.org, more specifically surveycto.com); (2) basic data cleaning, such as labelling and recoding; (3) reconciling survey rounds; (4) preparing codebooks to document data sets. iefieldkit was developed to standardize and simplify best practices for high-quality primary data collection across the World Bank's Development Research Group Impact Evaluations team (DIME). The commands can also be used independently, and are developed to be applicable to many other contexts as well. See https://github.com/worldbank/iefieldkit for more details.
 
 ### Keywords
 * impact evaluations
 * field work
 * ODK
 * survey data
+* primary data collection
+* SurveyCTO
+* data cleaning
+* survey harmonization
+* duplicates
+* codebooks
 
-### Required Stata Version      
-Stata 13
+### Required Stata Version
+Stata 13.1
 
 ### Author and Email
 * Author: DIME Analytics, The World Bank, DECIE
