@@ -158,8 +158,7 @@
 				egen `count_nonmissing_values' = rownonmiss(_all), strok
 				drop if `count_nonmissing_values' == 0
 
-				** All excelVars but dupListID and newID should be string. dupListID
-				*  should be numeric and the type of newID should be based on the user input
+				* Check if the variable name in the excel spreadsheet remain unchanged from the original report outputted. 
 				foreach excelvar of local excelVars {
 					cap confirm variable `excelvar'
 					if _rc !=0 {
@@ -169,6 +168,8 @@
 						exit		
 					}
 				
+				** All excelVars but dupListID and newID should be string. dupListID
+				*  should be numeric and the type of newID should be based on the user input
 					if !inlist("`excelvar'", "`dupListID'", "`newID'") {
 
 						* Make original ID var string
