@@ -61,7 +61,7 @@
 				if "``deafultvar''" == "" local `deafultvar' = "`deafultvar'" 
 			}
 		
-			* Test that nu variable with the name needed for the excel report already exist in the data set
+			* Test that no variable with the name needed for the excel report already exist in the data set
 			local excelVars `dupListID' `dateListed' `dateFixed' `correct' `drop' `newID' `initials' `notes'
 
 			foreach excelvar of local excelVars {
@@ -121,7 +121,7 @@
 
 				Section 3 - Test input from Excel file
 
-				If Excel repirt exist, import it and test for invalid corrections
+				If Excel report exists, import it and test for invalid corrections
 				made in the excel report.
 
 			************************************************************************
@@ -142,6 +142,7 @@
 				local fileExists 0
 			}
 
+
 			/******************
 				Section 3.2
 				If report exists, load file and check input, otherwise skip to section 4
@@ -160,9 +161,14 @@
 				** All excelVars but dupListID and newID should be string. dupListID
 				*  should be numeric and the type of newID should be based on the user input
 				foreach excelvar of local excelVars {
-					
-					*SI_TODO: confirm variable that they exist in excel var name
-
+					cap confirm variable `excelvar'
+					if _rc !=0 {
+						*Variable does notexist, output error
+						noi display as error "{phang}The original spreadsheet variable name "{inp:`excelvar'}" no longer exist. Please change the spreadsheet variable name back to the origional name.{p_end}"
+						error 198
+						exit		
+					}
+				
 					if !inlist("`excelvar'", "`dupListID'", "`newID'") {
 
 						* Make original ID var string
@@ -410,7 +416,7 @@
 				*Explicitly drop temporary variable. Temporary variables might
 				*be exported to excel so delete explicitly before that. Only
 				*using tempvar here to create a name with no conflicts
-				`drop' `iedup_merge'
+				drop `iedup_merge'
 
 			}
 
