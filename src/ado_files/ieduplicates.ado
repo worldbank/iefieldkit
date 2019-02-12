@@ -58,7 +58,7 @@
 			local deafultvars dupListID dateListed dateFixed correct drop newID initials notes
 			
 			foreach deafultvar of local deafultvars  {
-				if "``deafultvar''" == "" local "`deafultvar'" = "`deafultvar'" 
+				if "``deafultvar''" == "" local `deafultvar' = "`deafultvar'" 
 			}
 		
 			* Test that nu variable with the name needed for the excel report already exist in the data set
