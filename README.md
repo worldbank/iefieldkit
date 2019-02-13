@@ -21,7 +21,16 @@ If you are using a work computer where you are not permitted to make a `net` cal
 ### Updating the command
 If you are testing the command and want to make sure that you have the latest version of the package, run `net uninstall iefieldkit` before repeating the installation described above. 
     
-## introduction
-Stata commands designed for primary data collection using [SurveyCTO](https://www.surveycto.com/index.html). Some features of the command might require meta data specific to SurveyCTO, but you are of course free to try these commands on any use case. **iefieldkit** is similar to the package [ietoolkit](https://github.com/worldbank/ietoolkit) but the commands in **iefieldkit** relates only to primary data collection using SurveyCTO.
+## Introduction
+The `iefieldkit` is a package of commands for **primary data collection**. This is a topic with fewer user-written commands than for example analysis, and we think the reason for that is that there are not as many expert Stata coders in the field. But since primary data collection is equally important to quantitative research as analysis, we hope that `iefieldkit` will cover a part of this gap.
+
+This package currently supports three major components of that workflow: **survey design**; **survey completion**; and **data cleaning and survey harmonization**.
+
+Some features of the command might require meta data specific to SurveyCTO, but you are of course free to try these commands on any use case. **iefieldkit** is similar to the package [ietoolkit](https://github.com/worldbank/ietoolkit) but the commands in **iefieldkit** relates only to primary data collection using SurveyCTO.
 
 When using this package of commands for the first time, we recommend that you read the section on the intended work flow. Some commands have features that assumes that the commands earlier in the work flow have been used. You will be notified if that is the case as some features might not work, but to the degree possible, the commands will have other ways to implement those features.
+
+In this first version, `iefieldkit` performs the following three tasks:
+* _Before data collection_ , `ietestform` is a compliment to the ODK syntax test on SurveyCTO server as `ietestform` runs tests related to best practices on how to, and how not to use features in the ODK programming language to ensure data quality, especially if the data will be imported to Stata that has other restrictions than ODK syntax.
+* _During data collection_, `ieduplicates` and `iecompdup` (both previously released as a part of the package `ietoolkit` but now moved to this package) provide a workflow for detecting and resolving duplicate entries in the dataset, ensuring that the final survey dataset will be a correct record of the survey sample to merge onto the master sampling database. 
+* _After data collection_, the `iecodebook` commands provide a workflow for rapidly cleaning, harmonizing, and documenting datasets. `iecodebook` uses input specified in an Excel sheet, which provides a much more well-structured and easy to follow (especially for non-technical users) overview that the same operations written directly to a dofile.
