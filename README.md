@@ -1,7 +1,17 @@
-# iefieldkit
+**iefieldkit - Stata Commands for Primary Data Collection**
+=====
 
-## installation - beta version
-This is just a beta release for testing purposes. We know that there are still bugs to be resolved, output to be improved etc. before this package of commands is as user-friendly as we aim for it to be when the first non-beta version is released. With that said, we are immensely grateful for anyone who wants to help us test this command and report bugs, suggest improvements, ask for clarifications where documentation is not great etc. The non-beta version of the command will be released on _SSC_ but until then, the command is installed using the code below:
+### **Install and Update**
+
+#### Installing published versions of `iefieldkit`
+To install **iefieldkit**, type **`ssc install iefieldkit`** in Stata. This will install the latest published version of **iefieldkit**. The main version of the code in the repo (the `master` branch) is what is published on SSC as well.
+
+ If you think something is different in version in this repo, and the version installed on your computer, make sure that you both look at the `master` branch in this repo, and that you have the most recent version of **iefieldkit** installed. To update all files associated with **iefieldkit** type **`adoupdate iefieldkit, update`** in Stata. (It is wise to be in the habit of regularly checking if any of your .ado files installed in Stata need updates by typing **`adoupdate`**.)
+
+ When we are publishing new versions of **iefieldkit** then there could be a discrepancy between the master branch and the version on SSC as the master branch is updates a couple of days before. You can confirm if that could be the case by checking if we recently published a new [release](https://github.com/worldbank/iefieldkit/releases).
+
+#### Installing unpublished branches of this repository
+Follow the instructions above if you want the most recent published version of **iefieldkit**. If you want a yet to be published version of **iefieldkit** then you can use the code below. The code below installs the version currently in the `master` branch, but replace _master_ in the URL below with the name of the branch you want to install from. You can also install older version of **iefieldkit** like this but it will only go back to January 2019 when we set up this method of installing the package.
 ```
     net install iefieldkit , from("https://raw.githubusercontent.com/worldbank/iefieldkit/master/src") replace
 ```
@@ -15,17 +25,3 @@ If you are testing the command and want to make sure that you have the latest ve
 Stata commands designed for primary data collection using [SurveyCTO](https://www.surveycto.com/index.html). Some features of the command might require meta data specific to SurveyCTO, but you are of course free to try these commands on any use case. **iefieldkit** is similar to the package [ietoolkit](https://github.com/worldbank/ietoolkit) but the commands in **iefieldkit** relates only to primary data collection using SurveyCTO.
 
 When using this package of commands for the first time, we recommend that you read the section on the intended work flow. Some commands have features that assumes that the commands earlier in the work flow have been used. You will be notified if that is the case as some features might not work, but to the degree possible, the commands will have other ways to implement those features.
-
-## Suggested commands
-
-Only **ietestform** and **iecodebook** are released yet, and they are only released in beta version for testing.
-
-* Questionnaire design
-  * **ietestform** - command that tests the SurveyCTO questionnaire form for risky practices. This is not a substitute to the test SurveyCTO's servers do when uploading a form, but a complement. SurveyCTO's servers check that the syntax is correct, while **ietestform** warns you and bring your attention to practices that are not incorrect from a strict syntax perspecitve, but are practices that are prone to errors, or should only be used in very specific cases.
-* Data collection
-  * **ieimport** - similar to ODK meta. Applies labels etc. Stores meta data from the form to the vars in the data set.
-  * **ieduplicates** and **iecompdup** - already exists in **ietoolkit**, will be moved here in time for the first version of **iefieldkit**. Finds duplicates, assists in identifying why they are duplicates, and provides an easy way to correct them.
-  * **iehfc** - set of commands with iehfc being the main command that runs high frequency checks
-  * **ieprogressreport** - Generates a table with number of interviews done. Exports in Excel form. First sheet is total, last day, last week. Then user can specify vars like district, data collection team, enumerator, etc. that this information is split by. Command should probably have a shorter name.
-* After data collection
-  * **iecodebook** - helps document all the small edits needed when appending data sets from multiple rounds or from very similar surveys from different locations.
