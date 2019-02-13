@@ -34,10 +34,12 @@ The vast majority of users should install the command by typing `ssc install ief
  If you want a yet to be published version of **iefieldkit** then you can use the code below. The code below installs the version currently in the `master` branch, but replace _master_ in the URL below with the name of the branch you want to install from. You can also install older version of **iefieldkit** like this but it will only go back to January 2019 when we set up this method of installing the package.
 
 ```
-    //When working with multiple version from different sources, then you should always start by making sure any previously installed version of iefieldkit is removed
+    **When working with multiple version from different sources, 
+    * then you should always start by making sure any previously 
+    * installed version of iefieldkit is removed
     cap net uninstall iefieldkit
 
-    //Install the command
+    *Install iefieldkit directly from the repository
     net install iefieldkit , from("https://raw.githubusercontent.com/worldbank/iefieldkit/master/src") replace
 ```
 
@@ -48,9 +50,9 @@ If you are using a work computer where you are not permitted to make a `net` cal
 After you have done the contributions or testing that you intended to do, you have to manually make sure that you re-install the published and tested version of **iefieldkit**. Follow the code below to do so.
 
 ```
-    //Remove the installed version of the iefieldkit
+    *Remove the installed version of iefieldkit
     cap net uninstall iefieldkit
 
-    //Install the most recent published version of iefieldkit
+    *Install the most recent published version of iefieldkit
     ssc install iefieldkit
 ```
