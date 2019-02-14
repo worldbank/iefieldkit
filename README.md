@@ -37,7 +37,7 @@ The vast majority of users should install the command by typing `ssc install ief
     **When working with multiple version from different sources, 
     * then you should always start by making sure any previously 
     * installed version of iefieldkit is removed
-    cap net uninstall iefieldkit
+    cap ado uninstall iefieldkit
 
     *Install iefieldkit directly from the repository
     net install iefieldkit , from("https://raw.githubusercontent.com/worldbank/iefieldkit/master/src") replace
@@ -51,7 +51,7 @@ After you have done the contributions or testing that you intended to do, you ha
 
 ```
     *Remove the installed version of iefieldkit
-    cap net uninstall iefieldkit
+    cap ado uninstall iefieldkit
 
     *Install the most recent published version of iefieldkit
     ssc install iefieldkit
