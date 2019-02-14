@@ -16,13 +16,20 @@ All Stata packages has a version date. If that date is different between the mul
 
 If you have many user-written packages installed, then you might have to scroll up to right below `adoupdate` to see Stata gives you that output. You do not have to run `adoupdate` for a specific command as in the image below, just the command name with no other input is sufficient.
 
-Regardless if you see the output from the image below in your Stata window or not, after running `adoupdate` try to uninstall or update the package again and see as you get the same error message again. If you get the same error, move to _Solution 2_ below.
+Regardless if you see the output from the image below in your Stata window or not, after running `adoupdate` try to uninstall or update the package again and see as you get the same error message again. If you get the same error, move to next solution below.
 
 ![multiple-package-source-adoupdate](https://user-images.githubusercontent.com/15911801/52811331-d467a000-3062-11e9-9555-60f40ec19d7b.png)
 
 While it is not related to this error, it is always good to follow the instructions outputted by `adoupdate` if any of your user-written commands are out of date.
 
-## Solution 2 - Manual solution
+## Solution 2 - Manually uninstall
+If you got this error when you tried to do `ado uninstall packagename`, then you can skip this solution and go to next solution.
+
+If you did something else than `ado uninstall packagename`, then try that now, and then re-install the paackge. Then try if you get the same initial error when you re-try to do what you were doing when you go that error.
+
+If you still get that error, then move to next solution.
+
+## Solution 3 - Manual solution
 If the error persist after running `adoupdate`, then it is most likely due to two or more of the packages you have installed from different sources have the same version date. Stata does then not know which package to remove and which to keep. You will have to do it manually.
 
 First, make sure that there are indeed multiple versions of the package installed. You can use `adoupdate` again for this, but this time you should specify the specific package name you get this error for, and use the option `verbose`, see the image below.
