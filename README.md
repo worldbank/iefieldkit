@@ -56,3 +56,9 @@ After you have done the contributions or testing that you intended to do, you ha
     *Install the most recent published version of iefieldkit
     ssc install iefieldkit
 ```
+
+### Errors after installing from multiple sources
+
+If you have installed a package from multiple sources, then you might get the error below. If you get that error, follow the instructions [here](https://github.com/worldbank/iefieldkit/blob/master/admin/multiple-package-source-error.md).
+
+![multiple-package-source-error](https://user-images.githubusercontent.com/15911801/52809664-cadc3900-305e-11e9-863f-bff31f07a9ef.png)
