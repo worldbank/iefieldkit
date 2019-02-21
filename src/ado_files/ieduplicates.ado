@@ -163,7 +163,7 @@
 					cap confirm variable `excelvar'
 					if _rc !=0 {
 						*Variable does notexist, output error
-						noi display as error "{phang}The original spreadsheet variable name "{inp:`excelvar'}" no longer exist. Please change the spreadsheet variable name back to the origional name.{p_end}"
+						noi display as error "{phang}The original spreadsheet variable name {inp:`excelvar'} no longer exist. Please change the spreadsheet variable name back to the origional name.{p_end}"
 						error 198
 						exit		
 					}

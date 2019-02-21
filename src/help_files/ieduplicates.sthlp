@@ -19,7 +19,13 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {it:ID_varname}
 , {cmdab:fol:der(}{it:string}{cmd:)} {cmdab:unique:vars(}{it:varlist}{cmd:)}
 [{cmdab:keep:vars(}{it:varlist}{cmd:)} {cmdab:tostringok} {cmdab:droprest}
-{cmdab:nodaily} {cmdab:suf:fix(}{it:string}{cmd:)}
+{cmdab:nodaily} {cmdab:suf:fix(}{it:string}{cmd:)} 
+{cmdab:dupListID(}{it:string}{cmd:)} {cmdab:dateListed(}{it:string}{cmd:)}
+{cmdab:dateFixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}
+{cmdab:drop(}{it:string}{cmd:)} {cmdab:newID(}{it:string}{cmd:)}
+{cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)}]{p_end}
+
+
 
 {phang2}where {it:ID_varname} is the variable that will be controlled for duplicates
 
@@ -32,8 +38,19 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {synopt :{cmdab:keep:vars(}{it:varlist}{cmd:)}}variables used to be included in the Excel report in addition to {it:ID_varname} and {cmdab:unique:vars()} {p_end}
 {synopt :{cmdab:tostringok}}allows {it:ID_varname} to be recasted to string if required{p_end}
 {synopt :{cmdab:droprest}}disables the requirement that duplicates must be explicitly deleted{p_end}
-{synopt :{cmdab:suf:fix(}{it:string}{cmd:)}}allows the user to add a suffix to the filename of the Excel report{p_end}
 {synopt :{cmdab:nodaily}}disables daily back-up copies of the Excel report{p_end}
+{synopt :{cmdab:suf:fix(}{it:string}{cmd:)}}allows the user to add a suffix to the filename of the Excel report{p_end}
+
+{synopt :{cmdab:dupListID(}{it:string}{cmd:)}}allows the user to customize the variable name "dupListID" in the the Excel report{p_end}
+{synopt :{cmdab:dateListed(}{it:string}{cmd:)}}allows the user to customize the variable name "dateListed" in the the Excel report{p_end}
+{synopt :{cmdab:dateFixed(}{it:string}{cmd:)}}allows the user to customize the variable name "dateFixed" in the the Excel report{p_end}
+{synopt :{cmdab:correct(}{it:string}{cmd:)}}allows the user to customize the variable name "correct" in the the Excel report{p_end}
+{synopt :{cmdab:drop(}{it:string}{cmd:)}}allows the user to customize the variable name "drop" in the the Excel report{p_end}
+{synopt :{cmdab:newID(}{it:string}{cmd:)}}allows the user to customize the variable name "newID" in the the Excel report{p_end}
+{synopt :{cmdab:initials(}{it:string}{cmd:)}}allows the user to customize the variable name "initials" in the the Excel report{p_end}
+{synopt :{cmdab:notes(}{it:string}{cmd:)}}allows the user to customize the variable name "notes" in the the Excel report{p_end}
+
+
 {synoptline}
 
 {title:Description}
@@ -131,6 +148,14 @@ Excel report. The default is that the command saves dated copies of the Excel
 report in a sub-folder called Daily in the folder specified in {cmdab:folder()}. If
 the folder /Daily/ does not exist, then it is created unless the
 option {cmdab:nodaily} is used.
+
+{phang}{cmdab:dupListID(}{it:string}{cmd:)} {cmdab:dateListed(}{it:string}{cmd:)} 
+{cmdab:dateFixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)} 
+{cmdab:drop(}{it:string}{cmd:)} {cmdab:newID(}{it:string}{cmd:)} 
+{cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)} 
+allow the user to set a unique name for each default variable names (e.g. "dupListID", "dateListed", etc.) in the Excel report.
+This is meant to be used when the variable name already exists in the dataset. To avoid error, the command offers a way to modify the variable name in the Excel Report. {p_end}
+
 
 {title:The Excel Report}
 
@@ -245,7 +270,7 @@ unresolved duplicates were found
 {hi:Example 4.} Using the Excel file. The table below could be the report generated in Example 2 above. Make the viewer window wider and reload the page if the table below does not display properly!
 
 {col 3}{c TLC}{hline 116}{c TRC}
-{col 3}{c |}{col 4}HHID{col 10}dupListID{col 21}dateListed{col 33}dateFixed{col 44}correct{col 53}drop{col 59}newID{col 65}initials{col 75}note{col 94}KEY{col 107}enumerator{col 120}{c |}
+{col 3}{c |}{col 4}HHID{col 10}dupListID{col 21}dateListed{col 33}dateFixed{col 44}correct{col 53}drop{col 59}newID{col 65}initials{col 75}notes{col 94}KEY{col 107}enumerator{col 120}{c |}
 {col 3}{c LT}{hline 116}{c RT}
 {col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
 {col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
@@ -272,6 +297,28 @@ correction and made a note. This note can and should be more descriptive but is 
 observation. One is kept and one is dropped, usually it does not matter which you keep and which you drop, but that should be confirmed.
 
 {pmore}Both corrections described in the example would have been easily identified using this command's sister command {help iecompdup}.
+
+
+
+{phang}
+{hi:Example 5.} {inp:ieduplicates HHID, folder(C:\myImpactEvaluation\baseline\data) uniquevars(KEY) drop(out) notes(notes_enumerators)}
+
+{col 3}{c TLC}{hline 103}{c TRC}
+{col 3}{c |}{col 4}HHID{col 10}dupListID{col 21}dateListed{col 33}dateFixed{col 44}correct{col 53}out{col 59}newID{col 65}initials{col 75}notes_enumerators{col 94}KEY{col 107}{c |}
+{col 3}{c LT}{hline 103}{c RT}
+{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{c |}
+{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{c |}
+{col 3}{c |}{col 4}7365{col 10}3{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{c |}
+{col 3}{c |}{col 4}7365{col 10}4{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{c |}
+{col 3}{c |}{col 4}1145{col 10}5{col 21}03Jan2016{col 33}11Jan2016{col 44}   {col 53}   {col 59}1245{col 65}IB{col 75}incorrect id     {col 94}{it:uniquevalue}{col 107}{c |}
+{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}yes{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{c |}
+{col 3}{c |}{col 4}9834{col 10}7{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{c |}
+{col 3}{c |}{col 4}9834{col 10}8{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{c |}
+{col 3}{c BLC}{hline 103}{c BRC}
+
+{pmore} The variable names in Excel Report is now changed to the user speficied. If the user changed any of the variable names in the Excel Report, when importing the Excel file back to apply the decisions, run exactly the same code:{p_end}
+{pmore}{inp:ieduplicates HHID, folder(C:\myImpactEvaluation\baseline\data) uniquevars(KEY) drop(out) notes(notes_enumerators)}{p_end}
+
 
 {title:Acknowledgements}
 
