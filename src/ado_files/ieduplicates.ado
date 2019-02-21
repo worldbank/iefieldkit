@@ -7,7 +7,7 @@
 	qui {
 
 		syntax varname ,  FOLder(string) UNIQUEvars(varlist) [KEEPvars(varlist) tostringok droprest nodaily SUFfix(string) ///
-		dupListID(string) dateListed(string) dateFixed(string) correct(string) drop(string) newID(string) initials(string) notes(string)]
+		duplistid(string) datelisted(string) datefixed(string) correct(string) drop(string) newid(string) initials(string) notes(string)]
 
 		version 11.0
 
@@ -55,14 +55,14 @@
 			* Create a list of the variables created by this command to put in the report
 
 			*For optioin to change var names. Setting a default name of columns (in case user did not specify the variable name)
-			local deafultvars dupListID dateListed dateFixed correct drop newID initials notes
+			local deafultvars duplistid datelisted datefixed correct drop newid initials notes
 			
 			foreach deafultvar of local deafultvars  {
 				if "``deafultvar''" == "" local `deafultvar' = "`deafultvar'" 
 			}
 		
 			* Test that no variable with the name needed for the excel report already exist in the data set
-			local excelVars `dupListID' `dateListed' `dateFixed' `correct' `drop' `newID' `initials' `notes'
+			local excelVars `duplistid' `datelisted' `datefixed' `correct' `drop' `newid' `initials' `notes'
 
 			foreach excelvar of local excelVars {
 				cap confirm variable `excelvar'
@@ -168,9 +168,9 @@
 						exit		
 					}
 				
-				** All excelVars but dupListID and newID should be string. dupListID
-				*  should be numeric and the type of newID should be based on the user input
-					if !inlist("`excelvar'", "`dupListID'", "`newID'") {
+				** All excelVars but duplistid and newid should be string. duplistid
+				*  should be numeric and the type of newid should be based on the user input
+					if !inlist("`excelvar'", "`duplistid'", "`newid'") {
 
 						* Make original ID var string
 						tostring `excelvar' , replace
@@ -245,9 +245,9 @@
 					Make sure there are not too many corrections for a single observation
 				******************/
 
-				* Count the number of corrections (correct drop newID) per
+				* Count the number of corrections (correct drop newid) per
 				* observation. Only one correction per observation is allowed.
-				egen `multiInp' = rownonmiss(`correct' `drop' `newID'), strok
+				egen `multiInp' = rownonmiss(`correct' `drop' `newid'), strok
 
 				*Check that all rows have at most one correction
 				cap assert `multiInp' == 0 | `multiInp' == 1
@@ -278,14 +278,14 @@
 					Section 3.3.4
 					Make sure that either option droprest is specified, or that
 					drop was correctly indicated for all observations. i.e.; if
-					correct or newID was indicated for at least one duplicate in
+					correct or newid was indicated for at least one duplicate in
 					a duplicate group, then all other observations should be
 					indicated as drop (unless droprest is specified)
 
 				******************/
 
 				*Generate dummy if there is any correction for this observation
-				gen `anyCorrection' = !missing(`correct') | !missing(`newID')
+				gen `anyCorrection' = !missing(`correct') | !missing(`newid')
 
 				*Count number of observations with any correction in suplicates group
 				bys `idvar' : egen `groupAnyCorrection' =  total(`anyCorrection')
@@ -330,29 +330,29 @@
 
 						*Error multiple input
 						if `local_multiInp' == 1 {
-							display as error "{phang}The following observations have more than one correction. Only one correction (correct, drop or newID) per row is allowed{p_end}"
-							list `idvar' `dupListID' `correct' `drop' `newID' `uniquevars' if `multiInp' > 1
+							display as error "{phang}The following observations have more than one correction. Only one correction (correct, drop or newid) per row is allowed{p_end}"
+							list `idvar' `duplistid' `correct' `drop' `newid' `uniquevars' if `multiInp' > 1
 							di ""
 						}
 
 						*Error multiple correct
 						if `local_multiCorr' == 1 {
 							display as error "{phang}The following observations are in a duplicate group where more than one observation is listed as correct. Only one observation per duplicate group can be correct{p_end}"
-							list `idvar' `dupListID' `correct' `drop' `newID' `uniquevars' if `groupNumCorrect' > 1
+							list `idvar' `duplistid' `correct' `drop' `newid' `uniquevars' if `groupNumCorrect' > 1
 							di ""
 						}
 
 						*Error in incorrect string
 						if `local_inputNotYes' == 1 {
 							display as error "{phang}The following observations have an answer in either correct or drop that is neither yes nor y{p_end}"
-							list `idvar' `dupListID' `correct' `drop' `uniquevars' if `inputNotYes' == 1
+							list `idvar' `duplistid' `correct' `drop' `uniquevars' if `inputNotYes' == 1
 							di ""
 						}
 
 						*Error is not specfied as drop
 						if `local_notDrop' == 1 {
 							display as error "{phang}The following observations are not explicitly indicated as drop while other duplicates in the same duplicate group are corrected. Either manually indicate as drop or see option droprest{p_end}"
-							list `idvar' `dupListID' `correct' `drop' `newID' `uniquevars' if `notDrop' == 1
+							list `idvar' `duplistid' `correct' `drop' `newid' `uniquevars' if `notDrop' == 1
 							di ""
 						}
 
@@ -471,8 +471,8 @@
 					*Generate the excel variables used for indicating correction
 					foreach excelvar of local excelVars {
 
-						*Create all variables apart from dupListID as string vars
-						if inlist("`excelvar'", "`dupListID'", "`newID'") {
+						*Create all variables apart from duplistid as string vars
+						if inlist("`excelvar'", "`duplistid'", "`newid'") {
 							gen `excelvar' = .
 						}
 						else {
@@ -488,7 +488,7 @@
 
 				* Generate a local that is 1 if there are new duplicates
 				local unaddressedNewExcel 0
-				count if missing(`dateFixed')
+				count if missing(`datefixed')
 				if `r(N)' > 0 local unaddressedNewExcel 1
 
 				/******************
@@ -496,30 +496,30 @@
 				******************/
 
 				* Add date first time duplicate was identified
-				replace ``dateListed'' 	= "`date'" if missing(`dateListed')
+				replace `datelisted' 	= "`date'" if missing(`datelisted')
 
-				** Add today's date to variable dateFixed if dateFixed
+				** Add today's date to variable datefixed if datefixed
 				*  is empty and at least one correction is added
-				replace `dateFixed' 	= "`date'" if missing(`dateFixed') & (!missing(`correct') | !missing(`drop') | !missing(`newID'))
+				replace `datefixed' 	= "`date'" if missing(`datefixed') & (!missing(`correct') | !missing(`drop') | !missing(`newid'))
 
 				/******************
 					Section 5.3.2 Duplicate report list ID
 				******************/
 
-				** Sort after dupListID and after ID var for
-				*  duplicates currently without dupListID
-				sort `dupListID' `idvar'
+				** Sort after duplistid and after ID var for
+				*  duplicates currently without duplistid
+				sort `duplistid' `idvar'
 
-				** Assign dupListID 1 to the top row if no duplicate
+				** Assign duplistid 1 to the top row if no duplicate
 				*  list IDs have been generated so far.
-				replace `dupListID' = 1 if _n == 1 & missing(`dupListID')
+				replace `duplistid' = 1 if _n == 1 & missing(`duplistid')
 
 				** Generate new IDs based on the row above instead of directly
 				*  from the row number. That prevents duplicates in the list in
 				*  case an observation is deleted. The first observation with
 				*  missing value will have an ID that is one digit higher than
 				*  the highest ID already in the list
-				replace `dupListID' = `dupListID'[_n - 1] + 1 if missing(`dupListID')
+				replace `duplistid' = `duplistid'[_n - 1] + 1 if missing(`duplistid')
 
 				/******************
 					Section 5.4
@@ -603,25 +603,25 @@
 			/******************
 				Section 6.2.1
 				ID var in original file is string. Either
-				newID was imported as string or the variable
+				newid was imported as string or the variable
 				is made string. Easy.
 			******************/
 
 			*Test if there are any corrections by new ID
-			cap assert missing(`newID')
+			cap assert missing(`newid')
 			if _rc {
 
 				local idtype 	: type `idvar'
-				local idtypeNew : type `newID'
+				local idtypeNew : type `newid'
 
-				*If ID var is string but newID is not, then just make it string
+				*If ID var is string but newid is not, then just make it string
 				if substr("`idtype'",1,3) == "str" & substr("`idtypeNew'",1,3) != "str" {
 
-					tostring `newID' , replace
-					replace  `newID' = "" if `newID' == "."
+					tostring `newid' , replace
+					replace  `newid' = "" if `newid' == "."
 				}
 
-				*If ID var is numeric but the newID is loaded as string
+				*If ID var is numeric but the newid is loaded as string
 				else if substr("`idtype'",1,3) != "str" & substr("`idtypeNew'",1,3) == "str" {
 
 					* Check if [tostringok] is specificed:
@@ -637,23 +637,23 @@
 					else {
 
 						* Create a local with all non-numeric values
-						levelsof `newID' if missing(real(`newID')), local(NaN_values) clean
+						levelsof `newid' if missing(real(`newid')), local(NaN_values) clean
 
 						* Output error message
-						di as error "{phang}The ID variable `idvar' is numeric but newID has these non-numeric values: `NaN_values'. Update newID to only contain numeric values or see option tostringok.{p_end}"
+						di as error "{phang}The ID variable `idvar' is numeric but newid has these non-numeric values: `NaN_values'. Update newid to only contain numeric values or see option tostringok.{p_end}"
 						error 109
 						exit
 					}
 				}
 
 				*After making sure that type is ok, update the IDs
-				replace `idvar' = `newID' if !missing(`newID')
+				replace `idvar' = `newid' if !missing(`newid')
 
 
 
 				/******************
 					Section 6.3
-					Test that values in newID
+					Test that values in newid
 					were neither used twice
 					nor already existed
 				******************/
