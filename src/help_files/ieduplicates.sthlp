@@ -20,9 +20,9 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 , {cmdab:fol:der(}{it:string}{cmd:)} {cmdab:unique:vars(}{it:varlist}{cmd:)}
 [{cmdab:keep:vars(}{it:varlist}{cmd:)} {cmdab:tostringok} {cmdab:droprest}
 {cmdab:nodaily} {cmdab:suf:fix(}{it:string}{cmd:)} 
-{cmdab:dupListID(}{it:string}{cmd:)} {cmdab:dateListed(}{it:string}{cmd:)}
-{cmdab:dateFixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}
-{cmdab:drop(}{it:string}{cmd:)} {cmdab:newID(}{it:string}{cmd:)}
+{cmdab:duplistid(}{it:string}{cmd:)} {cmdab:datelisted(}{it:string}{cmd:)}
+{cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}
+{cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)}
 {cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)}]{p_end}
 
 
@@ -41,12 +41,12 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {synopt :{cmdab:nodaily}}disables daily back-up copies of the Excel report{p_end}
 {synopt :{cmdab:suf:fix(}{it:string}{cmd:)}}allows the user to add a suffix to the filename of the Excel report{p_end}
 
-{synopt :{cmdab:dupListID(}{it:string}{cmd:)}}allows the user to customize the variable name "dupListID" in the the Excel report{p_end}
-{synopt :{cmdab:dateListed(}{it:string}{cmd:)}}allows the user to customize the variable name "dateListed" in the the Excel report{p_end}
-{synopt :{cmdab:dateFixed(}{it:string}{cmd:)}}allows the user to customize the variable name "dateFixed" in the the Excel report{p_end}
+{synopt :{cmdab:duplistid(}{it:string}{cmd:)}}allows the user to customize the variable name "dupListID" in the the Excel report{p_end}
+{synopt :{cmdab:datelisted(}{it:string}{cmd:)}}allows the user to customize the variable name "dateListed" in the the Excel report{p_end}
+{synopt :{cmdab:datefixed(}{it:string}{cmd:)}}allows the user to customize the variable name "dateFixed" in the the Excel report{p_end}
 {synopt :{cmdab:correct(}{it:string}{cmd:)}}allows the user to customize the variable name "correct" in the the Excel report{p_end}
 {synopt :{cmdab:drop(}{it:string}{cmd:)}}allows the user to customize the variable name "drop" in the the Excel report{p_end}
-{synopt :{cmdab:newID(}{it:string}{cmd:)}}allows the user to customize the variable name "newID" in the the Excel report{p_end}
+{synopt :{cmdab:newid(}{it:string}{cmd:)}}allows the user to customize the variable name "newID" in the the Excel report{p_end}
 {synopt :{cmdab:initials(}{it:string}{cmd:)}}allows the user to customize the variable name "initials" in the the Excel report{p_end}
 {synopt :{cmdab:notes(}{it:string}{cmd:)}}allows the user to customize the variable name "notes" in the the Excel report{p_end}
 
@@ -149,9 +149,9 @@ report in a sub-folder called Daily in the folder specified in {cmdab:folder()}.
 the folder /Daily/ does not exist, then it is created unless the
 option {cmdab:nodaily} is used.
 
-{phang}{cmdab:dupListID(}{it:string}{cmd:)} {cmdab:dateListed(}{it:string}{cmd:)} 
-{cmdab:dateFixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)} 
-{cmdab:drop(}{it:string}{cmd:)} {cmdab:newID(}{it:string}{cmd:)} 
+{phang}{cmdab:duplistid(}{it:string}{cmd:)} {cmdab:datelisted(}{it:string}{cmd:)} 
+{cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)} 
+{cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)} 
 {cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)} 
 allow the user to set a unique name for each default variable names (e.g. "dupListID", "dateListed", etc.) in the Excel report.
 This is meant to be used when the variable name already exists in the dataset. To avoid error, the command offers a way to modify the variable name in the Excel Report. {p_end}
