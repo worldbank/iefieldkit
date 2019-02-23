@@ -1,82 +1,95 @@
+*! version 0 - NOT READY FOR DISTRIBUTION
+
 cap program drop iecorrect
 	program 	 iecorrect
 		
-	syntax using/, [GENerate idvar(varlist) save(string) replace]
+	syntax using/, [GENerate idvar(varlist) NOIsily save(string) replace]
 		
+	preserve
+	
+/*******************************************************************************	
+	Open file and check which types of corrections need to be made
+*******************************************************************************/
 		
+		* Check that folder exists
+		
+		* Check that file exists
 		cap confirm file "`using'"
 		noi di _rc
 		if _rc {
 			noi di as error "file does not exist"
 			error 601
 		}
-		else {
 		
-			tempname	corrections
-			tempfile	correctionsfile
-
-		cap	file close 	corrections
-			file open  	corrections using "`correctionsfile'", text write replace
-			file write  corrections		  "* Write header here" _n _n
-			file close  corrections		  
-			
-		preserve
+		*Numeric variables
+		noi di "import 'string' sheet"
+			* Check that there are numeric corrections
+			* Check that corrections are correctly specified
 		
-			* Numeric variables corrections
-			noi di "import 'numeric' sheet"
-		cap import excel "`using'", sheet("numeric") firstrow allstring clear
-		if !_rc {
+		*String variables
+			* Check that there are numeric corrections
+			* Check that corrections are correctly specified
 			
-			drop if missing(numvar)
-			foreach var of varlist numvar {
-				levelsof `var', local(`var'List)
-			}
-			
-			count
-			if `r(N)' > 0 {						
-			noi di "enter write loop"
-		cap	file close 	corrections	
-			file open  	corrections using "`correctionsfile'", text write append
-			file write  corrections		  "** Correct entries in numeric variables " _n
-				forvalues row = 1/`r(N)' {
+		*"Other" variables
+			* Check that there are numeric corrections
+			* Check that corrections are correctly specified
+		
+		
+/*******************************************************************************	
+	Create a do file containing the corrections
+*******************************************************************************/		
+		
+		* Define tempfile
+		tempname	doname
+		tempfile	dofile
+		
+		* If the do file will be saved for later reference, add a header
+		if "`save'" != "" {
+			doheader , doname("`doname'") dofile("`dofile'")
+		}
 					
-					local var			= numvar[`row']
-					local valuecurrent 	= valuecurrent[`row']
-					local value		 	= value[`row']
-					local idvalue		= idvalue[`row']
+		* If there are corrections to be made to numeric variables, then make them		
+		if `numeric' {
+			corrnum using `datanum', doname("`doname'") dofile("`dofile'")
+		}
+		
+		*String variables
+		*"Other" variables
+		
+		* If the do file will be saved for later reference, add a footer
+		if "`save'" != "" {
+			dofooter , doname("`doname'") dofile("`dofile'")
+		}
 
-					file write corrections		`"replace `var' = `value' if "'
-					
-					if "`idvar'" != "" {
-						file write corrections	`"`idvar' == `idvalue' "'
-						
-						if "`valuecurrent'" != "" {
-							file write corrections	`"& "'
-						}
-					}
-					
-					if "`valuecurrent'" != "" {
-						noi di "enter valuecurrent"
-						file write corrections	 `"`var' == `valuecurrent'"'
-					}
-					
-					file write corrections	_n
-				}
-			file write  corrections		  _n _n
+/*******************************************************************************	
+	Run the do file containing the corrections
+*******************************************************************************/
+
+		dorun , doname("`doname'") dofile("`dofile'") `noisily'
+		
+/*******************************************************************************	
+	Save the do file containing the corrections if "save" was selected
+*******************************************************************************/
+
+		if "`save'" != "" {
+		
+			* Check that folder exists
+			copy "`dofile'" `"`save'"', `replace'
 			
-			noi di "exit write loop"
-			file close corrections
-			}		
-	}		
+			noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} "'
+		}
+
+	restore
+	
+	end
+	
+		
 			* String variables corrections
-			noi di "import 'string' sheet"
-		cap	import excel "`using'", sheet("string") firstrow allstring clear
+			
 		if !_rc {
 		
 			drop if missing(strvar)
-			foreach var of varlist strvar {
-				levelsof `var', local(`var'List)
-			}
+
 			
 			count
 			if `r(N)' > 0 {
@@ -189,22 +202,178 @@ cap program drop iecorrect
 		* Test if numeric variable is numeric
 		
 		
+		
+		
+	}
+	end
+
+/*******************************************************************************	
+	Initial checks
+*******************************************************************************/
+	
+cap program drop checksheets
+	program 	 checksheets
+	
+	cap import excel "`using'", sheet("numeric") firstrow allstring clear
+	
+	* If the sheet does not exist, then say no corrections of this type
+	if _rc == {
+		
+	}
+	* If the sheet exist, check that it is correctly specified
+	else {
+		
+		* Drop extra lines in the excel
+		drop if missing(numvar)
+	
+		* Are any observations still left?
+		count
+		if `r(N)' > 0 {
+				
+		*Are all the necessary variables there?
+			* If numeric corrections, either idvalue or valuecurrent need to be specified
+		
+			*Are they the right format?
+			foreach var of varlist numvar {
+				levelsof `var', local(numlist)		
+			}
+		}
+		
+		tempfile datanum
+		save	 `datanum'
+		
+		*Do the variables referred to in the file exist?
+		*Are they the right format?
+		*If everything works, save the sheet in a tempfile and create a local saying to run the next command
+	}
+	
+	
+	end
+	
+/*******************************************************************************	
+	Write the do file with corrections
+*******************************************************************************/
+
+**********************
+* Write do file header
+**********************
+cap program drop doheader
+	program 	 doheader
+	
+	syntax , doname(string) dofile(string)
+	
+		cap	file close 	`doname'
+			file open  	`doname' using 	"`dofile'", text write replace
+			
+			file write  `doname'		"* Write header here" _n _n														// <---- Writing in do file here
+			
+			file close  `doname'	
+			
+	end
+
+***************************
+* Write numeric corrections
+***************************
+cap program drop donum
+	program 	 donum
+	
+	syntax using/ , doname(string) dofile(string)
+
+		preserve
+			
+			* Open the data set with the numeric corrections
+			use "`using'", clear
+		
+			* Open the placeholder do file and write the corrections to be made
+			cap	file close 	`doname'	
+				file open  	`doname' using "`dofile'", text write append
+				
+				file write  `doname'		  "** Correct entries in numeric variables " _n								// <---- Writing in do file here
+				
+				* Write one line of correction for each line in the data set
+				forvalues row = 1/`r(N)' {
+					
+					local var			= numvar[`row']
+					local valuecurrent 	= valuecurrent[`row']
+					local value		 	= value[`row']
+					local idvalue		= idvalue[`row']
+
+					* The listed variable will be corrected to new value, but a condition needs to be specified.
+					* The condition can be one ID variable and/or one current value.
+					file write `doname'		`"replace `var' = `value' if "'												// <---- Writing in do file here
+					
+					* If it's an ID variables, write that in the do file
+					if "`idvar'" != "" {
+						file write `doname'	`"`idvar' == `idvalue' "'													// <---- Writing in do file here
+						
+						* If it's both, add an "and"
+						if "`valuecurrent'" != "" {
+							file write `doname'	`"& "'																	// <---- Writing in do file here
+						}
+					}
+					
+					* If there's a current value, write that in the do file.
+					if "`valuecurrent'" != "" {
+						noi di "enter valuecurrent"
+						file write `doname'	 `"`var' == `valuecurrent'"'												// <---- Writing in do file here
+					}
+					
+					* Noew add an extra line
+					file write `doname'	_n																				// <---- Writing in do file here
+				}
+					
+				* Add an extra space before the next set of corrections
+				file write  `doname'		  _n _n																		// <---- Writing in do file here
+				
+				* And close the do file
+				noi di "exit write loop"
+			file close `doname'
+		
+		restore
+		
+	end
+	
+	
+**********************
+* Write do file footer
+**********************
+cap program drop dofooter
+	program 	 dofooter
+	
+	syntax , doname(string) dofile(string)
+	
+		cap	file close 	`doname'
+			file open  	`doname' using 	"`dofile'", text write replace
+			
+			file write  `doname'		"*-------------- THE END --------------*"										// <---- Writing in do file here
+			
+			file close  `doname'	
+			
+	end
+	
+/*******************************************************************************	
+	Run the do file with corrections
+*******************************************************************************/
+
+cap program drop dorun
+	program		 dorun
+	
+	syntax , doname(string) dofile(string) [noisily]
+	
 		noi di "Read corretions"
-		file open corrections using "`correctionsfile'", read
-		file read corrections line
+		file open `doname' using "`dofile'", read
+		file read `doname' line
 		
 		noi di "Run each line"
 		while r(eof)==0 {
 			display `"`line'"'
-			`line'
-			file read corrections line
+			`noisily' `line'
+			file read `doname' line
 		}
 
 		noi di "Close corrections"
-		file close corrections
-		
-		if "`save'" != "" {
-			copy "`correctionsfile'" `"`save'"', `replace'
-		}
-	}
+		file close `doname'
+	
 	end
+	
+	
