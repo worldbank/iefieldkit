@@ -7,128 +7,143 @@ cap program drop iecorrect
 		
 	gettoken subcommand anything : anything
 	
+	if !inlist("`subcommand'","template","apply") {
+		di as err "{bf:iecorrect} requires [template] or [apply] to be specified with a target [using] file. Type {bf:help iecorrect} for details."
+	}
+	
+/*==============================================================================
+								APPLY SUBCOMMAND
+==============================================================================*/
+
 	if "`subcommand'" == "apply" {
 	
 /*******************************************************************************	
 	Tests
 *******************************************************************************/
-	
+		
 	preserve
-	
-		* Check that folder exists
+	/*	
+			* Check that folder exists
+			
+			* Check that file exists
+			cap confirm file "`using'"
+			noi di _rc
+			if _rc {
+				noi di as error "file does not exist"
+				error 601
+			}
+			
+			checksheets using "`using'", type(numeric) typeshort(num)
+			local numcorr 	r(numcorr)
+			local datanum  	r(datanum)
+			local numvars	r(numvars)
+			
+			noi di as result `"{phang}Numeric variables to be corrected: `numvars'"'
+			
+			checksheets using "`using'", type(string) typeshort(str)
+			checksheets using "`using'", type(other) typeshort(str)
+			
+		restore
 		
-		* Check that file exists
-		cap confirm file "`using'"
-		noi di _rc
-		if _rc {
-			noi di as error "file does not exist"
-			error 601
-		}
+		*test that variables exist in the original data set
+		*check that the variables have the same format in the original data set
 		
-		checksheets using "`using'", type(numeric) typeshort(num)
-		local numcorr 	r(numcorr)
-		local datanum  	r(datanum)
-		local numvars	r(numvars)
-		
-		noi di as result `"{phang}Numeric variables to be corrected: `numvars'"'
-		
-		checksheets using "`using'", type(string) typeshort(str)
-		checksheets using "`using'", type(other) typeshort(str)
-		
-	restore
-	
-	*test that variables exist in the original data set
-	*check that the variables have the same format in the original data set
-	
-	* Test if variables exist
-		foreach varType in strvar catvar numvar idvar {
-			foreach var of local `varType'List {
-				cap confirm variable `var'
-				if _rc {
-					if "`generate'" != "" {
-						gen `var' = .
-					}
-					else {
-						noi di as error "There is no variable called `var'. To create this variable, use the generate option."
-						exit
+		 Test if variables exist
+			foreach varType in strvar catvar numvar idvar {
+				foreach var of local `varType'List {
+					cap confirm variable `var'
+					if _rc {
+						if "`generate'" != "" {
+							gen `var' = .
+						}
+						else {
+							noi di as error "There is no variable called `var'. To create this variable, use the generate option."
+							exit
+						}
 					}
 				}
 			}
-		}
-		
+		*/
 /*******************************************************************************	
 	Create a do file containing the corrections
 *******************************************************************************/		
 		
-		* Define tempfile
-		tempname	doname
-		tempfile	dofile
-		
-		* If the do file will be saved for later reference, add a header
-		if "`save'" != "" {
-			doheader , doname("`doname'") dofile("`dofile'")
-		}
-					
-		* Write the corrections
-		foreach type in numeric string other {
+			* Define tempfile
+			tempname	doname
+			tempfile	dofile
 			
-			local typeshort = substr("`type'", 1, 3)
-			
-			preserve
-				
-				* Open the data set with the numeric corrections
-				use "`type'", clear
-				
+			* If the do file will be saved for later reference, add a header
+			if "`save'" != "" {
+				doheader , doname("`doname'") dofile("`dofile'")
+			}
 						
-			
-				* Open the placeholder do file and write the corrections to be made
-				cap	file close 	doname	
-					file open  	doname using "`dofile'", text write append
-					
-					file write  doname		  "** Correct entries in numeric variables " _n								// <---- Writing in do file here
-					
-					forvalues row = 1/`r(N)' {
-	
-						file write	doname	  `"r(doline)"' _N
-					
-					}
-					
-				* Add an extra space before the next set of corrections
-				file write  doname		  _n _n																		// <---- Writing in do file here
+			/* Write the corrections
+			foreach type in numeric string other {
 				
-				* And close the do file
-				noi di "exit write loop"
-			file close doname
+				local typeshort = substr("`type'", 1, 3)
+				
+				preserve
+					
+					* Open the data set with the numeric corrections
+					use "`type'", clear
+					
+							
+				
+					* Open the placeholder do file and write the corrections to be made
+					cap	file close 	doname	
+						file open  	doname using "`dofile'", text write append
+						
+						file write  doname		  "** Correct entries in numeric variables " _n								// <---- Writing in do file here
+						
+						forvalues row = 1/`r(N)' {
 		
-		restore
-		}
-		if `numeric' {
-			corrnum using `datanum', doname("`doname'") dofile("`dofile'")
-		}
-		
-		*String variables
-		*"Other" variables
-		
-		* If the do file will be saved for later reference, add a footer
-		if "`save'" != "" {
-			dofooter , doname("`doname'") dofile("`dofile'")
-		}
-
+							file write	doname	  `"r(doline)"' _N
+						
+						}
+						
+					* Add an extra space before the next set of corrections
+					file write  doname		  _n _n																		// <---- Writing in do file here
+					
+					* And close the do file
+					noi di "exit write loop"
+				file close doname
+			
+			restore
+			}
+			*/
+			
+			* If the do file will be saved for later reference, add a footer
+			if "`save'" != "" {
+				dofooter , doname("`doname'") dofile("`dofile'")
+			}
+	
 /*******************************************************************************	
 	Run the do file containing the corrections
 *******************************************************************************/
 
-		dorun , doname("`doname'") dofile("`dofile'") `noisily'
+			*dorun , doname("`doname'") dofile("`dofile'") `noisily'
 		
 /*******************************************************************************	
 	Save the do file containing the corrections if "save" was selected
 *******************************************************************************/
 
-		if "`save'" != "" {
+			if "`save'" != "" {
+			
+				* Check that folder exists
+				copy "`dofile'" `"`save'"', `replace'
+				
+				noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} "'
+			}
+			
+		restore
 		
-		*/
 	}
-	else if "`subcommand'" == "template" {
+	
+/*==============================================================================
+							TEMPLATE SUBCOMMAND
+==============================================================================*/
+
+	if "`subcommand'" == "template" {
 	
 		* Check that folder exists
 		* Check that file doesn't already exist
@@ -162,11 +177,19 @@ cap program drop iecorrect
 			noi di as result `"{phang}Template spreadsheet saved to: {browse "`using'":`using'} "'
 	
 		}
-		else if !inlist("`subcommand'","template","apply") {
-			di as err "{bf:iecorrect} requires [template] or [apply] to be specified with a target [using] file. Type {bf:help iecorrect} for details."
-		}
 	
 	end
+	
+	
+/*==============================================================================
+================================================================================
+
+								 SUBPROGRAMS
+	
+================================================================================	
+==============================================================================*/
+
+	
 	
 /*******************************************************************************	
 	Initial checks
@@ -438,7 +461,7 @@ cap program drop dofooter
 	syntax , doname(string) dofile(string)
 	
 		cap	file close 	`doname'
-			file open  	`doname' using 	"`dofile'", text write replace
+			file open  	`doname' using 	"`dofile'", text write append
 			
 			file write  `doname'		"*-------------- THE END --------------*"										// <---- Writing in do file here
 			
