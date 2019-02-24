@@ -5,12 +5,14 @@ cap program drop iecorrect
 		
 	syntax using/, [GENerate idvar(varlist) NOIsily save(string) replace]
 		
-	preserve
+	
 	
 /*******************************************************************************	
-	Open file and check which types of corrections need to be made
+	Tests
 *******************************************************************************/
-		
+	
+	preserve
+	
 		* Check that folder exists
 		
 		* Check that file exists
@@ -21,19 +23,36 @@ cap program drop iecorrect
 			error 601
 		}
 		
-		*Numeric variables
-		noi di "import 'string' sheet"
-			* Check that there are numeric corrections
-			* Check that corrections are correctly specified
+		checksheets using "`using'", type(numeric) typeshort(num)
+		local numcorr 	r(numcorr)
+		local datanum  	r(datanum)
+		local numvars	r(numvars)
 		
-		*String variables
-			* Check that there are numeric corrections
-			* Check that corrections are correctly specified
-			
-		*"Other" variables
-			* Check that there are numeric corrections
-			* Check that corrections are correctly specified
+		noi di as result `"{phang}Numeric variables to be corrected: `numvars'"'
 		
+		checksheets using "`using'", type(string) typeshort(str)
+		checksheets using "`using'", type(other) typeshort(str)
+		
+	restore
+	
+	*test that variables exist in the original data set
+	*check that the variables have the same format in the original data set
+	
+	* Test if variables exist
+		foreach varType in strvar catvar numvar idvar {
+			foreach var of local `varType'List {
+				cap confirm variable `var'
+				if _rc {
+					if "`generate'" != "" {
+						gen `var' = .
+					}
+					else {
+						noi di as error "There is no variable called `var'. To create this variable, use the generate option."
+						exit
+					}
+				}
+			}
+		}
 		
 /*******************************************************************************	
 	Create a do file containing the corrections
@@ -48,7 +67,39 @@ cap program drop iecorrect
 			doheader , doname("`doname'") dofile("`dofile'")
 		}
 					
-		* If there are corrections to be made to numeric variables, then make them		
+		* Write the corrections
+		foreach type in numeric string other {
+			
+			local typeshort = substr("`type'", 1, 3)
+			
+			preserve
+				
+				* Open the data set with the numeric corrections
+				use "`type'", clear
+				
+						
+			
+				* Open the placeholder do file and write the corrections to be made
+				cap	file close 	doname	
+					file open  	doname using "`dofile'", text write append
+					
+					file write  doname		  "** Correct entries in numeric variables " _n								// <---- Writing in do file here
+					
+					forvalues row = 1/`r(N)' {
+	
+						file write	doname	  `"r(doline)"' _N
+					
+					}
+					
+				* Add an extra space before the next set of corrections
+				file write  doname		  _n _n																		// <---- Writing in do file here
+				
+				* And close the do file
+				noi di "exit write loop"
+			file close doname
+		
+		restore
+		}
 		if `numeric' {
 			corrnum using `datanum', doname("`doname'") dofile("`dofile'")
 		}
@@ -82,131 +133,7 @@ cap program drop iecorrect
 	restore
 	
 	end
-	
-		
-			* String variables corrections
 			
-		if !_rc {
-		
-			drop if missing(strvar)
-
-			
-			count
-			if `r(N)' > 0 {
-		cap	file close 	corrections
-			file open  	corrections using "`correctionsfile'", text write append
-						
-			noi di "enter write loop"
-			file write  corrections		  "** Correct entries in string variables " _n
-				forvalues row = 1/`r(N)' {
-					
-					local var			= strvar[`row']
-					
-					local valuecurrent 	= valuecurrent[`row']
-					local valuecurrent	= `""`valuecurrent'""'
-					
-					local value		 	= value[`row']
-					local value			= `""`value'""'
-					
-					local idvalue		= idvalue[`row']
-
-					file write corrections		`"replace `var' = `value' if "'
-					
-					if "`idvar'" != "" {
-						file write corrections	`"`idvar' == `idvalue' "'
-						
-						if "`valuecurrent'" != "" {
-							file write corrections	`"& "'
-						}
-					}
-					
-					if "`valuecurrent'" != "" {
-						noi di "enter valuecurrent"
-						file write corrections	 `"`var' == `valuecurrent'"'
-					}
-					
-					file write corrections	_n
-				}
-			file write  corrections		  _n _n
-			
-			noi di "exit write loop"
-			file close corrections
-			}		
-		}	
-			* 'Other' variables
-			noi di "import 'other' sheet"
-		cap	import excel "`using'", sheet("other") firstrow allstring clear
-		if !_rc {
-			
-			drop if missing(strvar)
-			foreach var of varlist strvar catvar {
-				levelsof `var', local(`var'List)
-			}
-			
-			count
-			if `r(N)' > 0 {
-		cap	file close 	corrections
-			file open  	corrections using "`correctionsfile'", text write append
-						
-			noi di "enter write loop"
-			
-			file write  corrections		  "** Adjust categorical variables to include 'other' values " _n
-				forvalues row = 1/`r(N)' {
-					
-					local strvar			= strvar[`row']
-					
-					local strvaluecurrent 	= strvaluecurrent[`row']
-					local strvaluecurrent	= `""`strvaluecurrent'""'
-					
-					local strvalue		 	= strvalue[`row']
-					local strvalue			= `""`strvalue'""'
-					
-					local catvar		 	= catvar[`row']
-					local catvalue		 	= catvalue[`row']
-
-					if "`catvar'" != ""	{
-						noi di "enter first if"
-						file write corrections		`"replace `catvar' = `catvalue' if `strvar' == `strvaluecurrent'"' _n
-					}
-					if !(regex(`strvalue',`strvaluecurrent') & regex(`strvalue',`strvaluecurrent'))	{
-						noi di "enter second if"
-						file write corrections		`"replace `strvar' = `strvalue' if `strvar' == `strvaluecurrent'"' _n
-					}
-				}
-			file write  corrections		  _n _n
-			
-			noi di "exit write loop"
-			file close corrections
-			}			
-		}	
-		restore
-		
-		noi di "Back to original file"
-		
-		* Test if variables exist
-		foreach varType in strvar catvar numvar idvar {
-			foreach var of local `varType'List {
-				cap confirm variable `var'
-				if _rc {
-					if "`generate'" != "" {
-						gen `var' = .
-					}
-					else {
-						noi di as error "There is no variable called `var'. To create this variable, use the generate option."
-						exit
-					}
-				}
-			}
-		}
-		
-		* Test if numeric variable is numeric
-		
-		
-		
-		
-	}
-	end
-
 /*******************************************************************************	
 	Initial checks
 *******************************************************************************/
@@ -214,8 +141,10 @@ cap program drop iecorrect
 cap program drop checksheets
 	program 	 checksheets
 	
-	cap import excel "`using'", sheet("numeric") firstrow allstring clear
+	syntax using/, type(string) typeshort(string) rclass
 	
+		
+	cap import excel "`using'", sheet("`type'") firstrow allstring clear
 	* If the sheet does not exist, then say no corrections of this type
 	if _rc == {
 		
@@ -224,31 +153,75 @@ cap program drop checksheets
 	else {
 		
 		* Drop extra lines in the excel
-		drop if missing(numvar)
+		drop if missing(`typeshort'var)
 	
 		* Are any observations still left?
 		count
 		if `r(N)' > 0 {
 				
-		*Are all the necessary variables there?
-			* If numeric corrections, either idvalue or valuecurrent need to be specified
+			* Check that the sheet is filled correctly
+			checkcol`typeshort'
+			
+			*If everything works, save the sheet in a tempfile and create a local saying to run the next command
+			local	`typeshort'corr	1 
+			
+			tempfile data`typeshort'
+			save	 `data`typeshort''
 		
-			*Are they the right format?
-			foreach var of varlist numvar {
-				levelsof `var', local(numlist)		
-			}
+		}
+		else if `r(N)' == 0 {
+			local	`typeshort'corr	0
+			noi di as result `"{phang}No `type' variables to correct."'
 		}
 		
-		tempfile datanum
-		save	 `datanum'
-		
-		*Do the variables referred to in the file exist?
-		*Are they the right format?
-		*If everything works, save the sheet in a tempfile and create a local saying to run the next command
+		return local `typeshort'corr 	`typeshort'corr'
+		return local data`typeshort' 	"`data`typeshort''"
 	}
 	
 	
 	end
+	
+**********************************
+* Check variables in numeric sheet
+**********************************
+cap program drop checkcolnum
+	program 	 checkcolnum
+	
+	syntax [anything]
+	
+		*Are all the necessary variables there?
+		foreach var in numvar idvalue valuecurrent value {
+			cap confirm var `var'
+			if _rc {
+				noi di as error `"{phang}Column `var' not found in `type' sheet. This variable must not be erased from the template. If you do not wish to use it, leave it blank."'
+			}
+		}
+		
+		* Keep only those variables in the data set
+		keep numvar idvalue valuecurrent value 
+		
+		* Check that variables have the correct format
+		cap confirm string var numvar
+		if _rc {
+			noi di as error `"{phang}Column numvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected."'
+		}
+				
+		cap confirm 	   var valuecurrent
+		if !rc {
+			cap confirm string var valuecurrent
+			if !_rc {
+				noi di as error `"{phang}Column valuecurrent in `type' sheet is not numeric. This column should contain the values of the `type' variables to be corrected."'
+			}
+		}
+		
+		cap confirm string var value
+		if !_rc {
+			noi di as error `"{phang}Column value in `type' sheet is not numeric. This column should contain the correct values of the `type' variables to be corrected."'
+		}
+		
+		* Either idvalue or valuecurrent need to be specified
+		
+	end		
 	
 /*******************************************************************************	
 	Write the do file with corrections
@@ -279,6 +252,45 @@ cap program drop donum
 	
 	syntax using/ , doname(string) dofile(string)
 
+				
+				* Write one line of correction for each line in the data set					
+					local var			= numvar[`row']
+					local valuecurrent 	= valuecurrent[`row']
+					local value		 	= value[`row']
+					local idvalue		= idvalue[`row']
+
+					* The listed variable will be corrected to new value, but a condition needs to be specified.
+					* The condition can be one ID variable and/or one current value.
+					local line	`"replace `var' = `value' if "'												// <---- Writing in do file here
+					
+					* If it's an ID variables, write that in the do file
+					if "`idvar'" != "" {
+						local line	`"`line' `idvar' == `idvalue'"'													// <---- Writing in do file here
+						
+						* If it's both, add an "and"
+						if "`valuecurrent'" != "" {
+							local line	`"`line' & "'																	// <---- Writing in do file here
+						}
+					}
+					
+					* If there's a current value, write that in the do file.
+					if "`valuecurrent'" != "" {
+						noi di "enter valuecurrent"
+						local line	`"`line'`var' == `valuecurrent'"'												// <---- Writing in do file here
+					}
+					
+					
+		
+	end
+	
+***************************
+* Write string corrections
+***************************
+cap program drop dostr
+	program 	 dostr
+	
+	syntax using/ , doname(string) dofile(string)
+
 		preserve
 			
 			* Open the data set with the numeric corrections
@@ -293,29 +305,29 @@ cap program drop donum
 				* Write one line of correction for each line in the data set
 				forvalues row = 1/`r(N)' {
 					
-					local var			= numvar[`row']
+					local var			= strvar[`row']						
+					
 					local valuecurrent 	= valuecurrent[`row']
+					local valuecurrent	= `""`valuecurrent'""'
+					
 					local value		 	= value[`row']
+					local value			= `""`value'""'
+					
 					local idvalue		= idvalue[`row']
 
-					* The listed variable will be corrected to new value, but a condition needs to be specified.
-					* The condition can be one ID variable and/or one current value.
-					file write `doname'		`"replace `var' = `value' if "'												// <---- Writing in do file here
+					file write corrections		`"replace `var' = `value' if "'										// <---- Writing in do file here
 					
-					* If it's an ID variables, write that in the do file
 					if "`idvar'" != "" {
-						file write `doname'	`"`idvar' == `idvalue' "'													// <---- Writing in do file here
+						file write corrections	`"`idvar' == `idvalue' "'											// <---- Writing in do file here
 						
-						* If it's both, add an "and"
 						if "`valuecurrent'" != "" {
-							file write `doname'	`"& "'																	// <---- Writing in do file here
+							file write corrections	`"& "'															// <---- Writing in do file here
 						}
 					}
 					
-					* If there's a current value, write that in the do file.
 					if "`valuecurrent'" != "" {
 						noi di "enter valuecurrent"
-						file write `doname'	 `"`var' == `valuecurrent'"'												// <---- Writing in do file here
+						file write corrections	 `"`var' == `valuecurrent'"'										// <---- Writing in do file here
 					}
 					
 					* Noew add an extra line
@@ -332,6 +344,55 @@ cap program drop donum
 		restore
 		
 	end
+	
+	
+***************************
+* Write string corrections
+***************************
+
+cap program drop dooth
+	program 	 dooth
+	
+	cap	file close 	corrections
+		file open  	corrections using "`correctionsfile'", text write append
+					
+		noi di "enter write loop"
+		
+		file write  corrections		  "** Adjust categorical variables to include 'other' values " _n
+			forvalues row = 1/`r(N)' {
+				
+				local strvar			= strvar[`row']
+				
+				local strvaluecurrent 	= strvaluecurrent[`row']
+				local strvaluecurrent	= `""`strvaluecurrent'""'
+				
+				local strvalue		 	= strvalue[`row']
+				local strvalue			= `""`strvalue'""'
+				
+				local catvar		 	= catvar[`row']
+				local catvalue		 	= catvalue[`row']
+
+				if "`catvar'" != ""	{
+					noi di "enter first if"
+					file write corrections		`"replace `catvar' = `catvalue' if `strvar' == `strvaluecurrent'"' _n
+				}
+				if !(regex(`strvalue',`strvaluecurrent') & regex(`strvalue',`strvaluecurrent'))	{
+					noi di "enter second if"
+					file write corrections		`"replace `strvar' = `strvalue' if `strvar' == `strvaluecurrent'"' _n
+				}
+			}
+		file write  corrections		  _n _n
+		
+		noi di "exit write loop"
+		file close corrections
+		}			
+	}	
+	restore
+	
+	noi di "Back to original file"
+	
+	
+end
 	
 	
 **********************
