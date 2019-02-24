@@ -14,38 +14,40 @@ cap program drop iecorrect
 /*==============================================================================
 								APPLY SUBCOMMAND
 ==============================================================================*/
-
+* cchec format of ID var
 	if "`subcommand'" == "apply" {
 	
 /*******************************************************************************	
 	Tests
 *******************************************************************************/
 		
-	preserve
-	/*	
-			* Check that folder exists
+		tempfile data
+		save	 `data'
+	
+		* Check that folder exists
 			
-			* Check that file exists
-			cap confirm file "`using'"
-			noi di _rc
-			if _rc {
-				noi di as error "file does not exist"
-				error 601
-			}
-			
-			checksheets using "`using'", type(numeric) typeshort(num)
-			local numcorr 	r(numcorr)
-			local datanum  	r(datanum)
-			local numvars	r(numvars)
-			
-			noi di as result `"{phang}Numeric variables to be corrected: `numvars'"'
-			
-			checksheets using "`using'", type(string) typeshort(str)
-			checksheets using "`using'", type(other) typeshort(str)
-			
-		restore
+		* Check that file exists
+		cap confirm file "`using'"
+		if _rc {
+			noi di as error `"{phang}File "`using'" could not be found."'
+			error 601
+		}
 		
-		*test that variables exist in the original data set
+		foreach type in numeric string other drop {
+		
+			* Check that template was correctly filled
+			checksheets using "`using'", type("`type'")
+		
+			* The result indicates if there are corrections of this type
+			local `type'corr 	`r(`type'corr)'
+
+			* If there are, it also lists the variables to be corrected or IDs to be dropped
+			if ``type'corr' == 1 {
+				local `type'vars	`r(`type'vars)'
+			}	
+		}
+		
+		/*test that variables exist in the original data set
 		*check that the variables have the same format in the original data set
 		
 		 Test if variables exist
@@ -67,76 +69,56 @@ cap program drop iecorrect
 /*******************************************************************************	
 	Create a do file containing the corrections
 *******************************************************************************/		
+
+		* Define tempfile
+		tempname	doname
+		tempfile	dofile
 		
-			* Define tempfile
-			tempname	doname
-			tempfile	dofile
-			
-			* If the do file will be saved for later reference, add a header
-			if "`save'" != "" {
-				doheader , doname("`doname'") dofile("`dofile'")
+		* If the do file will be saved for later reference, add a header
+		if "`save'" != "" {
+			doheader , doname("`doname'") dofile("`dofile'")
+		}
+		* Write the corrections into the do file
+		foreach type in numeric string other drop {
+
+			if ``type'corr' {
+				* Open the data set with the numeric corrections
+				cap import excel "`using'", sheet("`type'") firstrow allstring clear
+
+				* Open the placeholder do file and write the corrections to be made
+				cap	file close 	`doname'
+					file open  	`doname' using "`dofile'", text write append
+				
+					do`type', 	 doname("`doname'")
+				
+				* Add an extra space before the next set of corrections
+					file write  `doname'		  _n _n					
+					file close 	`doname'
 			}
-						
-			/* Write the corrections
-			foreach type in numeric string other {
-				
-				local typeshort = substr("`type'", 1, 3)
-				
-				preserve
-					
-					* Open the data set with the numeric corrections
-					use "`type'", clear
-					
-							
-				
-					* Open the placeholder do file and write the corrections to be made
-					cap	file close 	doname	
-						file open  	doname using "`dofile'", text write append
-						
-						file write  doname		  "** Correct entries in numeric variables " _n								// <---- Writing in do file here
-						
-						forvalues row = 1/`r(N)' {
+		}
 		
-							file write	doname	  `"r(doline)"' _N
-						
-						}
-						
-					* Add an extra space before the next set of corrections
-					file write  doname		  _n _n																		// <---- Writing in do file here
-					
-					* And close the do file
-					noi di "exit write loop"
-				file close doname
-			
-			restore
-			}
-			*/
-			
-			* If the do file will be saved for later reference, add a footer
-			if "`save'" != "" {
-				dofooter , doname("`doname'") dofile("`dofile'")
-			}
+		* If the do file will be saved for later reference, add a footer
+		if "`save'" != "" {
+			dofooter , doname("`doname'") dofile("`dofile'")
+		}
 	
 /*******************************************************************************	
 	Run the do file containing the corrections
 *******************************************************************************/
 
-			*dorun , doname("`doname'") dofile("`dofile'") `noisily'
+		*dorun , doname("`doname'") dofile("`dofile'") `noisily'
 		
 /*******************************************************************************	
 	Save the do file containing the corrections if "save" was selected
 *******************************************************************************/
 
-			if "`save'" != "" {
-			
-				* Check that folder exists
-				copy "`dofile'" `"`save'"', `replace'
-				
-				noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} "'
-			}
-			
-		restore
+		if "`save'" != "" {
 		
+			* Check that folder exists
+			copy "`dofile'" `"`save'"', `replace'
+			
+			noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} "'
+		}					
 	}
 	
 /*==============================================================================
@@ -172,7 +154,7 @@ cap program drop iecorrect
 			* Drop observations
 			template using "`using'", ///
 				varlist("idvar initials notes") ///
-				sheetname("drop_obs")
+				sheetname("drop")
 			
 			noi di as result `"{phang}Template spreadsheet saved to: {browse "`using'":`using'} "'
 	
@@ -196,49 +178,41 @@ cap program drop iecorrect
 *******************************************************************************/
 	
 cap program drop checksheets
-	program 	 checksheets
+	program 	 checksheets, rclass
 	
-	syntax using/, type(string) typeshort(string) rclass
-	
-		
-	cap import excel "`using'", sheet("`type'") firstrow allstring clear
-	* If the sheet does not exist, then say no corrections of this type
-	if _rc == {
-		
-	}
-	* If the sheet exist, check that it is correctly specified
-	else {
-		
-		* Drop extra lines in the excel
-		drop if missing(`typeshort'var)
-	
+	syntax using/, type(string)
+		prepdata `type' using "`using'"
+		local mainvar `r(mainvar)'
+
 		* Are any observations still left?
 		count
 		if `r(N)' > 0 {
 				
 			* Check that the sheet is filled correctly
-			checkcol`typeshort'
-			
+			*checkcol`type'
 			*If everything works, save the sheet in a tempfile and create a local saying to run the next command
-			local	`typeshort'corr	1 
+			local	`type'corr	1 
+						
+			levelsof `mainvar', local(`type'vars)
 			
-			tempfile data`typeshort'
-			save	 `data`typeshort''
-		
+			if inlist("`type'", "string", "numeric", "other") {
+				noi di as result `"{phang}Variables for corrections of type `type': ``type'vars'{p_end}"'
+			}
+			else {
+				noi di as result `"{phang}Observations to be dropped: ``type'vars'{p_end}"'
+			}		
 		}
 		else if `r(N)' == 0 {
-			local	`typeshort'corr	0
-			noi di as result `"{phang}No `type' variables to correct."'
+			local	`type'corr	0
+			noi di as result `"{phang}No `type' variables to correct.{p_end}"'
 		}
 		
-		return local `typeshort'corr 	`typeshort'corr'
-		return local data`typeshort' 	"`data`typeshort''"
-	}
-	
+		return local `type'vars 	``type'vars'
+		return local `type'corr 	``type'corr'	
 	
 	end
 	
-**********************************
+/**********************************
 * Check variables in numeric sheet
 **********************************
 cap program drop checkcolnum
@@ -279,7 +253,7 @@ cap program drop checkcolnum
 		* Either idvalue or valuecurrent need to be specified
 		
 	end		
-	
+*/
 /*******************************************************************************	
 	Write the do file with corrections
 *******************************************************************************/
@@ -301,157 +275,158 @@ cap program drop doheader
 			
 	end
 
-***************************
+***************
+* Prep data set
+***************
+cap program drop prepdata
+	program 	 prepdata, rclass
+	
+	syntax anything using/
+		
+		cap import excel "`using'", sheet("`anything'") firstrow allstring clear
+
+		* If the sheet does not exist, throw an error
+		if _rc == 601 {
+			noi di as error `"{phang}No sheet caled "`anything'" was found. Do not delete this sheet. If no `anything' corrections are needed, leave this sheet empty.{p_end}"'
+			error 601
+		}
+		
+		if "`anything'" == "numeric" 	local mainvar	numvar
+		if "`anything'" == "string" 	local mainvar	strvar
+		if "`anything'" == "other" 		local mainvar	strvar
+		if "`anything'" == "drop" 		local mainvar 	idvar
+		
+
+		* Drop extra lines in the excel
+		drop if missing(`mainvar')
+		
+		return local mainvar `mainvar'
+		
+	end
+	
+/***************************
 * Write numeric corrections
 ***************************
-cap program drop donum
-	program 	 donum
+cap program drop donumeric
+	program 	 donumeric
 	
-	syntax using/ , doname(string) dofile(string)
-
-				
-				* Write one line of correction for each line in the data set					
-					local var			= numvar[`row']
-					local valuecurrent 	= valuecurrent[`row']
-					local value		 	= value[`row']
-					local idvalue		= idvalue[`row']
-
-					* The listed variable will be corrected to new value, but a condition needs to be specified.
-					* The condition can be one ID variable and/or one current value.
-					local line	`"replace `var' = `value' if "'												// <---- Writing in do file here
-					
-					* If it's an ID variables, write that in the do file
-					if "`idvar'" != "" {
-						local line	`"`line' `idvar' == `idvalue'"'													// <---- Writing in do file here
-						
-						* If it's both, add an "and"
-						if "`valuecurrent'" != "" {
-							local line	`"`line' & "'																	// <---- Writing in do file here
-						}
-					}
-					
-					* If there's a current value, write that in the do file.
-					if "`valuecurrent'" != "" {
-						noi di "enter valuecurrent"
-						local line	`"`line'`var' == `valuecurrent'"'												// <---- Writing in do file here
-					}
-					
-					
+	syntax , doname(string)
 		
-	end
-	
-***************************
-* Write string corrections
-***************************
-cap program drop dostr
-	program 	 dostr
-	
-	syntax using/ , doname(string) dofile(string)
-
-		preserve
+	file write  `doname' "** Correct entries in numeric variables " _n								// <---- Writing in do file here
 			
-			* Open the data set with the numeric corrections
-			use "`using'", clear
-		
-			* Open the placeholder do file and write the corrections to be made
-			cap	file close 	`doname'	
-				file open  	`doname' using "`dofile'", text write append
-				
-				file write  `doname'		  "** Correct entries in numeric variables " _n								// <---- Writing in do file here
-				
-				* Write one line of correction for each line in the data set
-				forvalues row = 1/`r(N)' {
-					
-					local var			= strvar[`row']						
-					
-					local valuecurrent 	= valuecurrent[`row']
-					local valuecurrent	= `""`valuecurrent'""'
-					
-					local value		 	= value[`row']
-					local value			= `""`value'""'
-					
-					local idvalue		= idvalue[`row']
+	* Write one line of correction for each line in the data set
+		forvalues row = 1/`r(N)' {
+			
+		* Write one line of correction for each line in the data set					
+			local var			= numvar[`row']
+			local valuecurrent 	= valuecurrent[`row']
+			local value		 	= value[`row']
+			local idvalue		= idvalue[`row']
 
-					file write corrections		`"replace `var' = `value' if "'										// <---- Writing in do file here
-					
-					if "`idvar'" != "" {
-						file write corrections	`"`idvar' == `idvalue' "'											// <---- Writing in do file here
-						
-						if "`valuecurrent'" != "" {
-							file write corrections	`"& "'															// <---- Writing in do file here
-						}
-					}
-					
-					if "`valuecurrent'" != "" {
-						noi di "enter valuecurrent"
-						file write corrections	 `"`var' == `valuecurrent'"'										// <---- Writing in do file here
-					}
-					
-					* Noew add an extra line
-					file write `doname'	_n																				// <---- Writing in do file here
-				}
-					
-				* Add an extra space before the next set of corrections
-				file write  `doname'		  _n _n																		// <---- Writing in do file here
+			* The listed variable will be corrected to new value, but a condition needs to be specified.
+			* The condition can be one ID variable and/or one current value.
+			local line	`"replace `var' = `value' if "'												
+			
+			* If it's an ID variables, write that in the do file
+			if "`idvar'" != "" {
+				local line	`"`line' `idvar' == `idvalue'"'											
 				
-				* And close the do file
-				noi di "exit write loop"
-			file close `doname'
-		
-		restore
-		
-	end
-	
-	
-***************************
-* Write string corrections
-***************************
-
-cap program drop dooth
-	program 	 dooth
-	
-	cap	file close 	corrections
-		file open  	corrections using "`correctionsfile'", text write append
-					
-		noi di "enter write loop"
-		
-		file write  corrections		  "** Adjust categorical variables to include 'other' values " _n
-			forvalues row = 1/`r(N)' {
-				
-				local strvar			= strvar[`row']
-				
-				local strvaluecurrent 	= strvaluecurrent[`row']
-				local strvaluecurrent	= `""`strvaluecurrent'""'
-				
-				local strvalue		 	= strvalue[`row']
-				local strvalue			= `""`strvalue'""'
-				
-				local catvar		 	= catvar[`row']
-				local catvalue		 	= catvalue[`row']
-
-				if "`catvar'" != ""	{
-					noi di "enter first if"
-					file write corrections		`"replace `catvar' = `catvalue' if `strvar' == `strvaluecurrent'"' _n
-				}
-				if !(regex(`strvalue',`strvaluecurrent') & regex(`strvalue',`strvaluecurrent'))	{
-					noi di "enter second if"
-					file write corrections		`"replace `strvar' = `strvalue' if `strvar' == `strvaluecurrent'"' _n
+				* If it's both, add an "and"
+				if "`valuecurrent'" != "" {
+					local line	`"`line' & "'														
 				}
 			}
-		file write  corrections		  _n _n
+			
+			* If there's a current value, write that in the do file.
+			if "`valuecurrent'" != "" {
+				noi di "enter valuecurrent"
+				local line	`"`line'`var' == `valuecurrent'"'										
+			}
+			
+			file write  `doname' `"`line'"' _n															// <---- Writing in do file here
+		}	
 		
-		noi di "exit write loop"
-		file close corrections
-		}			
-	}	
-	restore
+	end
+	*/
+***************************
+* Write string corrections
+***************************
+cap program drop dostring
+	program 	 dostring
 	
-	noi di "Back to original file"
+	syntax , doname(string)
+
+	file write  `doname'		  "** Correct entries in strin variables " _n								// <---- Writing in do file here
+
+	* Write one line of correction for each line in the data set
+	count 
+	forvalues row = 1/`r(N)' {
+		
+		local var			= strvar[`row']						
+		local valuecurrent 	= valuecurrent[`row']
+		local value		 	= value[`row']
+		local idvalue		= idvalue[`row']
+
+		local line		`"replace `var' = "`value'" if"'
+		
+		if "`idvalue'" != "" {
+			*Confirm that ID var was specified
+			*Confirmed that ID var is the same type as idvaue
+			
+			local line	`"`line' `idvar' == `idvalue'"'
+			
+			if "`valuecurrent'" != "" {
+				local line	`"`line' &"'
+			}
+		}
+		
+		if "`valuecurrent'" != "" {
+			local line	`"`line' `var' == "`valuecurrent'" "'
+		}
+		
+		* Noew add an extra line
+		file write `doname'	`"`line'"'																		// <---- Writing in do file here
+	}
+
+		
+	end
 	
 	
-end
+/***************************
+* Write string corrections
+***************************
+
+cap program drop doother
+	program 	 doother
 	
+	 syntax , doname(string)
 	
+	file write  corrections		  "** Adjust categorical variables to include 'other' values " _n
+	
+	forvalues row = 1/`r(N)' {
+		
+		local strvar			= strvar[`row']
+		
+		local strvaluecurrent 	= strvaluecurrent[`row']
+		local strvaluecurrent	= `""`strvaluecurrent'""'
+		
+		local strvalue		 	= strvalue[`row']
+		local strvalue			= `""`strvalue'""'
+		
+		local catvar		 	= catvar[`row']
+		local catvalue		 	= catvalue[`row']
+
+		if "`catvar'" != ""	{
+			file write `doname'		`"replace `catvar' = `catvalue' if `strvar' == `strvaluecurrent'"' _n
+		}
+		else if !(regex(`strvalue',`strvaluecurrent') & regex(`strvalue',`strvaluecurrent'))	{
+			file write `doname'		`"replace `strvar' = `strvalue' if `strvar' == `strvaluecurrent'"' _n
+		}
+	}
+	
+	end
+	
+*/
 **********************
 * Write do file footer
 **********************
@@ -471,7 +446,7 @@ cap program drop dofooter
 	
 /*******************************************************************************	
 	Run the do file with corrections
-*******************************************************************************/
+*******************************************************************************
 
 cap program drop dorun
 	program		 dorun
@@ -493,7 +468,7 @@ cap program drop dorun
 		file close `doname'
 	
 	end
-	
+*/
 /*******************************************************************************	
 	Create template
 *******************************************************************************/
