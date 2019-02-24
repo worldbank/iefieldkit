@@ -3,9 +3,11 @@
 cap program drop iecorrect
 	program 	 iecorrect
 		
-	syntax using/, [GENerate idvar(varlist) NOIsily save(string) replace]
+	syntax [anything] using/, [GENerate idvar(varlist) NOIsily save(string) replace]
 		
+	gettoken subcommand anything : anything
 	
+	if "`subcommand'" == "apply" {
 	
 /*******************************************************************************	
 	Tests
@@ -124,13 +126,74 @@ cap program drop iecorrect
 
 		if "`save'" != "" {
 		
-			* Check that folder exists
-			copy "`dofile'" `"`save'"', `replace'
+		*/
+	}
+	else if "`subcommand'" == "template" {
+		* Check that folder exists
+		* Check that file doesn't already exist
+		* Create the template
+		preserve
+		
+			* String variables
+			clear
 			
-			noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} "'
-		}
+			set obs 1
+			
+			foreach var in strvar idvalue valuecurrent value initials notes {
+				gen `var' = .
+				lab var `var' "`var'"
+			}
+			
+			lab var valuecurrent "value:current"
+			
+			export excel using "`using'", sheet("string") firstrow(varlabels)
+			
+			* Numeric variables
+			clear
+			
+			set obs 1
+			
+			foreach var in numvar idvalue valuecurrent	value initials notes {
+				gen `var' = .
+				lab var `var' "`var'"
+			}
+			
+			lab var valuecurrent "value:current"
+			
+			export excel using "`using'", sheet("numeric") firstrow(varlabels)
 
-	restore
+			* Other variables
+			clear
+			
+			set obs 1
+			
+			foreach var in strvar strvaluecurrent strvalue catvar catvalue initials notes {
+				gen `var' = .
+				lab var `var' "`var'"
+			}
+			
+			lab var strvaluecurrent "strvalue:current"
+			
+			export excel using "`using'", sheet("other") firstrow(varlabels)
+			
+			* Drop observations
+			clear
+			
+			set obs 1
+			
+			foreach var in idvar initials notes {
+				gen `var' = .
+				lab var `var' "`var'"
+			}
+						
+			export excel using "`using'", sheet("drop_obs") firstrow(varlabels)
+			
+			noi di as result `"{phang}Template spreadsheet saved to: {browse "`using'":`using'} "'
+	
+		}
+		else if !inlist("`subcommand'","template","apply") {
+			di as err "{bf:iecorrect} requires [template] or [apply] to be specified with a target [using] codebook. Type {bf:help iecorrect} for details."
+		}
 	
 	end
 			
