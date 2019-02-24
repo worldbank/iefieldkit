@@ -129,74 +129,45 @@ cap program drop iecorrect
 		*/
 	}
 	else if "`subcommand'" == "template" {
+	
 		* Check that folder exists
 		* Check that file doesn't already exist
 		* Create the template
+	
 		preserve
 		
 			* String variables
-			clear
-			
-			set obs 1
-			
-			foreach var in strvar idvalue valuecurrent value initials notes {
-				gen `var' = .
-				lab var `var' "`var'"
-			}
-			
-			lab var valuecurrent "value:current"
-			
-			export excel using "`using'", sheet("string") firstrow(varlabels)
-			
+			template using "`using'", ///
+				varlist("strvar idvalue valuecurrent value initials notes") ///
+				sheetname("string") ///
+				current("value")
+						
 			* Numeric variables
-			clear
+			template using "`using'", ///
+				varlist("numvar idvalue valuecurrent value initials notes") ///
+				sheetname("numeric") ///
+				current("value")
 			
-			set obs 1
-			
-			foreach var in numvar idvalue valuecurrent	value initials notes {
-				gen `var' = .
-				lab var `var' "`var'"
-			}
-			
-			lab var valuecurrent "value:current"
-			
-			export excel using "`using'", sheet("numeric") firstrow(varlabels)
-
 			* Other variables
-			clear
-			
-			set obs 1
-			
-			foreach var in strvar strvaluecurrent strvalue catvar catvalue initials notes {
-				gen `var' = .
-				lab var `var' "`var'"
-			}
-			
-			lab var strvaluecurrent "strvalue:current"
-			
-			export excel using "`using'", sheet("other") firstrow(varlabels)
+			template using "`using'", ///
+				varlist("strvar strvaluecurrent strvalue catvar catvalue initials notes") ///
+				sheetname("other") ///
+				current("strvalue")
 			
 			* Drop observations
-			clear
-			
-			set obs 1
-			
-			foreach var in idvar initials notes {
-				gen `var' = .
-				lab var `var' "`var'"
-			}
-						
-			export excel using "`using'", sheet("drop_obs") firstrow(varlabels)
+			template using "`using'", ///
+				varlist("idvar initials notes") ///
+				sheetname("drop_obs")
 			
 			noi di as result `"{phang}Template spreadsheet saved to: {browse "`using'":`using'} "'
 	
 		}
 		else if !inlist("`subcommand'","template","apply") {
-			di as err "{bf:iecorrect} requires [template] or [apply] to be specified with a target [using] codebook. Type {bf:help iecorrect} for details."
+			di as err "{bf:iecorrect} requires [template] or [apply] to be specified with a target [using] file. Type {bf:help iecorrect} for details."
 		}
 	
 	end
-			
+	
 /*******************************************************************************	
 	Initial checks
 *******************************************************************************/
@@ -500,4 +471,29 @@ cap program drop dorun
 	
 	end
 	
+/*******************************************************************************	
+	Create template
+*******************************************************************************/
+
+cap program drop template
+	program		 template
 	
+	syntax using/, varlist(string) sheetname(string) [current(string)]
+	
+	clear
+			
+	set obs 1
+	
+	foreach var of local varlist {
+		gen `var' = .
+	}
+	
+	if "`curent'" != "" {
+		lab var `current'current "`current':current"
+	}
+				
+	export excel using "`using'", sheet("`sheetname'") firstrow(varlabels)
+			
+	end
+
+*********************************** THE END ************************************
