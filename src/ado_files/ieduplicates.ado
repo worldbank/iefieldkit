@@ -54,16 +54,49 @@
 
 			* Create a list of the variables created by this command to put in the report
 
+			********************
+			* Test that each manually entered Excel varaible name is valid, or assigned the default name
+
 			*For optioin to change var names. Setting a default name of columns (in case user did not specify the variable name)
 			local deafultvars duplistid datelisted datefixed correct drop newid initials notes
-			
 			foreach deafultvar of local deafultvars  {
+				
+				*trim user input. If no input string is empty, which returns an empty string
+				local `deafultvar' = trim("``deafultvar''") //trim() is older syntax, compare to strtrim() in Stata 15 and newer
+
+				*If no user input for this var, assign default name
 				if "``deafultvar''" == "" local `deafultvar' = "`deafultvar'" 
+
+				*Check for space in varname (only possible when user assign names manually)
+				if strpos("`deafultvar'", " ") != 0 { 
+
+					noi di as error "{phang}The Excel report variable name [`deafultvar'] should not contain any space. Please change the variable name.{p_end}"
+					noi di ""
+					error 198
+					exit
+				}
 			}
-		
+
+
+			********************
+			* Excel variables values are ok on their own, test in relation to each other and varaiblaes already in the data
+
 			* Test that no variable with the name needed for the excel report already exist in the data set
 			local excelVars `duplistid' `datelisted' `datefixed' `correct' `drop' `newid' `initials' `notes'
 
+			* Check for duplicate variable names in the excelVars
+			local duplicated_names : list dups excelVars
+			if "`duplicated_names'" != "" {
+
+				local duplicates : list uniq duplicatenames
+				noi display as error "{phang}The excel report variable name [`duplicates'] already exist within either the default variable name or modified name. Variable names in Excel report must be distinct. Please change the variable name.{p_end}"
+				noi di ""
+				error 198
+				exit
+			}
+
+
+			* Check for duplicate variable names in the existing dataset
 			foreach excelvar of local excelVars {
 				cap confirm variable `excelvar'
 				if _rc == 0 {
