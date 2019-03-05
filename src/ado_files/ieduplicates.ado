@@ -68,9 +68,9 @@
 				if "``deafultvar''" == "" local `deafultvar' = "`deafultvar'" 
 
 				*Check for space in varname (only possible when user assign names manually)
-				if strpos("`deafultvar'", " ") != 0 { 
+				if strpos("``deafultvar''", " ") != 0 { 
 
-					noi di as error "{phang}The Excel report variable name [`deafultvar'] should not contain any space. Please change the variable name.{p_end}"
+					noi di as error "{phang}The Excel report variable name [``deafultvar''] should not contain any space. Please change the variable name.{p_end}"
 					noi di ""
 					error 198
 					exit
