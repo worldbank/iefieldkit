@@ -6,11 +6,18 @@ which ieduplicates
 
 clear all
 
-global base "C:\Users\Saori\Desktop\Semester 4\z Other\DIME\iedup test"
-cd "$base"
-qui do "C:\Users\Saori\Documents\Github\iefieldkit\src\ado_files\ieduplicates.ado"
+di "The user for this case is: " c(username)
 
+if "`c(username)'" == "Saori" {
+	global base "C:\Users\Saori\Desktop\Semester 4\z Other\DIME\iedup test"
+	cd "$base"
+	qui do "C:\Users\Saori\Documents\Github\iefieldkit\src\ado_files\ieduplicates.ado"
 
+} 
+	else {  // *.... add other people's global here
+		di as err "Add path for your machine here"
+		e
+	}
 
 
 
