@@ -82,7 +82,7 @@
 			* Excel variables values are ok on their own, test in relation to each other and varaiblaes already in the data
 
 			* Test that no variable with the name needed for the excel report already exist in the data set
-			local excelVars `duplistid' `datelisted' `datefixed' `correct' `drop' `newid' `initials' `notes'
+			local excelVars `duplistid' `datelisted' `datefixed' `correct' `drop' `newid' `initials' `notes' `diff'
 
 			* Check for duplicate variable names in the excelVars
 			local duplicated_names : list dups excelVars
@@ -267,7 +267,7 @@
 				replace `drop' 	= "yes" if `drop' 	== "y"
 
 				*Check that variables are either empty or "yes"
-				gen `inputNotYes' = !((`correct'  == "yes" | `correct' == "") & (`drop'  == "yes" | `drop' == ""))
+				gen `inputNotYes' = !((`correct'  == "yes" | `correct' == "") & (`drop'  == "yes" | `drop' == "")) 
 
 				*Set local to 1 if error should be outputted
 				cap assert `inputNotYes' == 0
@@ -486,6 +486,13 @@
 					Section 5.2
 					Keep only duplicates for the report
 				******************/
+
+				*add diffvars here
+				qui iecompdup iid, id(1) didi keepdiff more2ok
+				
+				`diff'
+
+
 
 				*Keep if observation is part of duplicate group
 				keep if `dup' != 0
