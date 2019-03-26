@@ -7,7 +7,7 @@
 	qui {
 
 		syntax varname ,  FOLder(string) UNIQUEvars(varlist) [KEEPvars(varlist) tostringok droprest nodaily SUFfix(string) ///
-		duplistid(string) datelisted(string) datefixed(string) correct(string) drop(string) newid(string) initials(string) notes(string)]
+		duplistid(string) datelisted(string) datefixed(string) correct(string) drop(string) newid(string) initials(string) notes(string) listofdiffs(string)]
 
 		version 11.0
 
@@ -58,7 +58,7 @@
 			* Test that each manually entered Excel varaible name is valid, or assigned the default name
 
 			*For optioin to change var names. Setting a default name of columns (in case user did not specify the variable name)
-			local deafultvars duplistid datelisted datefixed correct drop newid initials notes
+			local deafultvars duplistid datelisted datefixed correct drop newid initials notes listofdiffs
 			foreach deafultvar of local deafultvars  {
 				
 				*trim user input. If no input string is empty, which returns an empty string
@@ -82,7 +82,7 @@
 			* Excel variables values are ok on their own, test in relation to each other and varaiblaes already in the data
 
 			* Test that no variable with the name needed for the excel report already exist in the data set
-			local excelVars `duplistid' `datelisted' `datefixed' `correct' `drop' `newid' `initials' `notes' `diff'
+			local excelVars `duplistid' `datelisted' `datefixed' `correct' `drop' `newid' `initials' `notes' `listofdiffs'
 
 			* Check for duplicate variable names in the excelVars
 			local duplicated_names : list dups excelVars
@@ -478,6 +478,33 @@
 			tempvar dup
 			duplicates tag `idvar', gen(`dup')
 
+
+			*SI_NOTE: Add list of variables that are different between the two duplicated id value in excel report in 'listofdiffs' variable
+			levelsof `idvar' if `dup' > 0, local(list_dup_ids)
+
+			foreach id of local list_dup_ids {
+
+				count if `idvar' == `id' 
+
+				*Check if duplicated id has more than 2 duplicates
+				if `r(N)' > 2 {
+					
+					local difflist_`id'	"Cannot list variables for IDs with more than 2 duplicates"
+					//replace `listofdiffs'	=	"Cannot list variables for IDs with more than 2 duplicates" if `idvar' == `id'
+
+				}
+				else {
+				
+					*Get the list of variables that are different between the two duplicated id value
+					qui iecompdup `idvar', id(`id')
+
+					*limit lenght if very long
+					local difflist_`id' "`r(diffvars)'"
+					//replace `listofdiffs'	= 	"`r(diffvars)'" if `idvar' == `id'
+				}
+
+			}			
+
 			*Test if there are any duplicates
 			cap assert `dup'==0
 			if _rc {
@@ -487,13 +514,6 @@
 					Keep only duplicates for the report
 				******************/
 
-				*add diffvars here
-				qui iecompdup iid, id(1) didi keepdiff more2ok
-				
-				`diff'
-
-
-
 				*Keep if observation is part of duplicate group
 				keep if `dup' != 0
 
@@ -501,7 +521,7 @@
 					* If Excel file exists keep excel vars and
 					* variables passed as arguments in the
 					* command
-					keep 	`argumentVars' `excelVars'
+					keep 	`argumentVars' `excelVars' 
 				}
 				else {
 					* Keep only variables passed as arguments in
@@ -519,7 +539,18 @@
 							gen `excelvar' = ""
 						}
 					}
+				
+
 				}
+
+
+				
+
+				//Assign the listdiff values
+				foreach id of local list_dup_ids { 
+					replace `listofdiffs' = "`difflist_`id''" if `idvar' == `id'
+				}
+
 
 				/******************
 					Section 5.3
