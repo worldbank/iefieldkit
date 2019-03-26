@@ -479,7 +479,7 @@
 			duplicates tag `idvar', gen(`dup')
 
 
-			*SI_NOTE: Add list of variables that are different between the two duplicated id value in excel report in 'listofdiffs' variable
+			*Add list of variables that are different between the two duplicated id value in excel report in 'listofdiffs' variable
 			levelsof `idvar' if `dup' > 0, local(list_dup_ids)
 
 			foreach id of local list_dup_ids {
@@ -498,9 +498,21 @@
 					*Get the list of variables that are different between the two duplicated id value
 					qui iecompdup `idvar', id(`id')
 
-					*limit lenght if very long
-					local difflist_`id' "`r(diffvars)'"
-					//replace `listofdiffs'	= 	"`r(diffvars)'" if `idvar' == `id'
+					*SI_NOTE: limit lenght if very long
+					
+					*255-29 (characters for "see iecompdup for full list")= 226
+					if strlen("`r(diffvars)'") > 256 {
+						
+						local difflist_`id'  = substr("`r(diffvars)'" ,1 ,226) + " see iecompdup for full list"
+
+					}
+					else {
+
+						local difflist_`id' "`r(diffvars)'"						
+						//replace `listofdiffs'	= 	"`r(diffvars)'" if `idvar' == `id'
+
+					}
+
 				}
 
 			}			
@@ -543,8 +555,7 @@
 
 				}
 
-
-				
+		
 
 				//Assign the listdiff values
 				foreach id of local list_dup_ids { 
@@ -629,6 +640,9 @@
 						*Prepare local for output
 						local daily_output " and a daily copy have been saved to the Daily folder"
 					}
+
+					*Making listofdiffs come last
+					order `listofdiffs', last
 
 					*Export main report
 					export excel using "`folder'/iedupreport`suffix'.xlsx"	, firstrow(variables) replace  nolabel
