@@ -490,7 +490,7 @@ qui {
 
 	*Variables that must be included every time
 	local name_vars 		"name"
-	local cmd_vars  		"type required" // Include as needed eventually. "readonly appearance"
+	local cmd_vars  		"type required appearance" // Include as needed eventually. "readonly"
 	local msg_vars  		"`labelvars'"
 	local code_vars 		"" // Include as needed eventually. " constraint  relevance  calculation repeat_count choice_filter"
 
@@ -638,6 +638,16 @@ qui {
 		local error_msg "Fields of type note creates an impassable view that are impossible for the enumerator to sweep pass. Make sure that is the inentional behavior for the following fields:"
 		noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Required_Column") message("`error_msg'")  table("list row type name if note_required == 1") testname("REQUIRED NOTE TYPE FIELD")
 	}
+	
+	*List and output required label fields in field-list groups
+	gen label_required 		= (req_relevant == 1 & appearance == "label" & lower(required) == "yes")
+	count if label_required == 1
+	if `r(N)' > 0 {
+
+		*Prepare message and write it
+		local error_msg "Fields with appearance [label] (inside a field-list group) must not be required. Label fields are currently required in the following rows:"
+		noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Required_Column") message("`error_msg'")  table("list row type name if label_required == 1") testname("REQUIRED LABEL FIELD")
+	}	
 
 }
 end
