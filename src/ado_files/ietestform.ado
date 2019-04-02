@@ -619,8 +619,8 @@ qui {
 		inlist(type, "start", "end", "deviceid", "subscriberid", "simserial", "phonenumber", "username", "caseid") | /// Default meta types doen not need to be required
 		missing(type)) /// Rows that are not fields shold be skipped
 
-	*List and output non-note fields that are not required
-	gen nonnote_nonrequired = (req_relevant == 1 & type != "note" & lower(required) != "yes")
+	*List and output non-note, non-label fields that are not required
+	gen nonnote_nonrequired = (req_relevant == 1 & type != "note" & appearance != "label" & lower(required) != "yes")
 	count if nonnote_nonrequired == 1
 	if `r(N)' > 0 {
 
