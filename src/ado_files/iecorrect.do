@@ -89,7 +89,7 @@ cap program drop iecorrect
 				cap	file close 	`doname'
 					file open  	`doname' using "`dofile'", text write append
 				
-					do`type', 	 doname("`doname'")
+					do`type', 	 doname("`doname'") idvar("`idvar'")
 				
 				* Add an extra space before the next set of corrections
 					file write  `doname'		  _n _n					
@@ -105,8 +105,8 @@ cap program drop iecorrect
 /*******************************************************************************	
 	Run the do file containing the corrections
 *******************************************************************************/
-
-		*dorun , doname("`doname'") dofile("`dofile'") `noisily'
+		
+		dorun , doname("`doname'") dofile("`dofile'") data("`data'")`noisily'
 		
 /*******************************************************************************	
 	Save the do file containing the corrections if "save" was selected
@@ -304,16 +304,18 @@ cap program drop prepdata
 		
 	end
 	
-/***************************
+***************************
 * Write numeric corrections
 ***************************
 cap program drop donumeric
 	program 	 donumeric
 	
-	syntax , doname(string)
+	syntax , doname(string) idvar(string)
 		
 	file write  `doname' "** Correct entries in numeric variables " _n								// <---- Writing in do file here
 			
+	count
+	
 	* Write one line of correction for each line in the data set
 		forvalues row = 1/`r(N)' {
 			
@@ -328,7 +330,7 @@ cap program drop donumeric
 			local line	`"replace `var' = `value' if "'												
 			
 			* If it's an ID variables, write that in the do file
-			if "`idvar'" != "" {
+			if "`idvalue'" != "" {
 				local line	`"`line' `idvar' == `idvalue'"'											
 				
 				* If it's both, add an "and"
@@ -347,14 +349,14 @@ cap program drop donumeric
 		}	
 		
 	end
-	*/
+
 ***************************
 * Write string corrections
 ***************************
 cap program drop dostring
 	program 	 dostring
 	
-	syntax , doname(string)
+	syntax , doname(string) idvar(string)
 
 	file write  `doname'		  "** Correct entries in strin variables " _n								// <---- Writing in do file here
 
@@ -403,6 +405,7 @@ cap program drop doother
 	
 	file write  corrections		  "** Adjust categorical variables to include 'other' values " _n
 	
+	count
 	forvalues row = 1/`r(N)' {
 		
 		local strvar			= strvar[`row']
@@ -446,13 +449,15 @@ cap program drop dofooter
 	
 /*******************************************************************************	
 	Run the do file with corrections
-*******************************************************************************
+*******************************************************************************/
 
 cap program drop dorun
 	program		 dorun
 	
-	syntax , doname(string) dofile(string) [noisily]
+	syntax , doname(string) dofile(string) data(string) [noisily]
 	
+		use  `data', clear
+		
 		noi di "Read corretions"
 		file open `doname' using "`dofile'", read
 		file read `doname' line
@@ -467,8 +472,10 @@ cap program drop dorun
 		noi di "Close corrections"
 		file close `doname'
 	
+		save `data', replace
+		
 	end
-*/
+
 /*******************************************************************************	
 	Create template
 *******************************************************************************/
