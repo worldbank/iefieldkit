@@ -500,10 +500,10 @@
 
 					*SI_NOTE: limit lenght if very long
 					
-					*255-29 (characters for "see iecompdup for full list")= 226
+					*255-29 (characters for " :see iecompdup for full list")= 226
 					if strlen("`r(diffvars)'") > 256 {
 						
-						local difflist_`id'  = substr("`r(diffvars)'" ,1 ,226) + " see iecompdup for full list"
+						local difflist_`id'  = substr("`r(diffvars)'" ,1 ,226) + " :see iecompdup for full list"
 
 					}
 					else {
