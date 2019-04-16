@@ -189,7 +189,7 @@ if "`c(username)'" == "Saori" {
 
 	ieduplicates iid 		, folder("C:\Users\Saori\Desktop\Semester 4\z Other\DIME\iedup test") uniquevars(unique_id) ///
 	duplistid("   DuplicateID") datefixed(notes_enumerators) ///
-	tostringok droprest nodaily 
+	tostringok droprest 
 
 
 * Test with duplicate IDs where only one variable differs
@@ -202,7 +202,7 @@ if "`c(username)'" == "Saori" {
 
 	ieduplicates iid 		, folder("C:\Users\Saori\Desktop\Semester 4\z Other\DIME\iedup test") uniquevars(unique_id) ///
 	duplistid("   DuplicateID") datefixed(notes_enumerators) ///
-	tostringok droprest nodaily 
+	tostringok droprest 
 
 *****************SI_NOTE: The report after importing the Excel Report, the variable "listofdiffs" include excel file's variables as well as the data set's.
 
