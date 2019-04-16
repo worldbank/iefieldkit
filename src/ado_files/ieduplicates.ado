@@ -494,24 +494,30 @@
 
 				}
 				else {
-				
+					
 					*Get the list of variables that are different between the two duplicated id value
 					qui iecompdup `idvar', id(`id')
+
+					local diffvars "`r(diffvars)'"
+
+					* Only checking variables in the original data set and not variables in Excel report.
+					local diffvars: list diffvars - excelVars						 
 
 					*SI_NOTE: limit lenght if very long
 					
 					*255-29 (characters for " :see iecompdup for full list")= 226
-					if strlen("`r(diffvars)'") > 256 {
+					if strlen("`diffvars'") > 256 {
 						
 						local difflist_`id'  = substr("`r(diffvars)'" ,1 ,226) + " :see iecompdup for full list"
 
 					}
 					else {
 
-						local difflist_`id' "`r(diffvars)'"						
+						local difflist_`id' "`diffvars'"						
 						//replace `listofdiffs'	= 	"`r(diffvars)'" if `idvar' == `id'
 
 					}
+
 
 				}
 
