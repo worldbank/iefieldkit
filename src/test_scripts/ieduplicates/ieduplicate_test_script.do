@@ -204,7 +204,5 @@ if "`c(username)'" == "Saori" {
 	duplistid("   DuplicateID") datefixed(notes_enumerators) ///
 	tostringok droprest 
 
-*****************SI_NOTE: The report after importing the Excel Report, the variable "listofdiffs" include excel file's variables as well as the data set's.
-
 *No error
 	rm "$base\iedupreport.xlsx"
