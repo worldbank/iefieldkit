@@ -153,7 +153,7 @@ cap program drop iecorrect
 			
 			* Drop observations
 			template using "`using'", ///
-				varlist("idvar initials notes") ///
+				varlist("idvalue initials notes") ///
 				sheetname("drop")
 			
 			noi di as result `"{phang}Template spreadsheet saved to: {browse "`using'":`using'} "'
@@ -294,7 +294,7 @@ cap program drop prepdata
 		if "`anything'" == "numeric" 	local mainvar	numvar
 		if "`anything'" == "string" 	local mainvar	strvar
 		if "`anything'" == "other" 		local mainvar	strvar
-		if "`anything'" == "drop" 		local mainvar 	idvar
+		if "`anything'" == "drop" 		local mainvar 	idvalue
 		
 
 		* Drop extra lines in the excel
