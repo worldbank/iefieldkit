@@ -392,7 +392,35 @@ cap program drop dostring
 
 		
 	end
+
+***********************
+* Dropping observations
+***********************
+cap program drop dodrop
+	program 	 dodrop
 	
+	syntax , doname(string) idvar(string)
+
+	file write  `doname'		  "** Drop observations " _n								// <---- Writing in do file here
+
+	* Write one line of correction for each line in the data set
+	count 
+	forvalues row = 1/`r(N)' {
+		
+		local idvalue		= idvalue[`row']
+
+		if "`idvalue'" != "" {
+			*Confirm that ID var was specified
+			*Confirmed that ID var is the same type as idvaue
+
+			* Noew add an extra line
+			file write `doname'	`"drop if `idvar' == `idvalue' "' _n							// <---- Writing in do file here
+			
+		}
+	}
+
+		
+	end
 	
 /***************************
 * Write string corrections
