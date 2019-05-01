@@ -422,16 +422,16 @@ cap program drop dodrop
 		
 	end
 	
-/***************************
-* Write string corrections
+***************************
+* Write 'other' corrections
 ***************************
 
 cap program drop doother
 	program 	 doother
 	
-	 syntax , doname(string)
+	 syntax , doname(string) idvar(string)
 	
-	file write  corrections		  "** Adjust categorical variables to include 'other' values " _n
+	file write  `doname'		  "** Adjust categorical variables to include 'other' values " _n
 	
 	count
 	forvalues row = 1/`r(N)' {
@@ -457,10 +457,11 @@ cap program drop doother
 	
 	end
 	
-*/
+
 **********************
 * Write do file footer
 **********************
+
 cap program drop dofooter
 	program 	 dofooter
 	
