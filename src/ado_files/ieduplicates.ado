@@ -101,7 +101,7 @@
 				cap confirm variable `excelvar'
 				if _rc == 0 {
 					*Variable exist, output error
-					noi display as error "{phang}The data set already have a variable called {inp:`excelvar'} which is a name that this command requires to be availible. Please change the name of the variable already in the data set. Future versions of this command will allow the user to rename the variables used by this command.{p_end}"
+					noi di as error "{phang}The Excel report variable [``excelvar''] cannot be created as that variable already exist in the data set. Use the option called ``excelvar''() to change the name of the variable to be created in the report.{p_end}"
 					noi di ""
 					error 198
 					exit
