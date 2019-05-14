@@ -750,7 +750,7 @@ qui {
 				local beginrow = subinstr("`beginrow'","#","", 1)	//Remove the parse char "#"
 
 				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed
-				if "`endname'" != "`beginname'"  {
+				if "`endname'" != "`beginname'" & !missing("`endname'") {
 
 					local error_msg "begin_`begintype' [`beginname'] on row `beginrow' and end_`endtype' [`endname'] on row `endrow'"
 
