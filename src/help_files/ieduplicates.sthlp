@@ -41,7 +41,11 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {synopt :{cmdab:nodaily}}disables daily back-up copies of the Excel report{p_end}
 {synopt :{cmdab:suf:fix(}{it:string}{cmd:)}}allows the user to add a suffix to the filename of the Excel report{p_end}
 
-{synopt :{cmdab:duplistid(}{it:string}{cmd:)}}allows the user to customize the variable name "dupListID" in the the Excel report{p_end}
+{pstd}{it:    {ul:{hi:Excel variable name options:}}}{p_end}
+
+{pstd}SAORI: Explain these options here, and make{p_end}
+
+{synopt :{cmdab:duplistid(}{it:string}{cmd:)}}customizes variable {it:duplistid}{p_end}
 {synopt :{cmdab:datelisted(}{it:string}{cmd:)}}allows the user to customize the variable name "dateListed" in the the Excel report{p_end}
 {synopt :{cmdab:datefixed(}{it:string}{cmd:)}}allows the user to customize the variable name "dateFixed" in the the Excel report{p_end}
 {synopt :{cmdab:correct(}{it:string}{cmd:)}}allows the user to customize the variable name "correct" in the the Excel report{p_end}
