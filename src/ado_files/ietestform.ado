@@ -970,7 +970,7 @@ qui {
 
 		local error_msg "These variable names are longer then 32 characters. That is allowed in the data formats used in SurveyCTO - and is therefore allowed in their test - but will cause an error when the data is imported to Stata. The following names should be shortened:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES")  message("`error_msg'") wikifragment("Field_Name_Length") able("list row type name if longname == 1")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES")  message("`error_msg'") wikifragment("Field_Name_Length") table("list row type name if longname == 1")
 
 	}
 
