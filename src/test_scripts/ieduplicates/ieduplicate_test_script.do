@@ -9,9 +9,9 @@ clear all
 di "The user for this case is: " c(username)
 
 if "`c(username)'" == "Saori" {
-	global base "C:\Users\Saori\Desktop\Semester 4\z Other\DIME\iedup test"
+	global base "{directory}\iedup test"
 	cd "$base"
-	qui do "C:\Users\Saori\Documents\Github\iefieldkit\src\ado_files\ieduplicates.ado"
+	qui do "{directory}\Github\iefieldkit\src\ado_files\ieduplicates.ado"
 
 } 
 	else {  // *.... add other people's global here
@@ -91,10 +91,10 @@ if "`c(username)'" == "Saori" {
 *Suffix
 	use "$base\ieduplicates_test", clear
 	ieduplicates iid 		, folder("$base") uniquevars(unique_id) ///
-	suffix(_test)
+	suffix(_test) 
 
 	use "$base\ieduplicates_test", clear
-	ieduplicates iid 		, folder("$base") uniquevars(unique_id)
+	ieduplicates iid 		, folder("$base") uniquevars(unique_id) 
 *No error
 	rm "$base\iedupreport_test.xlsx"
 	rm "$base\iedupreport.xlsx"
@@ -103,11 +103,12 @@ if "`c(username)'" == "Saori" {
 *Excel var name specification
 	use "$base\ieduplicates_test", clear
 	ieduplicates iid 		, folder("$base") uniquevars(unique_id) ///
-							duplistid("   DuplicateID") datelisted("Date_Listed    ") datefixed("DateFixed") correct(Keep_this) drop("This_is_mistake ") newid(ID) initials(Signature) notes(Remarks)
+							duplistid("   duplicate_id") datelisted("date_listed    ") datefixed("date_of_fixed") correct(keep_this) drop("this_is_mistake ") newid(id) initials(signature) notes(remarks)
 
 	use "$base\ieduplicates_test", clear
 	ieduplicates iid 		, folder("$base") uniquevars(unique_id) ///
-							duplistid("   DuplicateID") datelisted("Date_Listed    ") datefixed("DateFixed") correct(Keep_this) drop("This_is_mistake ") newid(ID) initials(Signature) notes(Remarks)
+							duplistid("   duplicate_id") datelisted("date_listed    ") datefixed("date_of_fixed") correct(keep_this) drop("this_is_mistake ") newid(id) initials(signature) notes(remarks)
+
 *No error
 	rm "$base\iedupreport.xlsx"
 
@@ -115,15 +116,15 @@ if "`c(username)'" == "Saori" {
 
 *3) With multiiple options
 *All of the options
-	use "$base\ieduplicates_test2", clear
+	use "$base\ieduplicates_test", clear
 	ieduplicates iid 		, folder("$base") uniquevars(unique_id) ///
 	keepvars(rep rate age wgt) tostringok droprest nodaily suffix(_test) ///
-	duplistid("   DuplicateID") datelisted("Date_Listed    ") datefixed("DateFixed") correct(Keep_this) drop("This_is_mistake ") newid(ID) initials(Signature) notes(Remarks)
+	duplistid("   duplicate_id") datelisted("date_listed    ") datefixed("date_of_fixed") correct(keep_this) drop("this_is_mistake ") newid(id) initials(signature) notes(remarks)
 
-	use "$base\ieduplicates_test2", clear
+	use "$base\ieduplicates_test", clear
 	ieduplicates iid 		, folder("$base") uniquevars(unique_id) ///
 	keepvars(rep rate age wgt) tostringok droprest nodaily suffix(_test) ///
-	duplistid("   DuplicateID") datelisted("Date_Listed    ") datefixed("DateFixed") correct(Keep_this) drop("This_is_mistake ") newid(ID) initials(Signature) notes(Remarks)
+	duplistid("   duplicate_id") datelisted("date_listed    ") datefixed("date_of_fixed") correct(keep_this) drop("this_is_mistake ") newid(id) initials(signature) notes(remarks)
 *No error
 	rm "$base\iedupreport_test.xlsx"
 
@@ -132,18 +133,18 @@ if "`c(username)'" == "Saori" {
 	use "$base\ieduplicates_test2", clear
 	ieduplicates iid 		, folder("$base") uniquevars(unique_id) ///
 	tostringok droprest nodaily ///
-	duplistid("   DuplicateID") 
+	duplistid("   duplicate_id") 
 
 	use "$base\ieduplicates_test2", clear
 	ieduplicates iid 		, folder("$base") uniquevars(unique_id) ///
 	tostringok droprest nodaily ///
-	duplistid("   DuplicateID") 
+	duplistid("   duplicate_id") 
 *No error
 	rm "$base\iedupreport.xlsx"
 
 
 *ieduplicate listing of variables that differs
-	use "$cd\ieduplicates_test", clear
+	use "$base\ieduplicates_test", clear
 	
 	gen this_a_fake_long_named_variable1 =.
 	replace this_a_fake_long_named_variable1=1 if unique_id==80865
@@ -176,9 +177,10 @@ if "`c(username)'" == "Saori" {
 	use "$base\test3", clear
 
 	ieduplicates iid 		, folder("C:\Users\Saori\Desktop\Semester 4\z Other\DIME\iedup test") uniquevars(unique_id) ///
-	duplistid("   DuplicateID") datefixed(notes_enumerators) ///
+	duplistid("   duplicate_id") datefixed(notes_enumerators) ///
 	tostringok droprest nodaily 
 
+	rm "$base\iedupreport.xlsx"
 
 * Test with duplicate IDs where all variables differ
 	use "$base\test3", clear
@@ -188,9 +190,10 @@ if "`c(username)'" == "Saori" {
 	use "$base\test4", clear
 
 	ieduplicates iid 		, folder("C:\Users\Saori\Desktop\Semester 4\z Other\DIME\iedup test") uniquevars(unique_id) ///
-	duplistid("   DuplicateID") datefixed(notes_enumerators) ///
+	duplistid("   duplicate_id") datefixed(notes_enumerators) ///
 	tostringok droprest 
 
+	rm "$base\iedupreport.xlsx"
 
 * Test with duplicate IDs where only one variable differs
 	use "$base\test3", clear
@@ -201,7 +204,7 @@ if "`c(username)'" == "Saori" {
 	use "$base\test4", clear
 
 	ieduplicates iid 		, folder("C:\Users\Saori\Desktop\Semester 4\z Other\DIME\iedup test") uniquevars(unique_id) ///
-	duplistid("   DuplicateID") datefixed(notes_enumerators) ///
+	duplistid("   duplicate_id") datefixed(notes_enumerators) ///
 	tostringok droprest 
 
 *No error
