@@ -7,7 +7,7 @@
 	qui {
 
 		syntax varname ,  FOLder(string) UNIQUEvars(varlist) [KEEPvars(varlist) tostringok droprest nodaily SUFfix(string) ///
-		duplistid(string) datelisted(string) datefixed(string) correct(string) drop(string) newid(string) initials(string) notes(string)]
+		duplistid(string) datelisted(string) datefixed(string) correct(string) drop(string) newid(string) initials(string) notes(string) listofdiffs(string)]
 
 		version 11.0
 
@@ -58,7 +58,7 @@
 			* Test that each manually entered Excel varaible name is valid, or assigned the default name
 
 			*For optioin to change var names. Setting a default name of columns (in case user did not specify the variable name)
-			local deafultvars duplistid datelisted datefixed correct drop newid initials notes
+			local deafultvars duplistid datelisted datefixed correct drop newid initials notes listofdiffs
 			foreach deafultvar of local deafultvars  {
 				
 				*trim user input. If no input string is empty, which returns an empty string
@@ -82,7 +82,7 @@
 			* Excel variables values are ok on their own, test in relation to each other and varaiblaes already in the data
 
 			* Test that no variable with the name needed for the excel report already exist in the data set
-			local excelVars `duplistid' `datelisted' `datefixed' `correct' `drop' `newid' `initials' `notes'
+			local excelVars `duplistid' `datelisted' `datefixed' `correct' `drop' `newid' `initials' `notes' `listofdiffs'
 
 			* Check for duplicate variable names in the excelVars
 			local duplicated_names : list dups excelVars
@@ -267,7 +267,7 @@
 				replace `drop' 	= "yes" if `drop' 	== "y"
 
 				*Check that variables are either empty or "yes"
-				gen `inputNotYes' = !((`correct'  == "yes" | `correct' == "") & (`drop'  == "yes" | `drop' == ""))
+				gen `inputNotYes' = !((`correct'  == "yes" | `correct' == "") & (`drop'  == "yes" | `drop' == "")) 
 
 				*Set local to 1 if error should be outputted
 				cap assert `inputNotYes' == 0
@@ -478,6 +478,51 @@
 			tempvar dup
 			duplicates tag `idvar', gen(`dup')
 
+
+			*Add list of variables that are different between the two duplicated id value in excel report in 'listofdiffs' variable
+			levelsof `idvar' if `dup' > 0, local(list_dup_ids)
+
+			foreach id of local list_dup_ids {
+
+				count if `idvar' == `id' 
+
+				*Check if duplicated id has more than 2 duplicates
+				if `r(N)' > 2 {
+					
+					local difflist_`id'	"Cannot list variables for IDs with more than 2 duplicates"
+					//replace `listofdiffs'	=	"Cannot list variables for IDs with more than 2 duplicates" if `idvar' == `id'
+
+				}
+				else {
+					
+					*Get the list of variables that are different between the two duplicated id value
+					qui iecompdup `idvar', id(`id')
+
+					local diffvars "`r(diffvars)'"
+
+					* Only checking variables in the original data set and not variables in Excel report.
+					local diffvars: list diffvars - excelVars						 
+
+					*SI_NOTE: limit lenght if very long
+					
+					*255-29 (characters for " :see iecompdup for full list")= 226
+					if strlen("`diffvars'") > 256 {
+						
+						local difflist_`id'  = substr("`r(diffvars)'" ,1 ,226) + " :see iecompdup for full list"
+
+					}
+					else {
+
+						local difflist_`id' "`diffvars'"						
+						//replace `listofdiffs'	= 	"`r(diffvars)'" if `idvar' == `id'
+
+					}
+
+
+				}
+
+			}			
+
 			*Test if there are any duplicates
 			cap assert `dup'==0
 			if _rc {
@@ -494,7 +539,7 @@
 					* If Excel file exists keep excel vars and
 					* variables passed as arguments in the
 					* command
-					keep 	`argumentVars' `excelVars'
+					keep 	`argumentVars' `excelVars' 
 				}
 				else {
 					* Keep only variables passed as arguments in
@@ -512,7 +557,17 @@
 							gen `excelvar' = ""
 						}
 					}
+				
+
 				}
+
+		
+
+				//Assign the listdiff values
+				foreach id of local list_dup_ids { 
+					replace `listofdiffs' = "`difflist_`id''" if `idvar' == `id'
+				}
+
 
 				/******************
 					Section 5.3
@@ -591,6 +646,9 @@
 						*Prepare local for output
 						local daily_output " and a daily copy have been saved to the Daily folder"
 					}
+
+					*Making listofdiffs come last
+					order `listofdiffs', last
 
 					*Export main report
 					export excel using "`folder'/iedupreport`suffix'.xlsx"	, firstrow(variables) replace  nolabel
