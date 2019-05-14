@@ -60,15 +60,15 @@
 			*For optioin to change var names. Setting a default name of columns (in case user did not specify the variable name)
 			local deafultvars duplistid datelisted datefixed correct drop newid initials notes listofdiffs
 			foreach deafultvar of local deafultvars  {
-				
+
 				*trim user input. If no input string is empty, which returns an empty string
 				local `deafultvar' = trim("``deafultvar''") //trim() is older syntax, compare to strtrim() in Stata 15 and newer
 
 				*If no user input for this var, assign default name
-				if "``deafultvar''" == "" local `deafultvar' = "`deafultvar'" 
+				if "``deafultvar''" == "" local `deafultvar' = "`deafultvar'"
 
 				*Check for space in varname (only possible when user assign names manually)
-				if strpos("``deafultvar''", " ") != 0 { 
+				if strpos("``deafultvar''", " ") != 0 {
 
 					noi di as error "{phang}The Excel report variable name [``deafultvar''] should not contain any space. Please change the variable name.{p_end}"
 					noi di ""
@@ -76,7 +76,6 @@
 					exit
 				}
 			}
-
 
 			********************
 			* Excel variables values are ok on their own, test in relation to each other and varaiblaes already in the data
@@ -148,7 +147,6 @@
 			}
 
 
-
 			/***********************************************************************
 			************************************************************************
 
@@ -191,7 +189,7 @@
 				egen `count_nonmissing_values' = rownonmiss(_all), strok
 				drop if `count_nonmissing_values' == 0
 
-				* Check if the variable name in the excel spreadsheet remain unchanged from the original report outputted. 
+				* Check if the variable name in the excel spreadsheet remain unchanged from the original report outputted.
 				foreach excelvar of local excelVars {
 					cap confirm variable `excelvar'
 
@@ -274,7 +272,7 @@
 				replace `drop' 	= "yes" if `drop' 	== "y"
 
 				*Check that variables are either empty or "yes"
-				gen `inputNotYes' = !((`correct'  == "yes" | `correct' == "") & (`drop'  == "yes" | `drop' == "")) 
+				gen `inputNotYes' = !((`correct'  == "yes" | `correct' == "") & (`drop'  == "yes" | `drop' == ""))
 
 				*Set local to 1 if error should be outputted
 				cap assert `inputNotYes' == 0
@@ -415,7 +413,6 @@
 
 				*Save imported data set with all corrections
 				save	`preppedReport'
-
 			}
 
 
@@ -491,7 +488,7 @@
 
 			foreach id of local list_dup_ids {
 
-				count if `idvar' == `id' 
+				count if `idvar' == `id'
 
 				*Check if duplicated id has more than 2 duplicates, as iecompdup must be run manually to check difference when there is more than 2 observations with same ID
 				if `r(N)' > 2 {
@@ -536,7 +533,7 @@
 					* If Excel file exists keep excel vars and
 					* variables passed as arguments in the
 					* command
-					keep 	`argumentVars' `excelVars' 
+					keep 	`argumentVars' `excelVars'
 				}
 				else {
 					* Keep only variables passed as arguments in
@@ -554,14 +551,14 @@
 							gen `excelvar' = ""
 						}
 					}
-				
+
 
 				}
 
-		
+
 
 				//Assign the listdiff values
-				foreach id of local list_dup_ids { 
+				foreach id of local list_dup_ids {
 					replace `listofdiffs' = "`difflist_`id''" if `idvar' == `id'
 				}
 
