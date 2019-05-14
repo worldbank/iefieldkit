@@ -43,16 +43,16 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 
 {pstd}{it:    {ul:{hi:Excel variable name options:}}}{p_end}
 
-{pstd}SAORI: Explain these options here, and make{p_end}
+{pstd}This option allows users to customize the column names in the report Excel spreadsheet. This option is intended for situations when the dataset already has variable(s) named the same as the default Excel spreadsheet name. {p_end}
 
 {synopt :{cmdab:duplistid(}{it:string}{cmd:)}}customizes variable {it:duplistid}{p_end}
-{synopt :{cmdab:datelisted(}{it:string}{cmd:)}}allows the user to customize the variable name "dateListed" in the the Excel report{p_end}
-{synopt :{cmdab:datefixed(}{it:string}{cmd:)}}allows the user to customize the variable name "dateFixed" in the the Excel report{p_end}
-{synopt :{cmdab:correct(}{it:string}{cmd:)}}allows the user to customize the variable name "correct" in the the Excel report{p_end}
-{synopt :{cmdab:drop(}{it:string}{cmd:)}}allows the user to customize the variable name "drop" in the the Excel report{p_end}
-{synopt :{cmdab:newid(}{it:string}{cmd:)}}allows the user to customize the variable name "newID" in the the Excel report{p_end}
-{synopt :{cmdab:initials(}{it:string}{cmd:)}}allows the user to customize the variable name "initials" in the the Excel report{p_end}
-{synopt :{cmdab:notes(}{it:string}{cmd:)}}allows the user to customize the variable name "notes" in the the Excel report{p_end}
+{synopt :{cmdab:datelisted(}{it:string}{cmd:)}}customizes variable {it:datelisted}{p_end}
+{synopt :{cmdab:datefixed(}{it:string}{cmd:)}}customizes variable {it:datefixed}{p_end}
+{synopt :{cmdab:correct(}{it:string}{cmd:)}}customizes variable {it:correct}{p_end}
+{synopt :{cmdab:drop(}{it:string}{cmd:)}}customizes variable {it:drop}{p_end}
+{synopt :{cmdab:newid(}{it:string}{cmd:)}}customizes variable {it:newid}{p_end}
+{synopt :{cmdab:initials(}{it:string}{cmd:)}}customizes variable {it:initials}{p_end}
+{synopt :{cmdab:notes(}{it:string}{cmd:)}}customizes variable {it:notes}{p_end}
 
 
 {synoptline}
@@ -94,10 +94,6 @@ columns {it:initials} and {it:notes}. Using these columns is not required but it
 to keep track of who decided how to correct that duplicate and to use {it:notes} to document why
 the correction was chosen. If {it:initials} and {it:notes} are used, then the Excel report also functions
 as an excellent documentation of the correction made.
-
-{pstd}{it:    {ul:{hi:Excel variable name options:}}}{p_end}
-
-{pstd}SAORI: Explain these options here, and make{p_end}
 
 {space 4}{hline}
 
@@ -157,12 +153,14 @@ report in a sub-folder called Daily in the folder specified in {cmdab:folder()}.
 the folder /Daily/ does not exist, then it is created unless the
 option {cmdab:nodaily} is used.
 
+{title:Excel variable name options:}
+
 {phang}{cmdab:duplistid(}{it:string}{cmd:)} {cmdab:datelisted(}{it:string}{cmd:)} 
 {cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)} 
 {cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)} 
 {cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)} 
-allow the user to set a unique name for each default variable names (e.g. "dupListID", "dateListed", etc.) in the Excel report.
-This is meant to be used when the variable name already exists in the dataset. To avoid error, the command offers a way to modify the variable name in the Excel Report. {p_end}
+allow the user to set a unique name for each default variable names (e.g. "dupListid", "datelisted", etc.) in the Excel report spreadsheet.
+This is meant to be used when the variable name already exists in the dataset. To avoid error, the command offers a way to modify the variable name in the Excel Report spreadsheet. {p_end}
 
 
 {title:The Excel Report}
