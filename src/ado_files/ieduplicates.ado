@@ -64,6 +64,18 @@
 				*trim user input. If no input string is empty, which returns an empty string
 				local `deafultvar' = trim("``deafultvar''") //trim() is older syntax, compare to strtrim() in Stata 15 and newer
 
+				*Test that the customized names only include lower case. This was a compromise
+				* needed to allow backward compatibility when all excel variable names are
+				* imported in lower case. This follows from the Excel variable names in first
+				* version had upper case letters, but Stata options cannot use upper case, and
+				* we want the two to be the same
+				if "``deafultvar''" != lower("``deafultvar''") {
+					noi di as error "{phang}For the puprpose of backward version compatibility, the names in option `deafultvar'(``deafultvar'') must not include any upper case letters.{p_end}"
+					noi di ""
+					error 198
+					exit
+				}
+
 				*If no user input for this var, assign default name
 				if "``deafultvar''" == "" local `deafultvar' = "`deafultvar'"
 
