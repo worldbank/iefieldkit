@@ -76,11 +76,11 @@ needs to be specified in order to have a unique reference for each row in the Ex
 observations in the Excel report, either on its own or together with {it:ID_varname}. {cmd:ieduplicates}
 then returns the data set without these duplicates.
 
-{pstd}The Excel report includes three columns called {it:correct}, {it:drop} and {it:newID}.
+{pstd}The Excel report includes three columns called {it:correct}, {it:drop} and {it:newid}.
 Each of them represents one way to correct the duplicates. If {it:correct} is indicated with
 a "Yes" then that observation is kept unchanged, if {it:drop} is indicated with a "Yes" then
-that observation is deleted and if {it:newID} is indicated then that observation is assigned
-a new ID using the value in column {it:newID}. After corrections are entered, the report should
+that observation is deleted and if {it:newid} is indicated then that observation is assigned
+a new ID using the value in column {it:newid}. After corrections are entered, the report should
 be saved in the same location {cmdab:fol:der(}{it:string}{cmd:)} without any changes to its name.
 
 {pstd}Before outputting a new report {cmd:ieduplicates} always checks if there already is an
@@ -120,7 +120,7 @@ drop and assign a new ID to. For data integrity reasons, be careful not to expor
 Excel files including both identifying variables and names together with {it:ID_varname}.
 
 {phang}{cmdab:tostringok} allows {it:ID_varname} to be turned into a string variable in case
-{it:ID_varname} is numeric but a value listed in {it:newID} is non-numeric. Otherwise an error is generated.
+{it:ID_varname} is numeric but a value listed in {it:newid} is non-numeric. Otherwise an error is generated.
 
 {phang}{cmdab:droprest} disables the requirement that duplicates must be explicitly deleted.
 The default is that if one of the duplicates in a group of duplicates has a
@@ -128,7 +128,7 @@ correction, then that correction is only valid if all other duplicates in that
 group have a correction as well. For example, if there are four observations with
 the same value for {it:ID_varname} and one is correct, one needs a new ID and
 two are incorrect and should be deleted. Then the first one is indicated to be
-kept in the {it:correct} column, the second one is given a new ID in {it:newID}
+kept in the {it:correct} column, the second one is given a new ID in {it:newid}
 and the other two observations must be indicated for deletion in {it:drop}
 unless {cmdab:droprest}. The first two corrections are not considered valid and
 will cause an error in case if {cmdab:droprest} is not specified and the other
@@ -159,7 +159,7 @@ option {cmdab:nodaily} is used.
 {cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)} 
 {cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)} 
 {cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)} 
-allow the user to set a unique name for each default variable names (e.g. "dupListid", "datelisted", etc.) in the Excel report spreadsheet.
+allow the user to set a unique name for each default variable names (e.g. {it:duplistid}, {it:datelisted}, etc.) in the Excel report spreadsheet.
 This is meant to be used when the variable name already exists in the dataset. To avoid error, the command offers a way to modify the variable name in the Excel Report spreadsheet. {p_end}
 
 
@@ -173,19 +173,19 @@ that day, then that report will be overwritten.
 
 {pstd}All duplicates in a group of duplicates must have a correction indicated. If
 one or more duplicates are indicated as correct in {it:correct} or assigned a new
-ID in {it:newID}, then all other duplicates with the same value in {it:ID_varname} must
+ID in {it:newid}, then all other duplicates with the same value in {it:ID_varname} must
 be explicitly indicated for deletion. This requirement may (but probably
 shouldn't) be disabled by option {cmdab:droprest}.
 
 {dlgtab:Columns in Excel Report filled in automatically:}
 
-{phang}{it:dupListID} stores an auto incremented duplicate list ID that is used
+{phang}{it:duplistid} stores an auto incremented duplicate list ID that is used
 to maintain the sort order in the Excel Report regardless of how the data in memory
 is sorted at the time {cmd:ieduplicates} is executed.
 
-{phang}{it:dateListed} stores the date the duplicate was first identified.
+{phang}{it:datelisted} stores the date the duplicate was first identified.
 
-{phang}{it:dateFixed} stores the date a valid correction was imported the first
+{phang}{it:datefixed} stores the date a valid correction was imported the first
 time for that duplicate.
 
 {dlgtab:Columns in Excel Report to be filled in manually by a user:}
@@ -193,20 +193,20 @@ time for that duplicate.
 {phang}{it:correct} is used to indicate that the duplicate should be kept. Valid values are
 restricted to "yes" and "y" to reduce the risk of unintended entries. The values
 are not sensitive to case. All valid values are changed to "yes" lower case when
-imported. If {it:correct} is indicated then both {it:drop} and {it:newID} must be
+imported. If {it:correct} is indicated then both {it:drop} and {it:newid} must be
 left empty.
 
 {phang}{it:drop} is used to indicate that the duplicate should be deleted. Valid values are
 restricted to "yes" and "y" to reduce the risk of unintended entries. The values
 are not sensitive to case. All valid values are changed to "yes" lower case when
-imported. If {it:drop} is indicated then both {it:correct} and {it:newID} must be
+imported. If {it:drop} is indicated then both {it:correct} and {it:newid} must be
 left empty.
 
-{phang}{it:newID} is used to assign a new ID values to a duplicate. If {it:ID_varname}
-is a string then all values are valid for {it:newID}. If {it:ID_varname} is numeric then
+{phang}{it:newid} is used to assign a new ID values to a duplicate. If {it:ID_varname}
+is a string then all values are valid for {it:newid}. If {it:ID_varname} is numeric then
 only digits are valid, unless the option {cmdab:tostringok} is specified.
-If {cmdab:tostringok} is specified and {it:newID} is non-numeric, then {it:ID_varname}
-is recasted to a string variable. If {it:newID} is indicated then both {it:correct} and {it:drop} must be
+If {cmdab:tostringok} is specified and {it:newid} is non-numeric, then {it:ID_varname}
+is recasted to a string variable. If {it:newid} is indicated then both {it:correct} and {it:drop} must be
 left empty.
 
 {phang}{it:initials} allows the team working with this data to keep track on who
@@ -276,7 +276,7 @@ unresolved duplicates were found
 {hi:Example 4.} Using the Excel file. The table below could be the report generated in Example 2 above. Make the viewer window wider and reload the page if the table below does not display properly!
 
 {col 3}{c TLC}{hline 116}{c TRC}
-{col 3}{c |}{col 4}HHID{col 10}dupListID{col 21}dateListed{col 33}dateFixed{col 44}correct{col 53}drop{col 59}newID{col 65}initials{col 75}notes{col 94}KEY{col 107}enumerator{col 120}{c |}
+{col 3}{c |}{col 4}HHID{col 10}duplistid{col 21}datelisted{col 33}datefixed{col 44}correct{col 53}drop{col 59}newid{col 65}initials{col 75}notes{col 94}KEY{col 107}enumerator{col 120}{c |}
 {col 3}{c LT}{hline 116}{c RT}
 {col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
 {col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
@@ -291,15 +291,15 @@ unresolved duplicates were found
 {pmore}The table above shows an example of an Excel report with 4 duplicates groups with
 two duplicates in each groups. The duplicates in 4321 and in 1145 have both been corrected
 but 7365 and 9834 are still unresolved. Before any observation was corrected, all observations had
-{it:dateFixed}, {it:correct}, {it:drop}, {it:newID}, {it:initials} and {it:note} empty just like the observations for ID 7365 and 9834. {it:dateFixed}
+{it:datefixed}, {it:correct}, {it:drop}, {it:newid}, {it:initials} and {it:note} empty just like the observations for ID 7365 and 9834. {it:datefixed}
 is not updated by the user, the command adds this date the first time the correction is made.
 
-{pmore}Observation with dupListID == 5 was found to have been
-assigned the incorrect ID while the data was collected. This observation is assigned the correct ID in {it:newID}
-and observation dupListID == 6 is indicated to be correct. Someone with initials IB made this
+{pmore}Observation with duplistid == 5 was found to have been
+assigned the incorrect ID while the data was collected. This observation is assigned the correct ID in {it:newid}
+and observation duplistid == 6 is indicated to be correct. Someone with initials IB made this
 correction and made a note. This note can and should be more descriptive but is kept short in this example.
 
-{pmore}Observations with dupListID == 1 and dupListID == 2 were identified as a duplicate submissions of the same
+{pmore}Observations with duplistid == 1 and duplistid == 2 were identified as a duplicate submissions of the same
 observation. One is kept and one is dropped, usually it does not matter which you keep and which you drop, but that should be confirmed.
 
 {pmore}Both corrections described in the example would have been easily identified using this command's sister command {help iecompdup}.
@@ -310,7 +310,7 @@ observation. One is kept and one is dropped, usually it does not matter which yo
 {hi:Example 5.} {inp:ieduplicates HHID, folder(C:\myImpactEvaluation\baseline\data) uniquevars(KEY) drop(out) notes(notes_enumerators)}
 
 {col 3}{c TLC}{hline 103}{c TRC}
-{col 3}{c |}{col 4}HHID{col 10}dupListID{col 21}dateListed{col 33}dateFixed{col 44}correct{col 53}out{col 59}newID{col 65}initials{col 75}notes_enumerators{col 94}KEY{col 107}{c |}
+{col 3}{c |}{col 4}HHID{col 10}duplistid{col 21}datelisted{col 33}datefixed{col 44}correct{col 53}out{col 59}newid{col 65}initials{col 75}notes_enumerators{col 94}KEY{col 107}{c |}
 {col 3}{c LT}{hline 103}{c RT}
 {col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{c |}
 {col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{c |}
