@@ -184,7 +184,7 @@
 			if `fileExists' {
 
 				*Load excel file. Load all vars as string and use metadata from Section 1
-				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow
+				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow case(lower)
 
 				*Drop empty rows that otherwise create error in merge that requires unique key
 				tempvar count_nonmissing_values
