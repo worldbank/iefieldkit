@@ -506,27 +506,19 @@
 					local diffvars "`r(diffvars)'"
 
 					* Only checking variables in the original data set and not variables in Excel report.
-					local diffvars: list diffvars - excelVars						 
+					local diffvars: list diffvars - excelVars
 
-					*SI_NOTE: limit lenght if very long
-
+					*Truncate list when longer than 256 to fit in old Stata string formats.
 					*255-29 (characters for " ||| List truncated, use iecompdup for full list")= 226
 					if strlen("`diffvars'") > 256 {
-
 						local difflist_`id'  = substr("`r(diffvars)'" ,1 ,207) + " ||| List truncated, use iecompdup for full list"
-
 					}
 					else {
-
-						local difflist_`id' "`diffvars'"						
-						//replace `listofdiffs'	= 	"`r(diffvars)'" if `idvar' == `id'
-
+						*List of diff is short enough to show in its entirety
+						local difflist_`id' "`diffvars'"
 					}
-
-
 				}
-
-			}			
+			}
 
 			*Test if there are any duplicates
 			cap assert `dup'==0
