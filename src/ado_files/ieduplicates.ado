@@ -493,15 +493,13 @@
 
 				count if `idvar' == `id' 
 
-				*Check if duplicated id has more than 2 duplicates
+				*Check if duplicated id has more than 2 duplicates, as iecompdup must be run manually to check difference when there is more than 2 observations with same ID
 				if `r(N)' > 2 {
-					
-					local difflist_`id'	"Cannot list variables for IDs with more than 2 duplicates"
-					//replace `listofdiffs'	=	"Cannot list variables for IDs with more than 2 duplicates" if `idvar' == `id'
 
+					local difflist_`id'	"Cannot list differences for duplicates for which 3 or more observations has the same ID, use command iecompdup instead."
 				}
 				else {
-					
+
 					*Get the list of variables that are different between the two duplicated id value
 					qui iecompdup `idvar', id(`id')
 
