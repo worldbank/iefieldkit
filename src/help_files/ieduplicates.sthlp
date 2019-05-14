@@ -95,6 +95,10 @@ to keep track of who decided how to correct that duplicate and to use {it:notes}
 the correction was chosen. If {it:initials} and {it:notes} are used, then the Excel report also functions
 as an excellent documentation of the correction made.
 
+{pstd}{it:    {ul:{hi:Excel variable name options:}}}{p_end}
+
+{pstd}SAORI: Explain these options here, and make{p_end}
+
 {space 4}{hline}
 
 {title:Options}
