@@ -194,13 +194,20 @@
 				* Check if the variable name in the excel spreadsheet remain unchanged from the original report outputted. 
 				foreach excelvar of local excelVars {
 					cap confirm variable `excelvar'
-					if _rc !=0 {
-						*Variable does notexist, output error
-						noi display as error "{phang}The original spreadsheet variable name {inp:`excelvar'} no longer exist. Please change the spreadsheet variable name back to the origional name.{p_end}"
-						error 198
-						exit		
+
+					*The listofdiffs var was not a part of the original vars so old report might not have it. So create it if it does not exits.
+					if _rc !=0 & "`excelvar'" == "listofdiffs" {
+						gen `excelvar' = ""
 					}
-				
+
+					*Required variable does not exist in Excel file, output error
+					else if _rc !=0 {
+
+						noi display as error "{phang}The spreadsheet variable {inp:`excelvar'} does not exist. Either you changed the name of the variables in the spreadsheet, or you are using options to ieduplicates that are changing the variable names expected in the spreadsheet. Change the names in the spreadsheet, or use the command options to change the name of variable {inp:`excelvar'}.{p_end}"
+						error 198
+						exit
+					}
+
 				** All excelVars but duplistid and newid should be string. duplistid
 				*  should be numeric and the type of newid should be based on the user input
 					if !inlist("`excelvar'", "`duplistid'", "`newid'") {
