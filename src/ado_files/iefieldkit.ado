@@ -4,8 +4,8 @@ capture program drop iefieldkit
 program iefieldkit, rclass
 
 	* UPDATE THESE LOCALS FOR EACH NEW VERSION PUBLISHED
-	local version "1.0"
-	local versionDate "31JAN2019"
+	local version "1.1"
+	local versionDate "20MAY2019"
 
 	syntax [anything]
 
