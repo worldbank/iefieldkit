@@ -1,5 +1,5 @@
 {smcl}
-{* 31 Jan 2019}{...}
+{* 20 May 2019}{...}
 {hline}
 help for {hi:ieduplicates}
 {hline}
@@ -19,7 +19,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {it:ID_varname}
 , {cmdab:fol:der(}{it:string}{cmd:)} {cmdab:unique:vars(}{it:varlist}{cmd:)}
 [{cmdab:keep:vars(}{it:varlist}{cmd:)} {cmdab:tostringok} {cmdab:droprest}
-{cmdab:nodaily} {cmdab:suf:fix(}{it:string}{cmd:)} 
+{cmdab:nodaily} {cmdab:suf:fix(}{it:string}{cmd:)}
 {cmdab:duplistid(}{it:string}{cmd:)} {cmdab:datelisted(}{it:string}{cmd:)}
 {cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}
 {cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)}
@@ -155,10 +155,10 @@ option {cmdab:nodaily} is used.
 
 {title:Excel variable name options:}
 
-{phang}{cmdab:duplistid(}{it:string}{cmd:)} {cmdab:datelisted(}{it:string}{cmd:)} 
-{cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)} 
-{cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)} 
-{cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)} 
+{phang}{cmdab:duplistid(}{it:string}{cmd:)} {cmdab:datelisted(}{it:string}{cmd:)}
+{cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}
+{cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)}
+{cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)}
 allow the user to set a unique name for each default variable names (e.g. {it:duplistid}, {it:datelisted}, etc.) in the Excel report spreadsheet.
 This is meant to be used when the variable name already exists in the dataset. To avoid error, the command offers a way to modify the variable name in the Excel Report spreadsheet. {p_end}
 
