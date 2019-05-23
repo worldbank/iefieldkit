@@ -1,4 +1,4 @@
-*! version 1.0 31JAN2018  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.1 20MAY2019  DIME Analytics dimeanalytics@worldbank.org
 
 capture program drop ietestform
 		program ietestform , rclass
@@ -490,7 +490,7 @@ qui {
 
 	*Variables that must be included every time
 	local name_vars 		"name"
-	local cmd_vars  		"type required" // Include as needed eventually. "readonly appearance"
+	local cmd_vars  		"type required appearance" // Include as needed eventually. "readonly"
 	local msg_vars  		"`labelvars'"
 	local code_vars 		"" // Include as needed eventually. " constraint  relevance  calculation repeat_count choice_filter"
 
@@ -619,8 +619,8 @@ qui {
 		inlist(type, "start", "end", "deviceid", "subscriberid", "simserial", "phonenumber", "username", "caseid") | /// Default meta types doen not need to be required
 		missing(type)) /// Rows that are not fields shold be skipped
 
-	*List and output non-note fields that are not required
-	gen nonnote_nonrequired = (req_relevant == 1 & type != "note" & lower(required) != "yes")
+	*List and output non-note, non-label fields that are not required
+	gen nonnote_nonrequired = (req_relevant == 1 & type != "note" & appearance != "label" & lower(required) != "yes")
 	count if nonnote_nonrequired == 1
 	if `r(N)' > 0 {
 
@@ -637,6 +637,16 @@ qui {
 		*Prepare message and write it
 		local error_msg "Fields of type note creates an impassable view that are impossible for the enumerator to sweep pass. Make sure that is the inentional behavior for the following fields:"
 		noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Required_Column") message("`error_msg'")  table("list row type name if note_required == 1") testname("REQUIRED NOTE TYPE FIELD")
+	}
+
+	*List and output required label fields in field-list groups
+	gen label_required 		= (req_relevant == 1 & appearance == "label" & lower(required) == "yes")
+	count if label_required == 1
+	if `r(N)' > 0 {
+
+		*Prepare message and write it
+		local error_msg "Fields with appearance [label] (inside a field-list group) must not be required. Label fields are currently required in the following rows:"
+		noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Required_Column") message("`error_msg'")  table("list row type name if label_required == 1") testname("REQUIRED LABEL FIELD")
 	}
 
 }
@@ -740,7 +750,7 @@ qui {
 				local beginrow = subinstr("`beginrow'","#","", 1)	//Remove the parse char "#"
 
 				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed
-				if "`endname'" != "`beginname'"  {
+				if "`endname'" != "`beginname'" & !missing("`endname'") {
 
 					local error_msg "begin_`begintype' [`beginname'] on row `beginrow' and end_`endtype' [`endname'] on row `endrow'"
 
@@ -960,7 +970,7 @@ qui {
 
 		local error_msg "These variable names are longer then 32 characters. That is allowed in the data formats used in SurveyCTO - and is therefore allowed in their test - but will cause an error when the data is imported to Stata. The following names should be shortened:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES")  message("`error_msg'") wikifragment("Field_Name_Length") able("list row type name if longname == 1")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES")  message("`error_msg'") wikifragment("Field_Name_Length") table("list row type name if longname == 1")
 
 	}
 

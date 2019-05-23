@@ -1,4 +1,4 @@
-*! version 1.0 31JAN2019 DIME Analytics dimeanalytics@worldbank.org
+*! version 1.1 20MAY2019  DIME Analytics dimeanalytics@worldbank.org
 
 	capture program drop ieduplicates
 	program ieduplicates , rclass
@@ -6,7 +6,8 @@
 
 	qui {
 
-		syntax varname ,  FOLder(string) UNIQUEvars(varlist) [KEEPvars(varlist) tostringok droprest nodaily SUFfix(string)]
+		syntax varname ,  FOLder(string) UNIQUEvars(varlist) [KEEPvars(varlist) tostringok droprest nodaily SUFfix(string) ///
+		duplistid(string) datelisted(string) datefixed(string) correct(string) drop(string) newid(string) initials(string) notes(string) listofdiffs(string)]
 
 		version 11.0
 
@@ -34,7 +35,7 @@
 			************************************************************************
 			***********************************************************************/
 
-			*Tempfiles to be uses
+			*Tempfiles to be used
 			tempfile originalData preppedReport datawithreportmerged dataToReturn
 
 			** Save a version of original data that can be brought
@@ -52,14 +53,66 @@
 			local argumentVars `idvar' `uniquevars' `keepvars'
 
 			* Create a list of the variables created by this command to put in the report
-			local excelVars dupListID dateListed dateFixed correct drop newID initials notes
 
-			* Test that nu variable with the name needed for the excel report already exist in the data set
+			********************
+			* Test that each manually entered Excel varaible name is valid, or assigned the default name
+
+			*For optioin to change var names. Setting a default name of columns (in case user did not specify the variable name)
+			local deafultvars duplistid datelisted datefixed correct drop newid initials notes listofdiffs
+			foreach deafultvar of local deafultvars  {
+
+				*trim user input. If no input string is empty, which returns an empty string
+				local `deafultvar' = trim("``deafultvar''") //trim() is older syntax, compare to strtrim() in Stata 15 and newer
+
+				*Test that the customized names only include lower case. This was a compromise
+				* needed to allow backward compatibility when all excel variable names are
+				* imported in lower case. This follows from the Excel variable names in first
+				* version had upper case letters, but Stata options cannot use upper case, and
+				* we want the two to be the same
+				if "``deafultvar''" != lower("``deafultvar''") {
+					noi di as error "{phang}For the puprpose of backward version compatibility, the names in option `deafultvar'(``deafultvar'') must not include any upper case letters.{p_end}"
+					noi di ""
+					error 198
+					exit
+				}
+
+				*If no user input for this var, assign default name
+				if "``deafultvar''" == "" local `deafultvar' = "`deafultvar'"
+
+				*Check for space in varname (only possible when user assign names manually)
+				if strpos("``deafultvar''", " ") != 0 {
+
+					noi di as error "{phang}The Excel report variable name [``deafultvar''] should not contain any space. Please change the variable name.{p_end}"
+					noi di ""
+					error 198
+					exit
+				}
+			}
+
+			********************
+			* Excel variables values are ok on their own, test in relation to each other and varaiblaes already in the data
+
+			* Test that no variable with the name needed for the excel report already exist in the data set
+			local excelVars `duplistid' `datelisted' `datefixed' `correct' `drop' `newid' `initials' `notes' `listofdiffs'
+
+			* Check for duplicate variable names in the excelVars
+			local duplicated_names : list dups excelVars
+			if "`duplicated_names'" != "" {
+
+				local duplicates : list uniq duplicatenames
+				noi display as error "{phang}The excel report variable name [`duplicates'] already exist within either the default variable name or modified name. Variable names in Excel report must be distinct. Please change the variable name.{p_end}"
+				noi di ""
+				error 198
+				exit
+			}
+
+
+			* Check for duplicate variable names in the existing dataset
 			foreach excelvar of local excelVars {
 				cap confirm variable `excelvar'
 				if _rc == 0 {
 					*Variable exist, output error
-					noi display as error "{phang}The data set already have a variable called {inp:`excelvar'} which is a name that this command requires to be availible. Please change the name of the variable already in the data set. Future versions of this command will allow the user to rename the variables used by this command.{p_end}"
+					noi di as error "{phang}The Excel report variable [``excelvar''] cannot be created as that variable already exist in the data set. Use the option called ``excelvar''() to change the name of the variable to be created in the report.{p_end}"
 					noi di ""
 					error 198
 					exit
@@ -106,13 +159,12 @@
 			}
 
 
-
 			/***********************************************************************
 			************************************************************************
 
 				Section 3 - Test input from Excel file
 
-				If Excel repirt exist, import it and test for invalid corrections
+				If Excel report exists, import it and test for invalid corrections
 				made in the excel report.
 
 			************************************************************************
@@ -133,6 +185,7 @@
 				local fileExists 0
 			}
 
+
 			/******************
 				Section 3.2
 				If report exists, load file and check input, otherwise skip to section 4
@@ -141,17 +194,33 @@
 			if `fileExists' {
 
 				*Load excel file. Load all vars as string and use metadata from Section 1
-				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow
+				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow case(lower)
 
 				*Drop empty rows that otherwise create error in merge that requires unique key
 				tempvar count_nonmissing_values
 				egen `count_nonmissing_values' = rownonmiss(_all), strok
 				drop if `count_nonmissing_values' == 0
 
-				** All excelVars but dupListID and newID should be string. dupListID
-				*  should be numeric and the type of newID should be based on the user input
+				* Check if the variable name in the excel spreadsheet remain unchanged from the original report outputted.
 				foreach excelvar of local excelVars {
-					if !inlist("`excelvar'", "dupListID", "newID") {
+					cap confirm variable `excelvar'
+
+					*The listofdiffs var was not a part of the original vars so old report might not have it. So create it if it does not exits.
+					if _rc !=0 & "`excelvar'" == "listofdiffs" {
+						gen `excelvar' = ""
+					}
+
+					*Required variable does not exist in Excel file, output error
+					else if _rc !=0 {
+
+						noi display as error "{phang}The spreadsheet variable {inp:`excelvar'} does not exist. Either you changed the name of the variables in the spreadsheet, or you are using options to ieduplicates that are changing the variable names expected in the spreadsheet. Change the names in the spreadsheet, or use the command options to change the name of variable {inp:`excelvar'}.{p_end}"
+						error 198
+						exit
+					}
+
+				** All excelVars but duplistid and newid should be string. duplistid
+				*  should be numeric and the type of newid should be based on the user input
+					if !inlist("`excelvar'", "`duplistid'", "`newid'") {
 
 						* Make original ID var string
 						tostring `excelvar' , replace
@@ -209,13 +278,13 @@
 				******************/
 
 				* Make string input lower case and change "y" to "yes"
-				replace correct = lower(correct)
-				replace drop 	= lower(drop)
-				replace correct = "yes" if correct 	== "y"
-				replace drop 	= "yes" if drop 	== "y"
+				replace `correct' = lower(`correct')
+				replace `drop' 	= lower(`drop')
+				replace `correct' = "yes" if `correct' 	== "y"
+				replace `drop' 	= "yes" if `drop' 	== "y"
 
 				*Check that variables are either empty or "yes"
-				gen `inputNotYes' = !((correct  == "yes" | correct == "") & (drop  == "yes" | drop == ""))
+				gen `inputNotYes' = !((`correct'  == "yes" | `correct' == "") & (`drop'  == "yes" | `drop' == ""))
 
 				*Set local to 1 if error should be outputted
 				cap assert `inputNotYes' == 0
@@ -226,9 +295,9 @@
 					Make sure there are not too many corrections for a single observation
 				******************/
 
-				* Count the number of corrections (correct drop newID) per
+				* Count the number of corrections (correct drop newid) per
 				* observation. Only one correction per observation is allowed.
-				egen `multiInp' = rownonmiss(correct drop newID), strok
+				egen `multiInp' = rownonmiss(`correct' `drop' `newid'), strok
 
 				*Check that all rows have at most one correction
 				cap assert `multiInp' == 0 | `multiInp' == 1
@@ -243,7 +312,7 @@
 				******************/
 
 				*Generate dummy if correct column is set to yes
-				gen `yesCorrect' = (correct == "yes")
+				gen `yesCorrect' = (`correct' == "yes")
 
 				*Count number of duplicates within duplicates where that dummy is 1
 				bys `idvar' : egen `groupNumCorrect' =  total(`yesCorrect')
@@ -259,20 +328,20 @@
 					Section 3.3.4
 					Make sure that either option droprest is specified, or that
 					drop was correctly indicated for all observations. i.e.; if
-					correct or newID was indicated for at least one duplicate in
+					correct or newid was indicated for at least one duplicate in
 					a duplicate group, then all other observations should be
 					indicated as drop (unless droprest is specified)
 
 				******************/
 
 				*Generate dummy if there is any correction for this observation
-				gen `anyCorrection' = !missing(correct) | !missing(newID)
+				gen `anyCorrection' = !missing(`correct') | !missing(`newid')
 
 				*Count number of observations with any correction in suplicates group
 				bys `idvar' : egen `groupAnyCorrection' =  total(`anyCorrection')
 
 				*Create dummy that indicates each place this error happens
-				gen `notDrop' = (missing(drop) & `groupAnyCorrection' > 0 & `anyCorrection' == 0)
+				gen `notDrop' = (missing(`drop') & `groupAnyCorrection' > 0 & `anyCorrection' == 0)
 
 				* Check if option droprest is specified
 				if "`droprest'" == "" {
@@ -292,7 +361,7 @@
 					*  for any observations without drop or any other correction
 					*  explicitly specified if the observation is in a duplicate
 					*  group with at least one observation has a correction
-					replace drop 	= "yes" if `notDrop' == 1
+					replace `drop' 	= "yes" if `notDrop' == 1
 
 				}
 
@@ -311,29 +380,29 @@
 
 						*Error multiple input
 						if `local_multiInp' == 1 {
-							display as error "{phang}The following observations have more than one correction. Only one correction (correct, drop or newID) per row is allowed{p_end}"
-							list `idvar' dupListID correct drop newID `uniquevars' if `multiInp' > 1
+							display as error "{phang}The following observations have more than one correction. Only one correction (correct, drop or newid) per row is allowed{p_end}"
+							list `idvar' `duplistid' `correct' `drop' `newid' `uniquevars' if `multiInp' > 1
 							di ""
 						}
 
 						*Error multiple correct
 						if `local_multiCorr' == 1 {
 							display as error "{phang}The following observations are in a duplicate group where more than one observation is listed as correct. Only one observation per duplicate group can be correct{p_end}"
-							list `idvar' dupListID correct drop newID `uniquevars' if `groupNumCorrect' > 1
+							list `idvar' `duplistid' `correct' `drop' `newid' `uniquevars' if `groupNumCorrect' > 1
 							di ""
 						}
 
 						*Error in incorrect string
 						if `local_inputNotYes' == 1 {
 							display as error "{phang}The following observations have an answer in either correct or drop that is neither yes nor y{p_end}"
-							list `idvar' dupListID correct drop `uniquevars' if `inputNotYes' == 1
+							list `idvar' `duplistid' `correct' `drop' `uniquevars' if `inputNotYes' == 1
 							di ""
 						}
 
 						*Error is not specfied as drop
 						if `local_notDrop' == 1 {
 							display as error "{phang}The following observations are not explicitly indicated as drop while other duplicates in the same duplicate group are corrected. Either manually indicate as drop or see option droprest{p_end}"
-							list `idvar' dupListID correct drop newID `uniquevars' if `notDrop' == 1
+							list `idvar' `duplistid' `correct' `drop' `newid' `uniquevars' if `notDrop' == 1
 							di ""
 						}
 
@@ -356,7 +425,6 @@
 
 				*Save imported data set with all corrections
 				save	`preppedReport'
-
 			}
 
 
@@ -426,6 +494,41 @@
 			tempvar dup
 			duplicates tag `idvar', gen(`dup')
 
+
+			*Add list of variables that are different between the two duplicated id value in excel report in 'listofdiffs' variable
+			levelsof `idvar' if `dup' > 0, local(list_dup_ids)
+
+			foreach id of local list_dup_ids {
+
+				count if `idvar' == `id'
+
+				*Check if duplicated id has more than 2 duplicates, as iecompdup must be run manually to check difference when there is more than 2 observations with same ID
+				if `r(N)' > 2 {
+
+					local difflist_`id'	"Cannot list differences for duplicates for which 3 or more observations has the same ID, use command iecompdup instead."
+				}
+				else {
+
+					*Get the list of variables that are different between the two duplicated id value
+					qui iecompdup `idvar', id(`id')
+
+					local diffvars "`r(diffvars)'"
+
+					* Only checking variables in the original data set and not variables in Excel report.
+					local diffvars: list diffvars - excelVars
+
+					*Truncate list when longer than 256 to fit in old Stata string formats.
+					*255-29 (characters for " ||| List truncated, use iecompdup for full list")= 226
+					if strlen("`diffvars'") > 256 {
+						local difflist_`id'  = substr("`r(diffvars)'" ,1 ,207) + " ||| List truncated, use iecompdup for full list"
+					}
+					else {
+						*List of diff is short enough to show in its entirety
+						local difflist_`id' "`diffvars'"
+					}
+				}
+			}
+
 			*Test if there are any duplicates
 			cap assert `dup'==0
 			if _rc {
@@ -452,15 +555,25 @@
 					*Generate the excel variables used for indicating correction
 					foreach excelvar of local excelVars {
 
-						*Create all variables apart from dupListID as string vars
-						if inlist("`excelvar'", "dupListID", "newID") {
+						*Create all variables apart from duplistid as string vars
+						if inlist("`excelvar'", "`duplistid'", "`newid'") {
 							gen `excelvar' = .
 						}
 						else {
 							gen `excelvar' = ""
 						}
 					}
+
+
 				}
+
+
+
+				//Assign the listdiff values
+				foreach id of local list_dup_ids {
+					replace `listofdiffs' = "`difflist_`id''" if `idvar' == `id'
+				}
+
 
 				/******************
 					Section 5.3
@@ -469,7 +582,7 @@
 
 				* Generate a local that is 1 if there are new duplicates
 				local unaddressedNewExcel 0
-				count if missing(dateFixed)
+				count if missing(`datefixed')
 				if `r(N)' > 0 local unaddressedNewExcel 1
 
 				/******************
@@ -477,30 +590,30 @@
 				******************/
 
 				* Add date first time duplicate was identified
-				replace dateListed 	= "`date'" if missing(dateListed)
+				replace `datelisted' 	= "`date'" if missing(`datelisted')
 
-				** Add today's date to variable dateFixed if dateFixed
+				** Add today's date to variable datefixed if datefixed
 				*  is empty and at least one correction is added
-				replace dateFixed 	= "`date'" if missing(dateFixed) & (!missing(correct) | !missing(drop) | !missing(newID))
+				replace `datefixed' 	= "`date'" if missing(`datefixed') & (!missing(`correct') | !missing(`drop') | !missing(`newid'))
 
 				/******************
 					Section 5.3.2 Duplicate report list ID
 				******************/
 
-				** Sort after dupListID and after ID var for
-				*  duplicates currently without dupListID
-				sort dupListID `idvar'
+				** Sort after duplistid and after ID var for
+				*  duplicates currently without duplistid
+				sort `duplistid' `idvar'
 
-				** Assign dupListID 1 to the top row if no duplicate
+				** Assign duplistid 1 to the top row if no duplicate
 				*  list IDs have been generated so far.
-				replace dupListID = 1 if _n == 1 & missing(dupListID)
+				replace `duplistid' = 1 if _n == 1 & missing(`duplistid')
 
 				** Generate new IDs based on the row above instead of directly
 				*  from the row number. That prevents duplicates in the list in
 				*  case an observation is deleted. The first observation with
 				*  missing value will have an ID that is one digit higher than
 				*  the highest ID already in the list
-				replace dupListID = dupListID[_n - 1] + 1 if missing(dupListID)
+				replace `duplistid' = `duplistid'[_n - 1] + 1 if missing(`duplistid')
 
 				/******************
 					Section 5.4
@@ -540,6 +653,9 @@
 						local daily_output " and a daily copy have been saved to the Daily folder"
 					}
 
+					*Making listofdiffs come last
+					order `listofdiffs', last
+
 					*Export main report
 					export excel using "`folder'/iedupreport`suffix'.xlsx"	, firstrow(variables) replace  nolabel
 
@@ -571,7 +687,7 @@
 				Drop duplicates listed for drop
 			******************/
 
-			drop if drop == "yes"
+			drop if `drop' == "yes"
 
 			/******************
 				Section 6.2
@@ -584,25 +700,25 @@
 			/******************
 				Section 6.2.1
 				ID var in original file is string. Either
-				newID was imported as string or the variable
+				newid was imported as string or the variable
 				is made string. Easy.
 			******************/
 
 			*Test if there are any corrections by new ID
-			cap assert missing(newID)
+			cap assert missing(`newid')
 			if _rc {
 
 				local idtype 	: type `idvar'
-				local idtypeNew : type newID
+				local idtypeNew : type `newid'
 
-				*If ID var is string but newID is not, then just make it string
+				*If ID var is string but newid is not, then just make it string
 				if substr("`idtype'",1,3) == "str" & substr("`idtypeNew'",1,3) != "str" {
 
-					tostring newID , replace
-					replace  newID = "" if newID == "."
+					tostring `newid' , replace
+					replace  `newid' = "" if `newid' == "."
 				}
 
-				*If ID var is numeric but the newID is loaded as string
+				*If ID var is numeric but the newid is loaded as string
 				else if substr("`idtype'",1,3) != "str" & substr("`idtypeNew'",1,3) == "str" {
 
 					* Check if [tostringok] is specificed:
@@ -618,23 +734,23 @@
 					else {
 
 						* Create a local with all non-numeric values
-						levelsof newID if missing(real(newID)), local(NaN_values) clean
+						levelsof `newid' if missing(real(`newid')), local(NaN_values) clean
 
 						* Output error message
-						di as error "{phang}The ID variable `idvar' is numeric but newID has these non-numeric values: `NaN_values'. Update newID to only contain numeric values or see option tostringok.{p_end}"
+						di as error "{phang}The ID variable `idvar' is numeric but newid has these non-numeric values: `NaN_values'. Update newid to only contain numeric values or see option tostringok.{p_end}"
 						error 109
 						exit
 					}
 				}
 
 				*After making sure that type is ok, update the IDs
-				replace `idvar' = newID if !missing(newID)
+				replace `idvar' = `newid' if !missing(`newid')
 
 
 
 				/******************
 					Section 6.3
-					Test that values in newID
+					Test that values in newid
 					were neither used twice
 					nor already existed
 				******************/
