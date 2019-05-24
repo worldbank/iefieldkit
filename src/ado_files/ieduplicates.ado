@@ -47,7 +47,16 @@
 
 			*Put idvar in a local with a more descriptive name
 			local idvar `varlist'
-
+			
+			* Test that values are missing in idvar
+			cap assert(!missing(`idvar'))
+			if _rc {
+				noi di as error "{phang}There are missing values in the ID_varname [`idvar']. Those values most be removed or solved before this command can be used.{p_end}"
+				noi di ""
+				error 198
+				exit
+			}
+			
 			** Making one macro with all variables that will be
 			*  imported and exported from the Excel file
 			local argumentVars `idvar' `uniquevars' `keepvars'
