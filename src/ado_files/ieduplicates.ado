@@ -508,6 +508,9 @@
 
 			foreach id of local list_dup_ids {
 
+				*ID might have spaces, create local without spaces to use in macro names
+				local nospaceid = subinstr("`id'"," ", "",.)
+
 				*Count differently if string or numeric var
 				cap confirm numeric variable `idvar'
 				if !_rc {
@@ -535,11 +538,11 @@
 					*Truncate list when longer than 256 to fit in old Stata string formats.
 					*255-29 (characters for " ||| List truncated, use iecompdup for full list")= 226
 					if strlen("`diffvars'") > 256 {
-						local difflist_`id'  = substr("`r(diffvars)'" ,1 ,207) + " ||| List truncated, use iecompdup for full list"
+						local difflist_`nospaceid'  = substr("`r(diffvars)'" ,1 ,207) + " ||| List truncated, use iecompdup for full list"
 					}
 					else {
 						*List of diff is short enough to show in its entirety
-						local difflist_`id' "`diffvars'"
+						local difflist_`nospaceid' "`diffvars'"
 					}
 				}
 			}
@@ -590,10 +593,10 @@
 					*Count differently if string or numeric var
 					cap confirm numeric variable `idvar'
 					if !_rc {
-						replace `listofdiffs' = "`difflist_`id''" if `idvar' == `id'
+						replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == `id'
 					}
 					else {
-						replace `listofdiffs' = "`difflist_`id''" if `idvar' == "`id'"
+						replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == "`id'"
 					}
 				}
 
