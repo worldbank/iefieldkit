@@ -205,10 +205,25 @@
 				*Load excel file. Load all vars as string and use metadata from Section 1
 				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow
 
+				ds
+				local existingExcelVarsRaw  `r(varlist)' // before fixing case
+
+				*Test that the ID variable is in the imported report
+				if `:list idvar in existingExcelVarsRaw' == 0 {
+
+					noi display as error "{phang}The ID variable `idvar' does not exist in the previously exported Excle file. If you renamed the ID variable you need to rename it manually in the Excel report or start a new Excel report by renaming or moving the original report, then run the command again and create a new file and manually copy any corrections from the old file to the new. If you changed the ID variable you need to start with a new report.{p_end}"
+					noi di ""
+					error 111
+					exit
+
+				}
+
+				local existingExcelVarsRaw : list existingExcelVarsRaw - idvar
+
 				*For backward comapitbility after allowing user to change names on
 				* vars, only use lower case, but do not change name of idvar
-				ds `idvar', not
-				foreach var in `r(varlist)' {
+
+				foreach var of local existingExcelVarsRaw {
 					local lowcase = lower("`var'")
 					if ("`var'"!="`lowcase'") rename `var' `lowcase'  // Will throw error if name is the same
 				}
@@ -254,16 +269,6 @@
 				*Copy a list of all variables in the imported report to the local existingExcelVars
 				ds
 				local existingExcelVars  `r(varlist)'
-
-				*Test that the ID variable is in the imported report
-				if `:list idvar in existingExcelVars' == 0 {
-
-					noi display as error "{phang}The ID variable `idvar' does not exist in the previously exported Excle file. If you renamed the ID variable you need to rename it manually in the Excel report or start a new Excel report by renaming or moving the original report, then run the command again and create a new file and manually copy any corrections from the old file to the new. If you changed the ID variable you need to start with a new report.{p_end}"
-					noi di ""
-					error 111
-					exit
-
-				}
 
 				*Test that the unique variables are in the imported report
 				if `:list uniquevars in existingExcelVars' == 0 {
