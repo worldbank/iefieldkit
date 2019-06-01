@@ -10,8 +10,8 @@
 	- [ ] 3.3 **Update version locals in iefieldkit** - In the _iefieldkit.ado_ file, update the _version_ and _versionDate_ locals at the top of the file.
 	- [ ] 3.4 **Create a .zip file** - Create a .zip file with all ado-files and help files in the folder you just created in the archive folder. Then remove all files but the .zip file from the archive folder.
 - [ ] 4. **Email Prof. Baum** - Email the .zip file created in step 3.4 to **kit.baum@bc.edu**.
-	- [ ] 9a - If any commands are added or deleted, make note of that in the email.
-	- [ ] 9b - If any of the meta info (title, description, keywords, version or authour/contact) has changed then include those updates in your email.
+	- [ ] 4.1 - If any commands are added or deleted, make note of that in the email.
+	- [ ] 4.2 - If any of the meta info (title, description, keywords, version or authour/contact) has changed then include those updates in your email.
 - [ ] 5. **Draft release note** - Go to the [release notes](https://github.com/worldbank/iefieldkit/releases) and draft a new release note for the new version. Follow the format from previous releases with links to [issues](https://github.com/worldbank/iefieldkit/issues) solved.
 - [ ] 6. **Wait for publication confirmation** - Do not proceed pass this step until Prof. Baum has confirmed that the new version is uploaded to the servers.
 - [ ] 7. **Merge version branch to *master*** - If step 2 and 3 was done correctly, then there should not be any merge conflicts in this step.
