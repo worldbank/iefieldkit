@@ -578,7 +578,15 @@
 
 				//Assign the listdiff values
 				foreach id of local list_dup_ids {
-					replace `listofdiffs' = "`difflist_`id''" if `idvar' == `id'
+
+					*Count differently if string or numeric var
+					cap confirm numeric variable `idvar'
+					if !_rc {
+						replace `listofdiffs' = "`difflist_`id''" if `idvar' == `id'
+					}
+					else {
+						replace `listofdiffs' = "`difflist_`id''" if `idvar' == "`id'"
+					}
 				}
 
 
