@@ -500,7 +500,14 @@
 
 			foreach id of local list_dup_ids {
 
-				count if `idvar' == `id'
+				*Count differently if string or numeric var
+				cap confirm numeric variable `idvar'
+				if !_rc {
+					count if `idvar' == `id'
+				}
+				else {
+					count if `idvar' == "`id'"
+				}
 
 				*Check if duplicated id has more than 2 duplicates, as iecompdup must be run manually to check difference when there is more than 2 observations with same ID
 				if `r(N)' > 2 {
