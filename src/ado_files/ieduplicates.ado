@@ -203,7 +203,15 @@
 			if `fileExists' {
 
 				*Load excel file. Load all vars as string and use metadata from Section 1
-				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow case(lower)
+				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow
+
+				*For backward comapitbility after allowing user to change names on
+				* vars, only use lower case, but do not change name of idvar
+				ds `idvar', not
+				foreach var in `r(varlist)' {
+					local lowcase = lower("`var'")
+					if ("`var'"!="`lowcase'") rename `var' `lowcase'  // Will throw error if name is the same
+				}
 
 				*Drop empty rows that otherwise create error in merge that requires unique key
 				tempvar count_nonmissing_values
@@ -509,7 +517,17 @@
 
 			foreach id of local list_dup_ids {
 
-				count if `idvar' == `id'
+				*ID might have spaces, create local without spaces to use in macro names
+				local nospaceid = subinstr("`id'"," ", "",.)
+
+				*Count differently if string or numeric var
+				cap confirm numeric variable `idvar'
+				if !_rc {
+					count if `idvar' == `id'
+				}
+				else {
+					count if `idvar' == "`id'"
+				}
 
 				*Check if duplicated id has more than 2 duplicates, as iecompdup must be run manually to check difference when there is more than 2 observations with same ID
 				if `r(N)' > 2 {
@@ -529,11 +547,11 @@
 					*Truncate list when longer than 256 to fit in old Stata string formats.
 					*255-29 (characters for " ||| List truncated, use iecompdup for full list")= 226
 					if strlen("`diffvars'") > 256 {
-						local difflist_`id'  = substr("`r(diffvars)'" ,1 ,207) + " ||| List truncated, use iecompdup for full list"
+						local difflist_`nospaceid'  = substr("`r(diffvars)'" ,1 ,207) + " ||| List truncated, use iecompdup for full list"
 					}
 					else {
 						*List of diff is short enough to show in its entirety
-						local difflist_`id' "`diffvars'"
+						local difflist_`nospaceid' "`diffvars'"
 					}
 				}
 			}
@@ -580,7 +598,15 @@
 
 				//Assign the listdiff values
 				foreach id of local list_dup_ids {
-					replace `listofdiffs' = "`difflist_`id''" if `idvar' == `id'
+
+					*Count differently if string or numeric var
+					cap confirm numeric variable `idvar'
+					if !_rc {
+						replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == `id'
+					}
+					else {
+						replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == "`id'"
+					}
 				}
 
 
