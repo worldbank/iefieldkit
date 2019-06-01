@@ -194,7 +194,15 @@
 			if `fileExists' {
 
 				*Load excel file. Load all vars as string and use metadata from Section 1
-				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow case(lower)
+				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow
+
+				*For backward comapitbility after allowing user to change names on
+				* vars, only use lower case, but do not change name of idvar
+				ds `idvar', not
+				foreach var in `r(varlist)' {
+					local lowcase = lower("`var'")
+					if ("`var'"!="`lowcase'") rename `var' `lowcase'  // Will throw error if name is the same
+				}
 
 				*Drop empty rows that otherwise create error in merge that requires unique key
 				tempvar count_nonmissing_values
