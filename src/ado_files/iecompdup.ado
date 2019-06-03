@@ -1,4 +1,4 @@
-*! version 1.1 20MAY2019  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.2 1JUN2019  DIME Analytics dimeanalytics@worldbank.org
 
 	capture program drop iecompdup
 	program iecompdup , rclass
@@ -38,11 +38,11 @@
 
 					** Use that length when explicitly setting the format in
 					*  order to prevent information lost
-					tostring `varlist', replace format(%`length'.0f)
+					tostring `varlist', replace format(%`length'.0f) force
 				}
 			}
 
-			* Testing that the ID variable is a string before constinueing the command
+			* Testing that the ID variable is a string before continueing the command
 			cap confirm string variable `varlist'
 			if _rc {
 				di as error "{phang}This error message is not due to incorrect specification from you. This message follows a failed check that the command is working properly. If you get this error, please send an email to kbjarkefur@worldbank.org including the follwoing message 'ID var was not succesfully turned in to a string without information loss in iecompdup.' and include whatever other data you do not mind sharing.{p_end}"

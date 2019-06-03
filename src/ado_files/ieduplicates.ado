@@ -1,4 +1,4 @@
-*! version 1.1 20MAY2019  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.2 1JUN2019  DIME Analytics dimeanalytics@worldbank.org
 
 	capture program drop ieduplicates
 	program ieduplicates , rclass
@@ -47,6 +47,15 @@
 
 			*Put idvar in a local with a more descriptive name
 			local idvar `varlist'
+
+			* Test that values are missing in idvar
+			cap assert(!missing(`idvar'))
+			if _rc {
+				noi di as error "{phang}There are missing values in the ID variable [`idvar']. Those values must be removed or solved before this command can be used. Click the link - {stata browse if missing(`idvar')} - to browse the observations for which the ID variable is missing so that they can be addressed.{p_end}"
+				noi di ""
+				error 198
+				exit
+			}
 
 			** Making one macro with all variables that will be
 			*  imported and exported from the Excel file
@@ -194,7 +203,30 @@
 			if `fileExists' {
 
 				*Load excel file. Load all vars as string and use metadata from Section 1
-				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow case(lower)
+				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow
+
+				ds
+				local existingExcelVarsRaw  `r(varlist)' // before fixing case
+
+				*Test that the ID variable is in the imported report
+				if `:list idvar in existingExcelVarsRaw' == 0 {
+
+					noi display as error "{phang}The ID variable `idvar' does not exist in the previously exported Excle file. If you renamed the ID variable you need to rename it manually in the Excel report or start a new Excel report by renaming or moving the original report, then run the command again and create a new file and manually copy any corrections from the old file to the new. If you changed the ID variable you need to start with a new report.{p_end}"
+					noi di ""
+					error 111
+					exit
+
+				}
+
+				local existingExcelVarsRaw : list existingExcelVarsRaw - idvar
+
+				*For backward comapitbility after allowing user to change names on
+				* vars, only use lower case, but do not change name of idvar
+
+				foreach var of local existingExcelVarsRaw {
+					local lowcase = lower("`var'")
+					if ("`var'"!="`lowcase'") rename `var' `lowcase'  // Will throw error if name is the same
+				}
 
 				*Drop empty rows that otherwise create error in merge that requires unique key
 				tempvar count_nonmissing_values
@@ -237,16 +269,6 @@
 				*Copy a list of all variables in the imported report to the local existingExcelVars
 				ds
 				local existingExcelVars  `r(varlist)'
-
-				*Test that the ID variable is in the imported report
-				if `:list idvar in existingExcelVars' == 0 {
-
-					noi display as error "{phang}The ID variable `idvar' does not exist in the previously exported Excle file. If you renamed the ID variable you need to rename it manually in the Excel report or start a new Excel report by renaming or moving the original report, then run the command again and create a new file and manually copy any corrections from the old file to the new. If you changed the ID variable you need to start with a new report.{p_end}"
-					noi di ""
-					error 111
-					exit
-
-				}
 
 				*Test that the unique variables are in the imported report
 				if `:list uniquevars in existingExcelVars' == 0 {
@@ -500,7 +522,17 @@
 
 			foreach id of local list_dup_ids {
 
-				count if `idvar' == `id'
+				*ID might have spaces, create local without spaces to use in macro names
+				local nospaceid = subinstr("`id'"," ", "",.)
+
+				*Count differently if string or numeric var
+				cap confirm numeric variable `idvar'
+				if !_rc {
+					count if `idvar' == `id'
+				}
+				else {
+					count if `idvar' == "`id'"
+				}
 
 				*Check if duplicated id has more than 2 duplicates, as iecompdup must be run manually to check difference when there is more than 2 observations with same ID
 				if `r(N)' > 2 {
@@ -520,11 +552,11 @@
 					*Truncate list when longer than 256 to fit in old Stata string formats.
 					*255-29 (characters for " ||| List truncated, use iecompdup for full list")= 226
 					if strlen("`diffvars'") > 256 {
-						local difflist_`id'  = substr("`r(diffvars)'" ,1 ,207) + " ||| List truncated, use iecompdup for full list"
+						local difflist_`nospaceid'  = substr("`r(diffvars)'" ,1 ,207) + " ||| List truncated, use iecompdup for full list"
 					}
 					else {
 						*List of diff is short enough to show in its entirety
-						local difflist_`id' "`diffvars'"
+						local difflist_`nospaceid' "`diffvars'"
 					}
 				}
 			}
@@ -571,7 +603,15 @@
 
 				//Assign the listdiff values
 				foreach id of local list_dup_ids {
-					replace `listofdiffs' = "`difflist_`id''" if `idvar' == `id'
+
+					*Count differently if string or numeric var
+					cap confirm numeric variable `idvar'
+					if !_rc {
+						replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == `id'
+					}
+					else {
+						replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == "`id'"
+					}
 				}
 
 
