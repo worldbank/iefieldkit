@@ -1,4 +1,4 @@
-*! version 1.2 1JUN2019  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.3 7JUN2019  DIME Analytics dimeanalytics@worldbank.org
 
 	capture program drop iecompdup
 	program iecompdup , rclass
