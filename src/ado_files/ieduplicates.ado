@@ -559,6 +559,15 @@
 						local difflist_`nospaceid' "`diffvars'"
 					}
 				}
+
+				*Count differently if string or numeric var
+				cap confirm numeric variable `idvar'
+				if !_rc {
+					replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == `id'
+				}
+				else {
+					replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == "`id'"
+				}
 			}
 
 			*Test if there are any duplicates
@@ -604,14 +613,7 @@
 				//Assign the listdiff values
 				foreach id of local list_dup_ids {
 
-					*Count differently if string or numeric var
-					cap confirm numeric variable `idvar'
-					if !_rc {
-						replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == `id'
-					}
-					else {
-						replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == "`id'"
-					}
+
 				}
 
 
