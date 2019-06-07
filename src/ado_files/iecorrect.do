@@ -171,28 +171,75 @@ cap program drop iecorrect
 ================================================================================	
 ==============================================================================*/
 
+/*******************************************************************************	
+	Import data set
+*******************************************************************************/
+
+**********************************************************************
+* Load data set for each check and keep only the lines filled by user
+**********************************************************************
+cap program drop prepdata
+	program 	 prepdata, rclass
 	
+	syntax anything using/
+		
+		** Load the sheet that was filled
+		cap import excel "`using'", sheet("`anything'") firstrow allstring clear
+
+		* If the sheet does not exist, throw an error
+		if _rc == 601 {
+			noi di as error `"{phang}No sheet caled "`anything'" was found. Do not delete this sheet. If no `anything' corrections are needed, leave this sheet empty.{p_end}"'
+			error 601
+		}
+		
+		** Specify the main column for each type of correction -- this column
+		** indicates the name of the variable to be corrected
+		if "`anything'" == "numeric" 	local mainvar	numvar
+		if "`anything'" == "string" 	local mainvar	strvar
+		if "`anything'" == "other" 		local mainvar	strvar
+		if "`anything'" == "drop" 		local mainvar 	idvalue
+		
+
+		* Drop blank lines that were imported by mistake
+		drop if missing(`mainvar')
+		
+		** Return the name of the main variable to be used in the next steps
+		return local mainvar `mainvar'
+		
+	end
 	
 /*******************************************************************************	
 	Initial checks
 *******************************************************************************/
 	
+****************************************
+* Check that sheet is filled correctly
+****************************************
+	
 cap program drop checksheets
 	program 	 checksheets, rclass
 	
 	syntax using/, type(string)
+	
+		** Import the data set and clean blank observations (commmand defined below)
 		prepdata `type' using "`using'"
+		
+		* Identify the type of correction being made
 		local mainvar `r(mainvar)'
 
-		* Are any observations still left?
+		** Check that there are corrections of this type to be made
 		count
+		
+		* If there are
 		if `r(N)' > 0 {
 				
 			* Check that the sheet is filled correctly
 			*checkcol`type'
+			
 			*If everything works, save the sheet in a tempfile and create a local saying to run the next command
 			local	`type'corr	1 
 						
+			* List the variables that will need corrections of this type
 			levelsof `mainvar', local(`type'vars)
 			
 			if inlist("`type'", "string", "numeric", "other") {
@@ -202,58 +249,75 @@ cap program drop checksheets
 				noi di as result `"{phang}Observations to be dropped: ``type'vars'{p_end}"'
 			}		
 		}
+		
+		* If there are no corrections to be made, save that information and move forward
 		else if `r(N)' == 0 {
 			local	`type'corr	0
 			noi di as result `"{phang}No `type' variables to correct.{p_end}"'
 		}
 		
-		return local `type'vars 	``type'vars'
+		** Save the information
+		* Whether there are any corrections to be made
 		return local `type'corr 	``type'corr'	
+		
+		* What are the names of the variables to be corrected
+		return local `type'vars 	``type'vars'
+		
+		
 	
 	end
 	
-/**********************************
+***********************************
 * Check variables in numeric sheet
-**********************************
+***********************************
+
 cap program drop checkcolnum
 	program 	 checkcolnum
 	
 	syntax [anything]
 	
-		*Are all the necessary variables there?
+		* Are all the necessary variables there?
 		foreach var in numvar idvalue valuecurrent value {
 			cap confirm var `var'
 			if _rc {
-				noi di as error `"{phang}Column `var' not found in `type' sheet. This variable must not be erased from the template. If you do not wish to use it, leave it blank."'
+				noi di as error `"{phang}Column `var' not found in `type' sheet. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
 			}
 		}
 		
-		* Keep only those variables in the data set
+		* Keep only those variables in the data set -- the user may have added notes
+		* that are not relevant for the command
 		keep numvar idvalue valuecurrent value 
 		
-		* Check that variables have the correct format
+		** Check that variables have the correct format
 		cap confirm string var numvar
 		if _rc {
-			noi di as error `"{phang}Column numvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected."'
+			noi di as error `"{phang}Column numvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
 		}
 				
-		cap confirm 	   var valuecurrent
-		if !rc {
+		* valuecurrent col may not have been filled, so only check if it was
+		count if !missing(valuecurrent)
+		if r(N) > 0 {
 			cap confirm string var valuecurrent
 			if !_rc {
-				noi di as error `"{phang}Column valuecurrent in `type' sheet is not numeric. This column should contain the values of the `type' variables to be corrected."'
+				noi di as error `"{phang}Column valuecurrent in `type' sheet is not numeric. This column should contain the values of the `type' variables to be corrected.{p_end}"'
 			}
 		}
 		
 		cap confirm string var value
 		if !_rc {
-			noi di as error `"{phang}Column value in `type' sheet is not numeric. This column should contain the correct values of the `type' variables to be corrected."'
+			noi di as error `"{phang}Column value in `type' sheet is not numeric. This column should contain the correct values of the `type' variables to be corrected.{p_end}"'
 		}
 		
-		* Either idvalue or valuecurrent need to be specified
+		** Either idvalue or valuecurrent need to be specified
+		count if missing(idvalue) & missing(valuecurrent)
+		
+		if r(N) > 0 {
+			noi di as error `"{phang}There are `r(N)' lines in the `type' sheet where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for numeric corrections to be made correctly.{p_end}"'
+		}
+		
 		
 	end		
-*/
+
 /*******************************************************************************	
 	Write the do file with corrections
 *******************************************************************************/
@@ -274,35 +338,6 @@ cap program drop doheader
 			file close  `doname'	
 			
 	end
-
-***************
-* Prep data set
-***************
-cap program drop prepdata
-	program 	 prepdata, rclass
-	
-	syntax anything using/
-		
-		cap import excel "`using'", sheet("`anything'") firstrow allstring clear
-
-		* If the sheet does not exist, throw an error
-		if _rc == 601 {
-			noi di as error `"{phang}No sheet caled "`anything'" was found. Do not delete this sheet. If no `anything' corrections are needed, leave this sheet empty.{p_end}"'
-			error 601
-		}
-		
-		if "`anything'" == "numeric" 	local mainvar	numvar
-		if "`anything'" == "string" 	local mainvar	strvar
-		if "`anything'" == "other" 		local mainvar	strvar
-		if "`anything'" == "drop" 		local mainvar 	idvalue
-		
-
-		* Drop extra lines in the excel
-		drop if missing(`mainvar')
-		
-		return local mainvar `mainvar'
-		
-	end
 	
 ***************************
 * Write numeric corrections
@@ -313,23 +348,27 @@ cap program drop donumeric
 	syntax , doname(string) idvar(string)
 		
 	file write  `doname' "** Correct entries in numeric variables " _n								// <---- Writing in do file here
-			
+	
+	* Count the number of lines in the current data set: each line will be one
+	* line in the do-file
 	count
 	
 	* Write one line of correction for each line in the data set
 		forvalues row = 1/`r(N)' {
 			
-		* Write one line of correction for each line in the data set					
+			* Calculate the user-specified inputs for this line
 			local var			= numvar[`row']
 			local valuecurrent 	= valuecurrent[`row']
 			local value		 	= value[`row']
 			local idvalue		= idvalue[`row']
 
-			* The listed variable will be corrected to new value, but a condition needs to be specified.
+			** Prepare a local with the line to be written in the do-file
+			
+			* The main variable will be corrected to new value, but a condition needs to be specified.
 			* The condition can be one ID variable and/or one current value.
 			local line	`"replace `var' = `value' if "'												
 			
-			* If it's an ID variables, write that in the do file
+			* If it's an ID variables, write that in the line
 			if "`idvalue'" != "" {
 				local line	`"`line' `idvar' == `idvalue'"'											
 				
@@ -339,12 +378,13 @@ cap program drop donumeric
 				}
 			}
 			
-			* If there's a current value, write that in the do file.
+			* If there's a current value, write that in the line
 			if "`valuecurrent'" != "" {
 				noi di "enter valuecurrent"
 				local line	`"`line'`var' == `valuecurrent'"'										
 			}
 			
+			** Write the line to the do file
 			file write  `doname' `"`line'"' _n															// <---- Writing in do file here
 		}	
 		
@@ -360,10 +400,14 @@ cap program drop dostring
 
 	file write  `doname'		  "** Correct entries in strin variables " _n								// <---- Writing in do file here
 
-	* Write one line of correction for each line in the data set
+	* Count the number of lines in the current data set: each line will be one
+	* line in the do-file
 	count 
+	
+	* Write one line of correction for each line in the data set
 	forvalues row = 1/`r(N)' {
 		
+		* Identify the user-specified input in that line
 		local var			= strvar[`row']						
 		local valuecurrent 	= valuecurrent[`row']
 		local value		 	= value[`row']
@@ -386,7 +430,7 @@ cap program drop dostring
 			local line	`"`line' `var' == "`valuecurrent'" "'
 		}
 		
-		* Noew add an extra line
+		** Write the line to the do file
 		file write `doname'	`"`line'"'																		// <---- Writing in do file here
 	}
 
@@ -413,7 +457,7 @@ cap program drop dodrop
 			*Confirm that ID var was specified
 			*Confirmed that ID var is the same type as idvaue
 
-			* Noew add an extra line
+			** Write the line to the do file
 			file write `doname'	`"drop if `idvar' == `idvalue' "' _n							// <---- Writing in do file here
 			
 		}
