@@ -66,9 +66,23 @@ qui {
 		error _rc
 	}
 
-	*TODO: add test for report file
-		* folder exists
-		* file type is cvs or file type where we will add csv to name
+	*Get the filename and the file extension type from the report file
+	local r_filename = substr(`"`report'"',`r_lastslash'+1, .)
+	local r_filenametype = substr(`"`r_filename'"',strlen(`"`r_filename'"')-strpos(strreverse(`"`r_filename'"'),".")+1,.)
+
+	*Test what the file extension type is
+	if (`"`r_filenametype'"' == "") {
+		*No file type specified, add .csv
+		local report `"`report'.csv"'
+	}
+	else if (`"`r_filenametype'"' != ".csv") {
+		*Incorrect file type added. Throw error
+		noi di as error `"{phang}The report  file [`report'] may only have the file extension .csv.{p_end}"'
+		error 601
+	}
+	else {
+		* All is correct, do nothing
+	}
 
 	*Tempfile that will be used to write the report
 	tempfile report_tempfile
