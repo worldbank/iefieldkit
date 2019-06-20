@@ -15,6 +15,14 @@ qui {
 		Test input
 	***********************************************/
 
+	* Test for form file is xls or xsls
+	local surveyformtyp = substr(`"`surveyform'"',strlen(`"`surveyform'"')-strpos(strreverse(`"`surveyform'"'),".")+1,.)
+	noi di `"`surveyformtyp'"'
+	if !(`"`surveyformtyp'"' == ".xls" | `"`surveyformtyp'"' == ".xlsx") {
+		noi di as error `"{phang}The survey form file [`surveyform'] must have file extension .xls or .xlsx specified in the option.{p_end}"'
+		error 601
+	}
+
 	*Test that the form file exists
 	cap confirm file "`surveyform'"
 	if _rc {
@@ -23,7 +31,6 @@ qui {
 		error _rc
 	}
 
-	*TODO: add test for form file is xls or xsls
 	*TODO: add test for report file
 		* folder exists
 		* file type is cvs or file type where we will add csv to name
