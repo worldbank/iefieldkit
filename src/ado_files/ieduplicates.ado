@@ -1,4 +1,4 @@
-*! version 1.2 1JUN2019  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.3 7JUN2019  DIME Analytics dimeanalytics@worldbank.org
 
 	capture program drop ieduplicates
 	program ieduplicates , rclass
@@ -516,51 +516,6 @@
 			tempvar dup
 			duplicates tag `idvar', gen(`dup')
 
-
-			*Add list of variables that are different between the two duplicated id value in excel report in 'listofdiffs' variable
-			levelsof `idvar' if `dup' > 0, local(list_dup_ids)
-
-			foreach id of local list_dup_ids {
-
-				*ID might have spaces, create local without spaces to use in macro names
-				local nospaceid = subinstr("`id'"," ", "",.)
-
-				*Count differently if string or numeric var
-				cap confirm numeric variable `idvar'
-				if !_rc {
-					count if `idvar' == `id'
-				}
-				else {
-					count if `idvar' == "`id'"
-				}
-
-				*Check if duplicated id has more than 2 duplicates, as iecompdup must be run manually to check difference when there is more than 2 observations with same ID
-				if `r(N)' > 2 {
-
-					local difflist_`id'	"Cannot list differences for duplicates for which 3 or more observations has the same ID, use command iecompdup instead."
-				}
-				else {
-
-					*Get the list of variables that are different between the two duplicated id value
-					qui iecompdup `idvar', id(`id')
-
-					local diffvars "`r(diffvars)'"
-
-					* Only checking variables in the original data set and not variables in Excel report.
-					local diffvars: list diffvars - excelVars
-
-					*Truncate list when longer than 256 to fit in old Stata string formats.
-					*255-29 (characters for " ||| List truncated, use iecompdup for full list")= 226
-					if strlen("`diffvars'") > 256 {
-						local difflist_`nospaceid'  = substr("`r(diffvars)'" ,1 ,207) + " ||| List truncated, use iecompdup for full list"
-					}
-					else {
-						*List of diff is short enough to show in its entirety
-						local difflist_`nospaceid' "`diffvars'"
-					}
-				}
-			}
-
 			*Test if there are any duplicates
 			cap assert `dup'==0
 			if _rc {
@@ -573,20 +528,16 @@
 				*Keep if observation is part of duplicate group
 				keep if `dup' != 0
 
-				if `fileExists'  {
-					* If Excel file exists keep excel vars and
-					* variables passed as arguments in the
-					* command
-					keep 	`argumentVars' `excelVars'
-				}
-				else {
-					* Keep only variables passed as arguments in
-					* the command and the string ID var as no Excel file exists
-					keep 	`argumentVars'
+				/******************
+					Generate the report variables if they do not exist
+				******************/
 
-					*Generate the excel variables used for indicating correction
-					foreach excelvar of local excelVars {
+				*Generate the excel variables used for indicating correction
+				foreach excelvar of local excelVars {
 
+					*Test if variable exist. Only does not exist if no report yet or an olde report
+					cap confirm variable `excelvar'
+					if _rc {
 						*Create all variables apart from duplistid as string vars
 						if inlist("`excelvar'", "`duplistid'", "`newid'") {
 							gen `excelvar' = .
@@ -595,25 +546,45 @@
 							gen `excelvar' = ""
 						}
 					}
-
-
 				}
 
-
-
-				//Assign the listdiff values
+				*Add list of variables that are different between the two duplicated id value in excel report in 'listofdiffs' variable
+				levelsof `idvar', local(list_dup_ids)
 				foreach id of local list_dup_ids {
+					*ID might have spaces, create local without spaces to use in macro names
+					local nospaceid = subinstr("`id'"," ", "",.)
 
 					*Count differently if string or numeric var
 					cap confirm numeric variable `idvar'
-					if !_rc {
-						replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == `id'
+					if !_rc count if `idvar' == `id'
+					else count if `idvar' == "`id'"
+
+					*Check if duplicated id has more than 2 duplicates, as iecompdup must be run manually to check difference when there is more than 2 observations with same ID
+					if `r(N)' > 2 {
+						local difflist_`id'	"Cannot list differences for duplicates for which 3 or more observations has the same ID, use command iecompdup instead."
 					}
 					else {
-						replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == "`id'"
+						*Get the list of variables that are different between the two duplicated id value
+						qui iecompdup `idvar', id(`id')
+						local diffvars "`r(diffvars)'"
+
+						* Only checking variables in the original data set and not variables in Excel report.
+						local diffvars: list diffvars - excelVars
+
+						*Truncate list when longer than 256 to fit in old Stata string formats.
+						*255-29 (characters for " ||| List truncated, use iecompdup for full list")= 226
+						if strlen("`diffvars'") > 256 local difflist_`nospaceid'  = substr("`r(diffvars)'" ,1 ,207) + " ||| List truncated, use iecompdup for full list"
+						else local difflist_`nospaceid' "`diffvars'" //List of diff is short enough to show in its entirety
 					}
+
+					*Count differently if string or numeric var
+					cap confirm numeric variable `idvar'
+					if !_rc replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == `id'
+					else replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == "`id'"
 				}
 
+				* Delete all variables that is not supposed to be exported
+				keep 	`argumentVars' `excelVars'
 
 				/******************
 					Section 5.3
