@@ -15,18 +15,74 @@ qui {
 		Test input
 	***********************************************/
 
+	/*********
+		Test survey file input
+	*********/
+
+	* Test for form file is xls or xsls
+	local surveyformtype = substr(`"`surveyform'"',strlen(`"`surveyform'"')-strpos(strreverse(`"`surveyform'"'),".")+1,.)
+	if !(`"`surveyformtype'"' == ".xls" | `"`surveyformtype'"' == ".xlsx") {
+		noi di as error `"{phang}The survey form file [`surveyform'] must have file extension .xls or .xlsx specified in the option.{p_end}"'
+		error 601
+	}
+
 	*Test that the form file exists
 	cap confirm file "`surveyform'"
 	if _rc {
 
-		noi di as error "{phang}The SCTO questionnaire form file in surveyform(`surveyform') was not found.{p_end}"
+		noi di as error `"{phang}The SCTO questionnaire form file in surveyform(`surveyform') was not found.{p_end}"'
 		error _rc
 	}
 
-	*TODO: add test for form file is xls or xsls
-	*TODO: add test for report file
-		* folder exists
-		* file type is cvs or file type where we will add csv to name
+	/*********
+		Test report file input
+	*********/
+
+	*********
+	*Get the folder for the report file
+
+	**Start by finding the position of the last forward slash. If no forward
+	* slash exist, it is zero, then replace to to string len so it is never
+	* the min() below.
+	local r_f_slash = strpos(strreverse(`"`report'"'),"\")
+	if   `r_f_slash' == 0 local r_f_slash = strlen(`"`report'"')
+
+	**Start by finding the position of the last backward slash. If no backward
+	* slash exist, it is zero, then replace to to string len so it is never
+	* the min() below.
+	local r_b_slash = strpos(strreverse(`"`report'"'),"/")
+	if   `r_b_slash' == 0 local r_b_slash = strlen(`"`report'"')
+
+	*Get the last slash in the report file path regardless of back or forward
+	local r_lastslash = strlen(`"`report'"')-min(`r_f_slash',`r_b_slash')
+
+	*Get the folder
+	local r_folder = substr(`"`report'"',1,`r_lastslash')
+
+    *Test that the folder for the report file exists
+	mata : st_numscalar("r(dirExist)", direxists("`r_folder'"))
+	if `r(dirExist)' == 0  {
+		noi di as error `"{phang}The folder used in [`report'] does not exist.{p_end}"'
+		error _rc
+	}
+
+	*Get the filename and the file extension type from the report file
+	local r_filename = substr(`"`report'"',`r_lastslash'+1, .)
+	local r_filenametype = substr(`"`r_filename'"',strlen(`"`r_filename'"')-strpos(strreverse(`"`r_filename'"'),".")+1,.)
+
+	*Test what the file extension type is
+	if (`"`r_filenametype'"' == "") {
+		*No file type specified, add .csv
+		local report `"`report'.csv"'
+	}
+	else if (`"`r_filenametype'"' != ".csv") {
+		*Incorrect file type added. Throw error
+		noi di as error `"{phang}The report  file [`report'] may only have the file extension .csv.{p_end}"'
+		error 601
+	}
+	else {
+		* All is correct, do nothing
+	}
 
 	*Tempfile that will be used to write the report
 	tempfile report_tempfile
