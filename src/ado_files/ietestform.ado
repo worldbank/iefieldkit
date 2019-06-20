@@ -15,10 +15,13 @@ qui {
 		Test input
 	***********************************************/
 
+	/*********
+		Test survey file input
+	*********/
+
 	* Test for form file is xls or xsls
-	local surveyformtyp = substr(`"`surveyform'"',strlen(`"`surveyform'"')-strpos(strreverse(`"`surveyform'"'),".")+1,.)
-	noi di `"`surveyformtyp'"'
-	if !(`"`surveyformtyp'"' == ".xls" | `"`surveyformtyp'"' == ".xlsx") {
+	local surveyformtype = substr(`"`surveyform'"',strlen(`"`surveyform'"')-strpos(strreverse(`"`surveyform'"'),".")+1,.)
+	if !(`"`surveyformtype'"' == ".xls" | `"`surveyformtype'"' == ".xlsx") {
 		noi di as error `"{phang}The survey form file [`surveyform'] must have file extension .xls or .xlsx specified in the option.{p_end}"'
 		error 601
 	}
