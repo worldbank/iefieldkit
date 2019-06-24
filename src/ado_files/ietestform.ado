@@ -63,7 +63,7 @@ qui {
 	mata : st_numscalar("r(dirExist)", direxists("`r_folder'"))
 	if `r(dirExist)' == 0  {
 		noi di as error `"{phang}The folder used in [`report'] does not exist.{p_end}"'
-		error _rc
+		error 601
 	}
 
 	*Get the filename and the file extension type from the report file
