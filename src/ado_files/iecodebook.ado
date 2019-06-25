@@ -126,7 +126,7 @@ qui {
 
 		// Stack up all the lines of code from all the dofiles in a dataset
 		foreach dofile in `trim' {
-			import delimited "`dofile'" , clear
+			import delimited "`dofile'" , clear delimiters("ß")
 			append using `a'
 			tempfile a
 				save `a' , replace
@@ -163,7 +163,7 @@ qui {
 			keep `theKeepList' // Keep only variables mentioned in the dofiles
 			compress
 			local savedta = subinstr(`"`using'"',".xlsx",".dta",.)
-			save `savedta' , replace
+			save "`savedta'" , replace
 	}
 
 	// Create XLSX file with all current/remaining variable names and labels; use SurveyCTO syntax for sheet names and column names
@@ -293,7 +293,7 @@ qui {
 		if `rc' != 0 error 603
 
 	// Reload original data
-	use `allData' , clear
+	use "`allData'" , clear
 	// Success message
 	if "`template'" == "" local template "current"
 	if `c(N)' > 1 di as err `"Codebook for `template' data created using {browse "`using'": `using'}"'
