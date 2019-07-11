@@ -76,7 +76,7 @@ and optionally produces an export version of the dataset with only variables use
 {p 2 4}{cmdab:iecodebook append} /// {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
 {help using} {it:"/path/to/codebook.xlsx"} /// {break}
-, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} /// {break}
+, {bf:clear} {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} /// {break}
 [{opt miss:ingvalues(# "label" [# "label" ...])}] [{bf:keepall}]{p_end}
 
 
@@ -106,6 +106,8 @@ For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "
 {marker Options}{...}
 {synopthdr:Append Options}
 {synoptline}
+{synopt:{opt clear}}This option is required, as {cmdab:iecodebook append} will clear the data in memory.{p_end}
+{break}
 {synopt:{opt surveys()}}{bf:This option is always required in append.} When creating a template {it:or} reading a codebook from {it:"/path/to/codebook.xlsx"},
 {cmdab:iecodebook} will use this list of names to identify each survey in the codebook.
 {it:These must be exactly one word} for each survey, and they must come in the same order as the filepaths.
@@ -219,8 +221,8 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {p 4 6}{inp:iecodebook append}
 {break}{inp:"data1.dta" "data2.dta"}
 {break}{inp: using "codebook.xlsx"}
-{break}{inp: , surveys(First Second)}
-{break}{stata iecodebook append "data1.dta" "data2.dta" using "codebook.xlsx" , surveys(First Second):(Run)}{p_end}
+{break}{inp: , clear surveys(First Second)}
+{break}{stata iecodebook append "data1.dta" "data2.dta" using "codebook.xlsx" , clear surveys(First Second):(Run)}{p_end}
 
 {dlgtab 0:Export: Creating a simple codebook}
 {break}
