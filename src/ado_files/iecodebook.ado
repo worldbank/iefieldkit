@@ -82,7 +82,7 @@ cap program drop iecodebook_export
 qui {
 
 	// Return a warning if there are lots of variables
-	if `c(k)' >= 1000 di as err "This dataset has `c(k)' variables. This may take a long time! Consider subsetting your variables first."
+	if `c(k)' >= 1000 di "This dataset has `c(k)' variables. This may take a long time! Consider subsetting your variables first."
 
 	// Template Setup
 		if `"`anything'"' != "" {
@@ -296,7 +296,7 @@ qui {
 	use "`allData'" , clear
 	// Success message
 	if "`template'" == "" local template "current"
-	if `c(N)' > 1 di as err `"Codebook for `template' data created using {browse "`using'": `using'}"'
+	if `c(N)' > 1 di `"Codebook for `template' data created using {browse "`using'": `using'}"'
 
 } // end qui
 end
@@ -453,8 +453,8 @@ qui {
 		}
 
 	// Success message
-	di as err `"Applied codebook to `survey' data using `using'"'
-	di as err `"{bf:Note: strings are sanitized} – any backticks, quotation marks, dollar signs, and line breaks have been removed."'
+	di `"Applied codebook to `survey' data using `using'"'
+	di `"{bf:Note: strings are sanitized} – any backticks, quotation marks, dollar signs, and line breaks have been removed."'
 
 } // end qui
 end
@@ -472,8 +472,8 @@ qui {
 		local drop "drop"
 	}
 	else {
-		di as err "You have turned off the [drop] default, which means you are forcing all variables to be appended even if you did not manually harmonize them."
-		di as err "Make sure to check the resulting dataset carefully. Forcibly appending data, especially of different types, may result in loss of information."
+		di "You have turned off the [drop] default, which means you are forcing all variables to be appended even if you did not manually harmonize them."
+		di "Make sure to check the resulting dataset carefully. Forcibly appending data, especially of different types, may result in loss of information."
 		local drop ""
 	}
 
@@ -527,7 +527,7 @@ qui {
 	}
 
 	// Success message
-	di as err `"Applied codebook using `using' to `anything' – check your data carefully!"'
+	di `"Applied codebook using `using' to `anything' – check your data carefully!"'
 
 	// Final codebook
 	local using = subinstr("`using'",".xlsx","_appended.xlsx",.)
