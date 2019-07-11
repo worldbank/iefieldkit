@@ -464,15 +464,21 @@ end
 cap program drop iecodebook_append
 	program 	 iecodebook_append
 
-	syntax [anything] [using/] , surveys(string asis) [template] [noDROP] [*]
+	syntax [anything] [using/] , surveys(string asis) [clear] [template] [KEEPall] [*]
 qui {
 
+  // Require [clear] option
+  if "`clear'" == "" {
+    di as err "[iecodebook] loads new data from disk. Therefore you must specify the [clear] option."
+    error 4
+  }
+
 	// Optional no-drop
-	if "`drop'" == "" {
+	if "`keepall'" == "" {
 		local drop "drop"
 	}
 	else {
-		di "You have turned off the [drop] default, which means you are forcing all variables to be appended even if you did not manually harmonize them."
+		di "You have specified [keepall], which means you are forcing all variables to be appended even if you did not manually harmonize them."
 		di "Make sure to check the resulting dataset carefully. Forcibly appending data, especially of different types, may result in loss of information."
 		local drop ""
 	}
