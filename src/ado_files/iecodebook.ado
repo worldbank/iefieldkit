@@ -468,7 +468,7 @@ cap program drop iecodebook_append
 qui {
 
   // Require [clear] option
-  if "`clear'" == "" {
+  if "`clear'" == "" & "`template'" == "" {
     di as err "[iecodebook] loads new data from disk. Therefore you must specify the [clear] option."
     error 4
   }
