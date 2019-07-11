@@ -377,7 +377,7 @@ qui {
 
 			if "`theName'" 	!= "" {
 				// Drop if requested
-				if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == "drop") local allDrops "`allDrops' `theName'"
+				if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == ".") local allDrops "`allDrops' `theName'"
 				// Otherwise process requested changes as long as there is something specified
 				else {
 					if "`theRename'" 	!= ""	local allRenames1 	= `"`allRenames1' `theName'"'
