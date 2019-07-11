@@ -449,7 +449,7 @@ qui {
 
 		// Rename variables and catch errors
 		cap rename (`allRenames1') (`allRenames2')
-		if _rc != 0 {
+		if _rc != 0 & !("`allRenames1'" == "" & "`allRenames2'" == "") {
 			di as err "That codebook contains a rename conflict. Please check and retry. {bf:iecodebook} will exit."
 			rename (`allRenames1') (`allRenames2')
 		}
