@@ -15,10 +15,10 @@ cap program drop iecodebook
 		di " / /  __/ /__/ /_/ / /_/ /  __/ /_/ / /_/ / /_/ / ,<		"
 		di "/_/\___/\___/\____/\__,_/\___/_.___/\____/\____/_/|_| 		"
 		di " "
-		di as err "Welcome to {bf:iecodebook}!"
-		di as err "It seems you have left out something important – the codebook!"
-		di as err "If you are new to {bf:iecodebook}, please {stata h iecodebook:view the help file}."
-		di as err "Enjoy!"
+		di "Welcome to {bf:iecodebook}!"
+		di "It seems you have left out something important – the codebook!"
+		di "If you are new to {bf:iecodebook}, please {stata h iecodebook:view the help file}."
+		di "Enjoy!"
 		exit
 	}
 	else if _rc != 0 {
@@ -529,7 +529,7 @@ qui {
 			label val survey survey
 			label var survey "Data Source"
 			save `final_data' , replace emptyok
-		di as err `"..."'
+		di `"..."'
 	}
 
 	// Success message
