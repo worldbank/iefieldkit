@@ -306,7 +306,9 @@ end
 cap program drop iecodebook_apply
 	program 	 iecodebook_apply
 
-	syntax [anything] [using/] , [template] [drop] [survey(string asis)] [MISSingvalues(string asis)]
+	syntax [anything] [using/] , [template] [drop] ///
+    [survey(string asis)] [MISSingvalues(string asis)]
+
 qui {
 	// Setups
 
@@ -318,10 +320,10 @@ qui {
 			preserve
 				clear
 				set obs 1
-				gen survey = 0
-					label var survey "(Ignore this placeholder, but do not delete it. Thanks!)"
+				gen _template = 0
+					label var _template "(Ignore this placeholder, but do not delete it. Thanks!)"
 					label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
-					label val survey yesno
+					label val _template yesno
 				iecodebook export using "`using'"
 			restore
 		// Append current dataset
@@ -464,8 +466,16 @@ end
 cap program drop iecodebook_append
 	program 	 iecodebook_append
 
-	syntax [anything] [using/] , surveys(string asis) [clear] [template] [KEEPall] [*]
+	syntax [anything] [using/] , ///
+    surveys(string asis) [GENerate(string asis)] ///
+    [clear] [template] [KEEPall] [*]
+
 qui {
+
+  // Generated variable is "survey" if not otherwise specified
+  if "`generate'" == "" {
+    local generate = "survey"
+  }
 
   // Require [clear] option
   if "`clear'" == "" & "`template'" == "" {
@@ -496,10 +506,10 @@ qui {
 		preserve
 			clear
 			set obs 1
-			gen survey = 0
-				label var survey "(Ignore this placeholder, but do not delete it. Thanks!)"
+			gen `generate' = 0
+				label var `generate' "Data Source (do not edit this row)"
 				label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
-				label val survey yesno
+				label val `generate' yesno
 			iecodebook export using "`using'"
 		restore
 		// append one codebook per survey
@@ -523,14 +533,14 @@ qui {
 
 		iecodebook apply using "`using'" , survey(`survey') `drop' `options'
 
-		gen survey = `x'
+		gen `generate' = `x'
 		tempfile next_data
 			save `next_data' , replace
 		use `final_data' , clear
 		append using `next_data'
-			label def survey `x' "`survey'" , add
-			label val survey survey
-			label var survey "Data Source"
+			label def `generate' `x' "`survey'" , add
+			label val `generate' `generate'
+			label var `generate' "Data Source"
 			save `final_data' , replace emptyok
 		di `"..."'
 	}
