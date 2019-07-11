@@ -484,6 +484,8 @@ qui {
 	}
 
 	// Final dataset setup
+  tempfile raw_data
+    save `raw_data'
 	clear
 	tempfile final_data
 		save `final_data' , replace emptyok
@@ -507,6 +509,7 @@ qui {
 			local filepath : word `x' of `anything'
 			iecodebook export "`filepath'" using "`using'", template(`survey')
 		}
+  use `raw_data' , clear
 	exit
 	}
 
