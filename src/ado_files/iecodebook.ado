@@ -19,7 +19,7 @@ cap program drop iecodebook
 		di "It seems you have left out something important – the codebook!"
 		di "If you are new to {bf:iecodebook}, please {stata h iecodebook:view the help file}."
 		di "Enjoy!"
-		exit
+		error 100
 	}
 	else if _rc != 0 {
 		syntax [anything] using/ , [*]
@@ -36,20 +36,21 @@ cap program drop iecodebook
 			di as err "That template already exists. {bf:iecodebook} does not allow you to overwrite an existing template,"
 			di as err " since you may already have set it up. If you are {bf:sure} that you want to delete this template,"
 			di as err `" you need to manually remove it from `file'. {bf:iecodebook} will now exit."'
-			exit
+      error 602
 		}
 
 		cap confirm new file "`using'"
 		if _rc {
 			di as error "{bf:iecodebook} could not create file `using'. Check that the file path is correctly specified."
-			exit
+			error 601
 		}
 	}
 
 	// Make sure some command is specified
 	if !inlist("`subcommand'","template","apply","append","export") {
 		di as err "{bf:iecodebook} requires [template], [apply], [append], or [export] to be specified with a target [using] codebook. Type {bf:help iecodebook} for details."
-	}
+    error 197
+  }
 
 	// Execute subcommand
 	iecodebook_`subcommand' `anything' using "`using'" , `options'
@@ -451,7 +452,7 @@ qui {
 		cap rename (`allRenames1') (`allRenames2')
 		if _rc != 0 & !("`allRenames1'" == "" & "`allRenames2'" == "") {
 			di as err "That codebook contains a rename conflict. Please check and retry. {bf:iecodebook} will exit."
-			rename (`allRenames1') (`allRenames2')
+			rename (`allRenames1') (`allRenames2') // Throw error from [rename] directly
 		}
 
 	// Success message
