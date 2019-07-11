@@ -77,7 +77,7 @@ and optionally produces an export version of the dataset with only variables use
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
 {help using} {it:"/path/to/codebook.xlsx"} /// {break}
 , {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} /// {break}
-[{opt miss:ingvalues(# "label" [# "label" ...])}] [{bf:nodrop}]{p_end}
+[{opt miss:ingvalues(# "label" [# "label" ...])}] [{bf:keepall}]{p_end}
 
 
 {dlgtab 0:Export: Creating a full codebook of the current data}
@@ -115,7 +115,7 @@ When importing, this will also be used to create a variable {it:survey} identify
 {synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every value-labeled answer.{p_end}
 {break}
-{synopt:{opt nodrop}}{bf:Specifying this option will keep all variables from all datasets. Use carefully!}
+{synopt:{opt keep:all}}{bf:Specifying this option will keep all variables from all datasets. Use carefully!}
 Forcibly appending data, especially of different types, can result in loss of information.
 For example, appending a same-named string variable to a numeric variable may cause data deletion.
 (This is common when one dataset has all missing values for a given variable.)
