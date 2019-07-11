@@ -121,11 +121,11 @@ This must be specified during both the template and append steps.{p_end}
 {synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every value-labeled answer.{p_end}
 {break}
-{synopt:{opt keep:all}}{bf:Specifying this option will keep all variables from all datasets. Use carefully!}
+{synopt:{opt keep:all}}By default, {cmdab:iecodebook append} will only retain those variables with a new {it:name} explicitly written in the codebook to signify manual review for harmonization.
+{bf:Specifying this option will keep all variables from all datasets. Use carefully!}
 Forcibly appending data, especially of different types, can result in loss of information.
 For example, appending a same-named string variable to a numeric variable may cause data deletion.
-(This is common when one dataset has all missing values for a given variable.)
-By default, {cmdab:iecodebook append} will {bf:drop} all variables without a new {it:name} explicitly written in the codebook to signify manual review for harmonization.{p_end}
+(This is common when one dataset has all missing values for a given variable.){p_end}
 {synoptline}
 
 {break}
