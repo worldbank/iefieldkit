@@ -61,30 +61,30 @@ and optionally produces an export version of the dataset with only variables use
 
 {p 2}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
 
-{p 2 4 }{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"} /// {break}
+{p 2 4 }{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"} {break}
 , [{bf:drop}] [{opt miss:ingvalues(# "label" [# "label" ...])}]{p_end}
 
 {p 2 4 } {it:Note: This function operates on the dataset that is open in the current Stata session.}{p_end}
 
 {dlgtab 0:Append: Setting up and using a codebook to harmonize and append multiple datasets}
 
-{p 2 4}{cmdab:iecodebook template} /// {break}
-{it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
-{help using} {it:"/path/to/codebook.xlsx"} /// {break}
-, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}{p_end}
+{p 2 4}{cmdab:iecodebook template} {break}
+{it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
+{help using} {it:"/path/to/codebook.xlsx"} {break}{p_end}
+{p 2 4}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} [{opth gen:erate(varname)}]{p_end}
 
-{p 2 4}{cmdab:iecodebook append} /// {break}
-{it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
-{help using} {it:"/path/to/codebook.xlsx"} /// {break}
-, {bf:clear} {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} /// {break}
-[{opt miss:ingvalues(# "label" [# "label" ...])}] [{bf:keepall}]{p_end}
+{p 2 4}{cmdab:iecodebook append} {break}
+{it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
+{help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
+{p 2 3}, {bf:clear} {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} {break}
+[{opth gen:erate(varname)} {opt miss:ingvalues(# "label" [# "label" ...])} {bf:keepall}]{p_end}
 
 
 {dlgtab 0:Export: Creating a full codebook of the current data}
 
-{p 2 4}{cmdab:iecodebook export} [{help if}] [{help in}] /// {break}
-{help using} {it:"/path/to/codebook.xlsx"} ,  /// {break}
-[{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
+{p 2 4}{cmdab:iecodebook export} [{help if}] [{help in}] {break}
+{help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
+{p 2 3}, [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
 
 {hline}
 
@@ -107,13 +107,16 @@ For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "
 {marker Options}{...}
 {synopthdr:Append Options}
 {synoptline}
-{synopt:{opt clear}}This option is required, as {cmdab:iecodebook append} will clear the data in memory.{p_end}
+{synopt:{opt clear}}{bf:This option is required}, as {cmdab:iecodebook append} will clear the data in memory.{p_end}
 {break}
 {synopt:{opt surveys()}}{bf:This option is always required in append.} When creating a template {it:or} reading a codebook from {it:"/path/to/codebook.xlsx"},
 {cmdab:iecodebook} will use this list of names to identify each survey in the codebook.
 {it:These must be exactly one word} for each survey, and they must come in the same order as the filepaths.
 Names must have no spaces or special characters.
-When importing, this will also be used to create a variable {it:survey} identifying the source of each observation.{p_end}
+When importing, this will also be used to create a variable identifying the source of each observation.{p_end}
+{break}
+{synopt:{opt gen:erate()}}This option names the variable identifying the source of each observation. If left blank, the default is "survey".
+This must be specified during both the template and append steps.{p_end}
 {break}
 {synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every value-labeled answer.{p_end}
@@ -150,7 +153,7 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c TLC}{hline 91}{c TRC}
 {col 3}{c |}{col 4} name{col 12}label{col 22}choices{col 31}name:current{col 45}label:current{col 60}choices:current{col 80}recode:current{col 95}{c |}
 {col 3}{c LT}{hline 91}{c RT}
-{col 3}{c |}{col 4} survey{col 12}{it:(Ignore this placeholder, but do not delete it.)}{col 45}{col 60} {col 80} {col 95}{c |}
+{col 3}{c |}{col 4} _template{col 12}{it:(Ignore this placeholder, but do not delete it.)}{col 45}{col 60} {col 80} {col 95}{c |}
 {col 3}{c |}{col 4} {col 95}{c |}
 {col 3}{c |}{col 4} car{col 12}Name{col 22}{col 31}make{col 45}Make and Model{col 60} {col 80} {col 95}{c |}
 {col 3}{c |}{col 4}  |{col 12}  |{col 22}{it:value}{col 31}{col 45}{col 60} {col 80}{it:recode}{col 95}{c |}
@@ -204,7 +207,7 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c TLC}{hline 91}{c TRC}
 {col 3}{c |}{col 4} name{col 12}label{col 22}choices{col 31}name:First{col 45}recode:First{col 60}name:Second{col 80}recode:Second{col 95}{c |}
 {col 3}{c LT}{hline 91}{c RT}
-{col 3}{c |}{col 4} survey{col 12}{it:(Ignore this placeholder, but do not delete it.)}{col 45}{col 60} {col 80} {col 95}{c |}
+{col 3}{c |}{col 4} survey{col 12}{it:Data Source (do not edit this row)}{col 45}{col 60} {col 80} {col 95}{c |}
 {col 3}{c |}{col 4} {col 95}{c |}
 {col 3}{c |}{col 4} cost{col 12}Cost{col 22}{col 31}price{col 45}{col 60}cost{col 80}{col 95}{c |}<- {it:align old}
 {col 3}{c |}{col 4}  |{col 12}  |{col 22}{it:value}{col 31}{col 45}{col 60} {col 80}{col 95}{c |}   {it:names}
