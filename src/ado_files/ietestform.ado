@@ -9,7 +9,7 @@ qui {
 
 	//preserve
 
-	syntax , Surveyform(string) Report(string) [STATAlanguage(string) date replace]
+	syntax [using/] ,  Report(string) [Surveyform(string) STATAlanguage(string) date replace]
 
 	/***********************************************
 		Test input
@@ -18,6 +18,18 @@ qui {
 	/*********
 		Test survey file input
 	*********/
+
+	*Test and finally combine the using and surveyform for backward compatibility
+	if `"`using'"' != "" & `"`surveyform'"'  != "" {
+		noi di as error `"{phang}Option surveyform() [`surveyform'] cannot be used together with [using `using']. surveyform() is an undocumneted option allowed for backward compatibility reasons only.{p_end}"'
+		error 198
+	}
+	else if `"`using'`surveyform'"' == "" {
+		noi di as error `"{phang}You must specifiy your survey form with [using].{p_end}"'
+		error 198
+	}
+	local surveyform `"`using'`surveyform'"'
+
 
 	* Test for form file is xls or xsls
 	local surveyformtype = substr(`"`surveyform'"',strlen(`"`surveyform'"')-strpos(strreverse(`"`surveyform'"'),".")+1,.)
