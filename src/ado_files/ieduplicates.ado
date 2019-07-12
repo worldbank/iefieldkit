@@ -829,7 +829,7 @@
 			noi di	"{phang}There are no unresolved duplicates in this data set. The data set is returned with `idvar' uniquely and fully identifying the data set.{p_end}"
 		}
 		else if "`force'" == "" {
-			noi di as error	"{phang}There are `numDup' duplicated IDs still unresolved. IDs still containing duplicates: `dup_ids'. The unresolved duplicate observations were exported in the Excel file. The {it:force} option is required to return the data set without those duplicates.{p_end}"
+			noi di as error	"{phang}There are `numDup' duplicated IDs still unresolved. IDs still containing duplicates: `dup_ids'. The unresolved duplicate observations were exported in the Excel file. Variable `idvar' does not uniquely identify the current data set. The {it:force} option is required to return the data set without those duplicates.{p_end}"
 			error 198
 			restore
 			exit
