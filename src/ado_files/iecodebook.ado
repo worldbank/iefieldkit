@@ -81,7 +81,9 @@ end
 cap program drop iecodebook_export
   program    iecodebook_export
 
-  syntax [anything] [using/] [if] [in], [template(string asis)] [trim(string asis)]
+  syntax [anything] [using/] [if] [in] ///
+    , [merge] [template(string asis)] [trim(string asis)]
+
 qui {
 
   // Return a warning if there are lots of variables
@@ -211,7 +213,7 @@ qui {
       local theN : word count `allVariables'
 
       local templateN ""
-      if `TEMPLATE' {
+      if `TEMPLATE' & "`merge'" == "" {
         import excel "`using'", clear first sheet("survey")
 
         count
@@ -242,6 +244,20 @@ qui {
         replace type`template'    = `"`theType'"'      in `=`i'`templateN''
         replace choices`template' = `"`theChoices'"'   in `=`i'`templateN''
       }
+
+    if `TEMPLATE' & "`merge'" != "" {
+      tempfile newdata
+        save `newdata' , replace
+
+      import excel "`using'", clear first sheet("survey")
+
+      qui lookfor name
+      clonevar name`template' = `: word 2 of `r(varlist)''
+        label var name`template' "name`template_colon'"
+
+      merge 1:1 name`template' using `newdata' , nogen 
+      replace name`template' = "" if type`template' == ""
+    }
 
     // Export variable information to "survey" sheet
     cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
@@ -489,7 +505,7 @@ cap program drop iecodebook_append
 
   syntax [anything] [using/] , ///
     surveys(string asis) [GENerate(string asis)] ///
-    [clear] [template] [KEEPall] [*]
+    [clear] [merge] [template] [KEEPall] [*]
 
 qui {
 
@@ -516,7 +532,7 @@ qui {
 
   // Final dataset setup
   tempfile raw_data
-    save `raw_data'
+    save `raw_data' , emptyok
   clear
   tempfile final_data
     save `final_data' , replace emptyok
@@ -536,9 +552,10 @@ qui {
     // append one codebook per survey
     local x = 0
     foreach survey in `surveys' {
+      if `x' == 1 local mergeopt "`merge'"
       local ++x
       local filepath : word `x' of `anything'
-      iecodebook export "`filepath'" using "`using'", template(`survey')
+      iecodebook export "`filepath'" using "`using'", template(`survey') `mergeopt'
     }
   use `raw_data' , clear
   exit
