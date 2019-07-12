@@ -6,9 +6,9 @@
 
 	qui {
 
-		syntax varname ,  FOLder(string) UNIQUEvars(varlist) [KEEPvars(varlist) tostringok droprest nodaily SUFfix(string) ///
+		syntax varname ,  FOLder(string) UNIQUEvars(varlist) [force KEEPvars(varlist) tostringok droprest nodaily SUFfix(string) ///
 		duplistid(string) datelisted(string) datefixed(string) correct(string) drop(string) newid(string) initials(string) notes(string) listofdiffs(string)]
-
+		
 		version 11.0
 
 		*Add version of Stata fix
@@ -480,7 +480,7 @@
 				*Display error message if assertion is not true and some duplicates in the Excel file are no longer in the data set
 				if _rc {
 
-					display as error "{phang}One or several observations in the Excel report are no longer found in the data set. Always run ieduplicates on the raw data set that include all the duplicates, both new duplicates and those you have already identified. After removing duplicates, save the data set using a different name. You might also recieve this error if you are using an old ieduplicates Excel report on a new data set.{p_end}"
+					display as error "{phang}One or several observations in the Excel report are no longer found in the data set. Always run ieduplicates on the raw data set that include all the duplicates, both new duplicates and those you have already identified. After removing duplicates, save the data set using a different name. You might also receive this error if you are using an old ieduplicates Excel report on a new data set.{p_end}"
 					error 9
 					exit
 				}
@@ -815,7 +815,7 @@
 		cap isid `idvar'
 		if _rc {
 
-			di as error "{phang}The data set is not returned with `idvar' uniquely and fully identifying the data set. Please report this bug to kbjarkefur@worldbank.org{p_end}"
+			di as error "{phang}The data set is not returned with `idvar' uniquely and fully identifying the data set. Please report this bug to dimeanalytics@worldbank.org{p_end}"
 			error 119
 			exit
 
@@ -825,9 +825,16 @@
 		local numDup	= `:list sizeof dup_ids'
 
 		if `numDup' == 0 {
+			noi di "numDup == 0"
 			noi di	"{phang}There are no unresolved duplicates in this data set. The data set is returned with `idvar' uniquely and fully identifying the data set.{p_end}"
 		}
-		else {
+		else if "`force'" == "" {
+			noi di as error	"{phang}There are `numDup' duplicated IDs still unresolved. IDs still containing duplicates: `dup_ids'. The unresolved duplicate observations were exported in the Excel file. The {it:force} option is required to return the data set without those duplicates.{p_end}"
+			error 198
+			restore
+			exit
+		}
+		else if "`force'" != "" {
 			noi di	"{phang}There are `numDup' duplicated IDs still unresolved. IDs still containing duplicates: `dup_ids'. The unresolved duplicate observations were exported in the Excel file. The data set is returned without those duplicates and with `idvar' uniquely and fully identifying the data set.{p_end}"
 		}
 
