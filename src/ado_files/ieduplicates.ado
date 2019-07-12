@@ -302,8 +302,8 @@
 				* Trim string input
 				replace `correct' = strtrim(`correct')
 				replace `drop' 	  = strtrim(`drop')
-				
-				* Make string input lower case and change "y" to "yes"
+
+				* 1. Trim the string of leading and trailing spaces, 2. make it lower case and 3. change "y" to "yes"
 				replace `correct' = lower(`correct')
 				replace `drop' 	  = lower(`drop')
 				replace `correct' = "yes" if `correct' == "y"
