@@ -9,10 +9,10 @@ cap program drop iecodebook
 
 	cap syntax [anything] using/ , [*]
 	if _rc == 100 {
-		di "    _                     __     __                __		"
+		di "    _                     __     __                __		  "
 		di "   (_)__  _________  ____/ /__  / /_  ____  ____  / /__		"
 		di "  / / _ \/ ___/ __ \/ __  / _ \/ __ \/ __ \/ __ \/ //_/		"
-		di " / /  __/ /__/ /_/ / /_/ /  __/ /_/ / /_/ / /_/ / ,<		"
+		di " / /  __/ /__/ /_/ / /_/ /  __/ /_/ / /_/ / /_/ / ,<		  "
 		di "/_/\___/\___/\____/\__,_/\___/_.___/\____/\____/_/|_| 		"
 		di " "
 		di "Welcome to {bf:iecodebook}!"
@@ -28,7 +28,7 @@ cap program drop iecodebook
 	// Select subcommand
 	gettoken subcommand anything : anything
 
-	// Throw error if codebook exists
+	// Throw error on [template] if codebook already exists
 	if ("`subcommand'" == "template") {
 
 		cap confirm new file "`using'"
@@ -46,7 +46,7 @@ cap program drop iecodebook
 		}
 	}
 
-	// Make sure some command is specified
+	// Make sure some subcommand is specified
 	if !inlist("`subcommand'","template","apply","append","export") {
 		di as err "{bf:iecodebook} requires [template], [apply], [append], or [export] to be specified with a target [using] codebook. Type {bf:help iecodebook} for details."
     error 197
@@ -66,9 +66,11 @@ program iecodebook_template
 
 	// Select the right syntax and pass through to templating options
 	if `"`anything'"' == `""' {
+    // [apply] template if no arguments
 		iecodebook apply using "`using'" , `options' template
 	}
 	else {
+    // [append] template if arguments
 		iecodebook append `anything' using "`using'" , `options' template
 	}
 
@@ -86,14 +88,16 @@ qui {
 	if `c(k)' >= 1000 di "This dataset has `c(k)' variables. This may take a long time! Consider subsetting your variables first."
 
 	// Template Setup
+    // Load dataset if argument
 		if `"`anything'"' != "" {
 			use `anything' , clear
 		}
 
+    // Setup for name of data source
 		if "`template'" != "" {
 			local template_colon ":`template'" 	// colon for titles
-			local template_us "_`template'" 	// underscore for sheet names
-			local TEMPLATE = 1					// flag for template functions
+			local template_us "_`template'" 	  // underscore for sheet names
+			local TEMPLATE = 1					        // flag for template functions
 		}
 		else local TEMPLATE = 0
 
@@ -127,7 +131,19 @@ qui {
 
 		// Stack up all the lines of code from all the dofiles in a dataset
 		foreach dofile in `trim' {
-			import delimited "`dofile'" , clear delimiters("ß")
+			import delimited "`dofile'" , clear varnames(nonames)
+
+      unab allv : *
+      gen v = ""
+
+      foreach v in `allv' {
+        cap tostring `v' , replace
+        replace v = v + `v'
+      }
+
+      keep v
+      rename v v1
+
 			append using `a'
 			tempfile a
 				save `a' , replace
@@ -165,7 +181,7 @@ qui {
 			compress
 			local savedta = subinstr(`"`using'"',".xlsx",".dta",.)
 			save "`savedta'" , replace
-	}
+	} // End [trim] option
 
 	// Create XLSX file with all current/remaining variable names and labels; use SurveyCTO syntax for sheet names and column names
 	preserve
@@ -382,10 +398,10 @@ qui {
 				if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == ".") local allDrops "`allDrops' `theName'"
 				// Otherwise process requested changes as long as there is something specified
 				else {
-					if "`theRename'" 	!= ""	local allRenames1 	= `"`allRenames1' `theName'"'
-					if "`theRename'" 	!= "" 	local allRenames2 	= `"`allRenames2' `theRename'"'
+					if "`theRename'" 	!= ""   local allRenames1 = `"`allRenames1' `theName'"'
+					if "`theRename'" 	!= "" 	local allRenames2 = `"`allRenames2' `theRename'"'
 					if "`theLabel'" 	!= "" 	local allLabels 	= `"`allLabels' `"label var `theName' "`theLabel'" "' "'
-					if "`theChoices'" 	!= "" 	local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
+					if "`theChoices'" != "" 	local allChoices 	= `"`allChoices' "label val `theName' `theChoices'""'
 					if "`theRecode'" 	!= "" 	local allRecodes 	= `"`allRecodes' "recode `theName' `theRecode'""'
 				}
 			}
