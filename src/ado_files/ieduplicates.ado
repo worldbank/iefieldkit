@@ -299,11 +299,9 @@
 					Make sure input is yes or y for the correct and drop columns
 				******************/
 
-				* Trim string input
-				replace `correct' = strtrim(`correct')
-				replace `drop' 	  = strtrim(`drop')
-
 				* 1. Trim the string of leading and trailing spaces, 2. make it lower case and 3. change "y" to "yes"
+				replace `correct' =  trim(`correct')
+				replace `drop' 	  =  trim(`drop')
 				replace `correct' = lower(`correct')
 				replace `drop' 	  = lower(`drop')
 				replace `correct' = "yes" if `correct' == "y"
