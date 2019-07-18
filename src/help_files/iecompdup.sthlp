@@ -18,15 +18,15 @@ Note that this command share wiki article with {help ieduplicates}.
 
 {phang2}
 {cmdab:iecompdup}
-{it:idvariable}
-, {cmdab:id(}{it:string}{cmd:)} [{cmdab:didi:fference} {cmdab:keepdiff:erence}
+{it:id_varname}
+, {cmdab:id(}{it:id_value}{cmd:)} [{cmdab:didi:fference} {cmdab:keepdiff:erence}
 {cmdab:keepoth:er(}{it:varlist}{cmd:)} {cmdab:more2ok}]
 
 {marker opts}{...}
 {synoptset 28}{...}
 {synopthdr:options}
 {synoptline}
-{synopt :{cmdab:id(}{it:string}{cmd:)}}value in the ID variables that is duplicated{p_end}
+{synopt :{cmdab:id(}{it:id_value}{cmd:)}}value of the {it:id_varname} variable that is duplicated{p_end}
 {synopt :{cmdab:didi:fference}}outputs the list with the variables for which the two observation differs. The default is to only store them in a local{p_end}
 {synopt :{cmdab:keepdiff:erence}}drops all but the variables for which the two observations differ{p_end}
 {synopt :{cmdab:keepoth:er(}{it:varlist}{cmd:)}}used together with {cmdab:keepdifference}. Variables included in {it:varlist} are also kept{p_end}
@@ -36,10 +36,10 @@ Note that this command share wiki article with {help ieduplicates}.
 {title:Description}
 
 {pstd}{cmdab:iecompdup} compare all variables for observations that are duplicates in
-ID variable {it:varname} and the duplicated value is {cmdab:id(}{it:string}{cmd:)}. Duplicates can
+the {it:id_varname} variable and the duplicated value is {cmdab:id(}{it:id_value}{cmd:)}. Duplicates can
 be identified and corrected with its sister command {help ieduplicates}. {cmdab:iecompdup}
-is intended to assist in the process of investigating why two observations are duplicates in
-the ID variable, and what correction is appropriate.
+is intended to assist in the process of investigating why two observations are duplicated with respect
+to {it:id_varname}, and what correction is appropriate.
 
 {pstd}{cmdab:iecompdup} returns two locals {cmd:r(matchvars)} and {cmd:r(diffvars)}. {cmd:r(matchvars)} returns
 a list of the names of all variables for which the two observations
@@ -57,11 +57,11 @@ on how to use the command. )
 
 {title:Options}
 
-{phang}{cmdab:id(}{it:string}{cmd:)} is used to specify the ID value that the
+{phang}{cmdab:id(}{it:id_value}{cmd:)} is used to specify the ID value that the
 duplicates share. Both text strings and numeric values are allowed.
 
 {phang}{cmdab:didi:fference} is used to display the list of all variables for which
-the ID variable duplicates differ. The default is to provide this list in a local, and only
+the {it:id_varname} variable duplicates differ. The default is to provide this list in a local, and only
 display the number of variables that differ.
 
 {phang}{cmdab:keepdiff:erence} is used to return the data set with only the ID
@@ -111,7 +111,7 @@ for variable HH_ID. HH_ID holds an ID that was uniquely assigned to each househo
 investigate why two observations were assigned the same ID. iecompdup is a great place to start.
 
 {pmore}Specifying the command as above compares the two observations that both
-have value 55424 in the ID variable. The output displayed will
+have a value of 55424 for variable {it:id_varname}. The output displayed will
 only be number of non-missing variables for which the two observations have identical
 values, and the number of non-missing variables for which the two observations
 have different values. The list of those two sets of variables are stored as locals.
@@ -171,7 +171,7 @@ observations in the data set with the value 55424 for variable HH_ID. This
 time {inp:keepdifference} and {inp:keepother()} are specified. Those two options
 can be used to provide additional information to the field team when following up
 based on solution 2 and solution 3 in example 2. {inp:keepdifference} drops all
-variables apart from the ID variable and the variables in {cmd:r(diffvars)}. Any
+variables apart from {it:id_varname} and the variables in {cmd:r(diffvars)}. Any
 variables in {inp:keepother()} are also kept. All observations apart from the
 duplicates with the ID specified in {inp:id()} are also dropped. This data can be
 exported to excel and sent to a field team that can see how the observations differ.
