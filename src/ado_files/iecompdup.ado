@@ -11,51 +11,9 @@
 
 		preserve
 
-			/****************************
-
-				Turn ID var to string so that the rest of the command works similarly
-
-			****************************/
-
-			* Test if ID variable fully identifies the data (otherwise, the next test will not work)
-			qui count if missing(`varlist')
-			if r(N) != 0 {
-				di as error "{phang}The ID variable contains missing values. The data set is not fully identified.{p_end}"
-				error 459
-				exit
-			}
+			* Turn ID var to string so that the rest of the command works similarly
+			stringid `varlist'
 			
-			* Test if ID variable is numeric or string
-			cap confirm numeric variable `varlist'
-			if !_rc {
-
-				* If numeric, test if all values in ID variable is integer
-				cap assert mod(`varlist',1) == 0
-
-				* This command does not allow numeric ID varaibels that are not integers
-				if _rc {
-					di as error "{phang}The ID variable is only allowed to be either string or only consist of integers. Integer in this context is not the same as the variable type int. Integer in this context means numeric values without decimals. Please consider using integers as your ID or convert your ID variable to a string.{p_end}"
-
-				}
-				else {
-
-					** Find the longest (for integers that is the same as largest)
-					*  number and get its legth.l
-					sum `varlist'
-					local length 	= strlen("`r(max)'")
-
-					** Use that length when explicitly setting the format in
-					*  order to prevent information lost
-					tostring `varlist', replace format(%`length'.0f) force
-				}
-			}
-
-			* Testing that the ID variable is a string before continueing the command
-			cap confirm string variable `varlist'
-			if _rc {
-				di as error "{phang}This error message is not due to incorrect specification from you. This message follows a failed check that the command is working properly. If you get this error, please send an email to kbjarkefur@worldbank.org including the follwoing message 'ID var was not succesfully turned in to a string without information loss in iecompdup.' and include whatever other data you do not mind sharing.{p_end}"
-			}
-
 			* Only keep duplicates with the ID specified
 			keep if  `varlist' == "`id'"
 
@@ -278,3 +236,57 @@
 		}
 	}
 	end
+
+/*******************************************************************************
+	Turn ID var to string so that the rest of the command works similarly
+*******************************************************************************/
+
+capture program drop stringid
+		program 	 stringid
+
+qui {
+	
+	syntax varname
+		
+	* Test if ID variable fully identifies the data (otherwise, the next test will not work)
+	qui count if missing(`varlist')
+	if r(N) != 0 {
+		di as error "{phang}The ID variable contains missing values. The data set is not fully identified.{p_end}"
+		error 459
+		exit
+	}
+			
+	* Test if ID variable is numeric or string
+	cap confirm numeric variable `varlist'
+	if !_rc {
+
+		* If numeric, test if all values in ID variable is integer
+		cap assert mod(`varlist',1) == 0
+
+		* This command does not allow numeric ID variables that are not integers
+		if _rc {
+			di as error "{phang}The ID variable is only allowed to be either string or only consist of integers. Integer in this context is not the same as the variable type int. Integer in this context means numeric values without decimals. Please consider using integers as your ID or convert your ID variable to a string.{p_end}"
+
+		}
+		else {
+
+			** Find the longest (for integers that is the same as largest)
+			*  number and get its legth.l
+			sum `varlist'
+			local length 	= strlen("`r(max)'")
+
+			** Use that length when explicitly setting the format in
+			*  order to prevent information lost
+			tostring `varlist', replace format(%`length'.0f) force
+		}
+	}
+
+		* Testing that the ID variable is a string before continuing the command
+		cap confirm string variable `varlist'
+		if _rc {
+			di as error "{phang}This error message is not due to incorrect specification from you. This message follows a failed check that the command is working properly. If you get this error, please send an email to kbjarkefur@worldbank.org including the follwoing message 'ID var was not succesfully turned in to a string without information loss in iecompdup.' and include whatever other data you do not mind sharing.{p_end}"
+		}
+}
+
+end
+
