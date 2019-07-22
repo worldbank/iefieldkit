@@ -35,7 +35,7 @@ cap program drop iecodebook
     if _rc != 0 {
       di as err "That template already exists. {bf:iecodebook} does not allow you to overwrite an existing template,"
       di as err " since you may already have set it up. If you are {bf:sure} that you want to delete this template,"
-      di as err `" you need to manually remove it from `file'. {bf:iecodebook} will now exit."'
+      di as err `" you need to manually remove it from `using'. {bf:iecodebook} will now exit."'
       error 602
     }
 
@@ -255,7 +255,7 @@ qui {
       clonevar name`template' = `: word 2 of `r(varlist)''
         label var name`template' "name`template_colon'"
 
-      merge 1:1 name`template' using `newdata' , nogen 
+      merge 1:1 name`template' using `newdata' , nogen
       replace name`template' = "" if type`template' == ""
     }
 
