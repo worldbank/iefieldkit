@@ -58,8 +58,8 @@ cap program drop iecodebook
   // Throw error on [template] if codebook already exists
   if ("`subcommand'" == "template") {
 
-    cap confirm new file "`using'"
-    if _rc != 0 {
+    cap confirm file "`using'"
+    if _rc == 0 {
       di as err "That template already exists. {bf:iecodebook} does not allow you to overwrite an existing template,"
       di as err " since you may already have set it up. If you are {bf:sure} that you want to delete this template,"
       di as err `" you need to manually remove it from `using'. {bf:iecodebook} will now exit."'
@@ -68,6 +68,21 @@ cap program drop iecodebook
 
     cap confirm new file "`using'"
     if _rc {
+      di as error "{bf:iecodebook} could not create file `using'. Check that the file path is correctly specified."
+      error 601
+    }
+  }
+
+  if ("`subcommand'" == "export") {
+
+    cap confirm file "`using'"
+    if (_rc == 0) & (!strpos("`options'","replace")) {
+      di as err "That codebook already exists. {bf:iecodebook export} will only overwrite it if you specify the [replace] option."
+      error 602
+    }
+
+    cap confirm new file "`using'"
+    if (_rc != 0) & (!strpos("`options'","replace")) {
       di as error "{bf:iecodebook} could not create file `using'. Check that the file path is correctly specified."
       error 601
     }
@@ -108,8 +123,9 @@ end
 cap program drop iecodebook_export
   program    iecodebook_export
 
-  syntax [anything] [using/] [if] [in] ///
-    , [merge] [template(string asis)] [trim(string asis)]
+  syntax [anything] [using/] [if] [in]  ///
+    , [replace] [trim(string asis)]     /// User-specified options
+      [merge] [template(string asis)]   // Programming options
 
 qui {
 

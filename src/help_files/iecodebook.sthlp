@@ -84,7 +84,7 @@ and optionally produces an export version of the dataset with only variables use
 
 {p 2 4}{cmdab:iecodebook export} [{help if}] [{help in}] {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
-{p 2 3}, [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
+{p 2 3}, [{bf:replace}] [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
 
 {hline}
 
@@ -136,6 +136,8 @@ For example, appending a same-named string variable to a numeric variable may ca
 {marker Options}{...}
 {synopthdr:Export Options}
 {synoptline}
+{synopt:{opt replace}}This option allows {cmdab:iecodebook export} to overwrite an existing codebook.{p_end}
+{break}
 {synopt:{opt trim()}} Takes one or more dofiles and trims the current dataset to only include variables used in those dofiles,
 and saves an identically named .dta file at the location specified in {it:"/path/to/codebook.xlsx"}.{p_end}
 {synoptline}
