@@ -95,7 +95,22 @@ cap program drop iecodebook
   }
 
   // Execute subcommand
+  iecodebook_labclean // Do this first in case export or template syntax
   iecodebook_`subcommand' `anything' using "`using'" , `options'
+  iecodebook_labclean // Do this again to clean up after apply or append
+
+end
+
+// Label cleaning ------------------------------------------------------------------------------
+
+cap program drop iecodebook_labclean
+program iecodebook_labclean
+
+  qui labelbook , problems
+  local unused `r(unused)'
+  foreach l of local unused {
+    la drop `l'
+  }
 
 end
 
