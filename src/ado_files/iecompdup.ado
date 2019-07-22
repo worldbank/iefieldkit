@@ -17,19 +17,9 @@
 			* Only keep duplicates with the ID specified
 			keep if  `varlist' == "`id'"
 
-			/****************************
-
-				Test if input is correct
-
-			****************************/
-
-
-			if "`keepdifference'" == "" & "`keepother'" != "" {
-
-				noi di as error "{phang}Not allowed to specify keepother() without specifying keepdifference{p_end}"
-				noi di ""
-				error 197
-				exit
+			* Test input on keepother() option
+			if "`keepother'" != "" {
+				testkeep, `keepdifference' keepother("`keepother'")
 			}
 
 			****************************************
@@ -286,6 +276,28 @@ qui {
 		if _rc {
 			di as error "{phang}This error message is not due to incorrect specification from you. This message follows a failed check that the command is working properly. If you get this error, please send an email to kbjarkefur@worldbank.org including the follwoing message 'ID var was not succesfully turned in to a string without information loss in iecompdup.' and include whatever other data you do not mind sharing.{p_end}"
 		}
+}
+
+end
+
+/*******************************************************************************
+	Test input on "keep" options
+*******************************************************************************/
+
+capture program drop testkeep
+		program		 testkeep
+	
+qui {
+
+	syntax anything, [keepother(varlist) keepdifference]
+
+	if "`keepdifference'" == "" & "`keepother'" != "" {
+
+		noi di as error "{phang}Not allowed to specify option {inp:keepother()} without specifying {inp:keepdifference}.{p_end}"
+		noi di ""
+		error 197
+		exit
+	}
 }
 
 end
