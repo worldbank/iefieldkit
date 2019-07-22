@@ -17,6 +17,14 @@
 
 			****************************/
 
+			* Test if ID variable fully identifies the data (otherwise, the next test will not work)
+			qui count if missing(`varlist')
+			if r(N) != 0 {
+				di as error "{phang}The ID variable contains missing values. The data set is not fully identified.{p_end}"
+				error 459
+				exit
+			}
+			
 			* Test if ID variable is numeric or string
 			cap confirm numeric variable `varlist'
 			if !_rc {
