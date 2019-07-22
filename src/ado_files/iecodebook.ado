@@ -28,6 +28,33 @@ cap program drop iecodebook
   // Select subcommand
   gettoken subcommand anything : anything
 
+  // Check folder exists
+
+  	// Start by finding the position of the last forward slash. If no forward
+  	* slash exist, it is zero, then replace to to string len so it is never
+  	* the min() below.
+  	local r_f_slash = strpos(strreverse(`"`using'"'),"\")
+  	if   `r_f_slash' == 0 local r_f_slash = strlen(`"`using'"')
+
+  	// Start by finding the position of the last backward slash. If no backward
+  	* slash exist, it is zero, then replace to to string len so it is never
+  	* the min() below.
+  	local r_b_slash = strpos(strreverse(`"`using'"'),"/")
+  	if   `r_b_slash' == 0 local r_b_slash = strlen(`"`using'"')
+
+  	// Get the last slash in the report file path regardless of back or forward
+  	local r_lastslash = strlen(`"`using'"')-min(`r_f_slash',`r_b_slash')
+
+  	// Get the folder
+  	local r_folder = substr(`"`using'"',1,`r_lastslash')
+
+    // Test that the folder for the report file exists
+  	mata : st_numscalar("r(dirExist)", direxists("`r_folder'"))
+  	if `r(dirExist)' == 0  {
+  		noi di as error `"{phang}The folder [`r_folder'/] does not exist.{p_end}"'
+  		error 601
+  	}
+
   // Throw error on [template] if codebook already exists
   if ("`subcommand'" == "template") {
 
