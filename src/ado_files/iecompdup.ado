@@ -11,6 +11,10 @@
 
 		preserve
 
+/*******************************************************************************
+	Test inputs and prepare data
+*******************************************************************************/
+
 			* Turn ID var to string so that the rest of the command works similarly
 			stringid `varlist'
 			
@@ -26,7 +30,8 @@
 			count
 			
 			* If less then 2, there are no duplicates and it makes no sense to use the command 
-			if `r(N)' < 2  {
+			if `r(N)' == 2 next
+			else if `r(N)' < 2  {
 				testless `varlist', id("`id'") ndup(`r(N)')
 			}
 			* If more then 2, other options need to be specified so the command can compare observations
@@ -51,84 +56,80 @@
 					keep if inlist(`uniquevar', `: word 1 of "`uniquevals'" ', `: word 2 of "`uniquevals'" ')
 				}
 			}
+			
+/*******************************************************************************
+	Compare all variables
+*******************************************************************************/
 
+			*Initiate the locals
+			local match
+			local difference
 
+			* Go over all variables and see if they are non missing for at least one of the variables
+			foreach var of varlist _all {
 
-			/****************************
+				cap assert missing(`var')
 
-				Compare all variables
+				** If not missing for at lease one of the observations, test
+				*  if they are identical across the duplicates or not, and
+				*  store variable name in appropriate local
+				if _rc {
 
-			****************************/				
-
-				*Initiate the locals
-				local match
-				local difference
-
-				* Go over all variables and see if they are non missing for at least one of the variables
-				foreach var of varlist _all {
-
-					cap assert missing(`var')
-
-					** If not missing for at lease one of the observations, test
-					*  if they are identical across the duplicates or not, and
-					*  store variable name in appropriate local
-					if _rc {
-
-						* Are the variables identical
-						if `var'[1] == `var'[2] {
-							local match `match' `var'
-						}
-						else {
-							local difference `difference' `var'
-						}
+					* Are the variables identical
+					if `var'[1] == `var'[2] {
+						local match `match' `var'
 					}
-					* If missing for all duplicates, then drop that variable
 					else {
-						drop `var'
+						local difference `difference' `var'
 					}
 				}
-
-				* Remove the ID var from the match list, it is match by definition and therefore add no information
-				local match : list match - varlist
-
-			/****************************
-
-				Output the result
-
-			****************************/
-
-
-				noi di ""
-				** Display all variables that differ. This comes first in case
-				*  the number of variables are a lot, cause then it would push
-				*  any other output to far up
-				if "`didifference'" != "" {
-
-					noi di "{phang}The following variables have different values across the duplicates:{p_end}"
-					noi di "{pstd}`difference'{p_end}"
-					noi di ""
+				* If missing for all duplicates, then drop that variable
+				else {
+					drop `var'
 				}
+			}
 
-				*Display number output
-				local numNonMissing = `:list sizeof match' + `:list sizeof difference'
+			* Remove the ID var from the match list, it is match by definition and therefore add no information
+			local match : list match - varlist
 
-				noi di "{phang}The duplicate observations with ID = `id' have non-missing values in `numNonMissing' variables. Out of those variables:{p_end}"
+/*******************************************************************************
+	Output the results
+*******************************************************************************/
+
+			noi di ""
+			** Display all variables that differ. This comes first in case
+			*  the number of variables are a lot, cause then it would push
+			*  any other output to far up
+			if "`didifference'" != "" {
+
+				noi di "{phang}The following variables have different values across the duplicates:{p_end}"
+				noi di "{pstd}`difference'{p_end}"
 				noi di ""
-				noi di "{phang2}`:list sizeof match' variable(s) are identical across the duplicates{p_end}"
-				noi di "{phang2}`:list sizeof difference' variable(s) have different values across the duplicates{p_end}"
+			}
+
+			*Display number output
+			local numNonMissing = `:list sizeof match' + `:list sizeof difference'
+
+			noi di "{phang}The duplicate observations with ID = `id' have non-missing values in `numNonMissing' variables. Out of those variables:{p_end}"
+			noi di ""
+			noi di "{phang2}`:list sizeof match' variable(s) are identical across the duplicates{p_end}"
+			noi di "{phang2}`:list sizeof difference' variable(s) have different values across the duplicates{p_end}"
 
 
 
-				return local matchvars 	`"`match'"'
-				return local diffvars 	`"`difference'"'
+			return local matchvars 	`"`match'"'
+			return local diffvars 	`"`difference'"'
 
-				return scalar nummatch	= `:list sizeof match'
-				return scalar numdiff 	= `:list sizeof difference'
-				return scalar numnomiss	= `numNonMissing'
+			return scalar nummatch	= `:list sizeof match'
+			return scalar numdiff 	= `:list sizeof difference'
+			return scalar numnomiss	= `numNonMissing'
 
 		restore
 
-		* If keep difference is applied only keep those variables here.
+/*******************************************************************************
+	If keep difference is applied, return only different or selected variables
+*******************************************************************************/
+
 		if "`keepdifference'" != "" & "`difference'" != "" {
 
 			order `varlist' `difference' `keepother'
@@ -144,11 +145,18 @@
 			}
 		}
 	}
+	
 	end
 
 /*******************************************************************************
-	Turn ID var to string so that the rest of the command works similarly
+
+	Subprograms to test inputs and prepare data
+	
 *******************************************************************************/
+
+*------------------------------------------------------------------------------*
+*	Turn ID var to string so that the rest of the command works similarly
+*------------------------------------------------------------------------------*
 
 capture program drop stringid
 		program 	 stringid
@@ -199,9 +207,9 @@ qui {
 
 end
 
-/*******************************************************************************
-	Test input on "keep" options
-*******************************************************************************/
+*------------------------------------------------------------------------------*
+*	Test input on "keep" options
+*------------------------------------------------------------------------------*
 
 capture program drop testkeep
 		program		 testkeep
@@ -221,9 +229,9 @@ qui {
 
 end
 
-/*******************************************************************************
-	Test the number of duplicates 
-*******************************************************************************/
+*------------------------------------------------------------------------------*
+*	Test the number of duplicates 
+*------------------------------------------------------------------------------*
 
 capture program drop testless
 		program		 testless
@@ -250,10 +258,9 @@ qui {
 		
 end
 
-			
-/*******************************************************************************
-	Test input if more than two duplicates 
-*******************************************************************************/
+*------------------------------------------------------------------------------*
+*	Test input if more than two duplicates 
+*------------------------------------------------------------------------------*
 
 capture program drop testmore
 		program		 testmore
@@ -289,10 +296,10 @@ qui {
 	
 end
 			
-			
-/*******************************************************************************
-	Test input duplicated observations to be compared were explicitly selected
-*******************************************************************************/
+*------------------------------------------------------------------------------*
+*	Test input duplicated observations to be compared were explicitly selected
+*------------------------------------------------------------------------------*
+
 
 capture program drop testunique
 		program		 testunique, rclass
@@ -347,3 +354,5 @@ qui {
 }
 	
 end
+
+	
