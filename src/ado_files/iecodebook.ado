@@ -98,6 +98,7 @@ cap program drop iecodebook
   iecodebook_labclean // Do this first in case export or template syntax
   iecodebook_`subcommand' `anything' using "`using'" , `options'
   iecodebook_labclean // Do this again to clean up after apply or append
+  compress
 
 end
 
