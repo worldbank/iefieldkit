@@ -397,7 +397,7 @@ end
 cap program drop iecodebook_apply
   program    iecodebook_apply
 
-  syntax [anything] [using/] , [template] [drop] ///
+  syntax [anything] [using/] , [template] [replace] [drop] ///
     [survey(string asis)] [MISSingvalues(string asis)]
 
 qui {
@@ -415,12 +415,12 @@ qui {
         label var _template "(Ignore this placeholder, but do not delete it. Thanks!)"
         label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
         label val _template yesno
-      iecodebook export using "`using'"
+      iecodebook export using "`using'" , `replace'
     restore
     // Append the codebook for the current dataset to the placeholder codebook
     tempfile current
     save `current' , replace
-    iecodebook export `current' using "`using'" , template(`survey')
+    iecodebook export `current' using "`using'" , template(`survey') replace
   exit
   }
 
@@ -525,7 +525,7 @@ qui {
 
     // Define value labels
     foreach theValueLabel in `theValueLabels' {
-      label def `theValueLabel' `theLabelList_`theValueLabel'', replace
+      if "`theValueLabel'" != "." label def `theValueLabel' `theLabelList_`theValueLabel'', replace
       }
 
     // Drop leftovers if requested
@@ -563,7 +563,9 @@ cap program drop iecodebook_append
 
   syntax [anything] [using/] , ///
     surveys(string asis) [GENerate(string asis)] ///
-    [clear] [merge] [template] [KEEPall] [*]
+    [clear] [merge] [KEEPall] /// User options
+    [template] [replace] /// System options
+    [*]
 
 qui {
 
@@ -605,7 +607,7 @@ qui {
         label var `generate' "Data Source (do not edit this row)"
         label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
         label val `generate' yesno
-      iecodebook export using "`using'"
+      iecodebook export using "`using'" , `replace'
     restore
     // append one codebook per survey
     local x = 0
@@ -613,7 +615,8 @@ qui {
       if `x' == 1 local mergeopt "`merge'"
       local ++x
       local filepath : word `x' of `anything'
-      iecodebook export "`filepath'" using "`using'", template(`survey') `mergeopt'
+      iecodebook export "`filepath'" using "`using'" ///
+        , template(`survey') `mergeopt' replace
     }
   use `raw_data' , clear
   exit
