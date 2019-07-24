@@ -95,7 +95,7 @@ and optionally produces an export version of the dataset with only variables use
 {synopthdr:Apply Options}
 {synoptline}
 {synopt:{opt drop}}Requests that {cmdab:iecodebook} drop all variables which have no entry in the "name" column in the codebook.
-The default behavior is to retain all variables. {bf:Alternatively, to drop variables one-by-one, write . (a single period) in the "name" column of the codebook.}{p_end}
+The default behavior is to retain all variables. {bf:Alternatively, to drop variables (or value labels) one-by-one, write . (a single period) in the "name" (or "choices") column of the codebook.}{p_end}
 {break}
 {synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every coded answer.{p_end}
