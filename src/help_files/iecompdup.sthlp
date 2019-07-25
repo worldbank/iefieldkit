@@ -19,7 +19,7 @@ Note that this command share wiki article with {help ieduplicates}.
 {phang2}
 {cmdab:iecompdup}
 {it:id_varname}
-, {cmdab:id(}{it:id_value}{cmd:)} [{cmdab:didi:fference} {cmdab:keepdiff:erence}
+[{help if:if}], {cmdab:id(}{it:id_value}{cmd:)} [{cmdab:didi:fference} {cmdab:keepdiff:erence}
 {cmdab:keepoth:er(}{it:varlist}{cmd:)} {cmdab:more2ok}]
 
 {marker opts}{...}
