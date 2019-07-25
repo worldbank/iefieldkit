@@ -708,13 +708,6 @@
 				section is complicated.
 			******************/
 
-			/******************
-				Section 6.2.1
-				ID var in original file is string. Either
-				newid was imported as string or the variable
-				is made string. Easy.
-			******************/
-
 			*Test if there are any corrections by new ID
 			cap assert missing(`newid')
 			if _rc {
@@ -722,17 +715,28 @@
 				local idtype 	: type `idvar'
 				local idtypeNew : type `newid'
 
-				*If ID var is string but newid is not, then just make it string
+				/******************
+					Section 6.2.1
+					ID var in original file is string. Either
+					newid was imported as string or the variable
+					is made string. Easy.
+				******************/
+			
 				if substr("`idtype'",1,3) == "str" & substr("`idtypeNew'",1,3) != "str" {
 
 					tostring `newid' , replace
 					replace  `newid' = "" if `newid' == "."
 				}
 
-				*If ID var is numeric but the newid is loaded as string
+				/******************
+					Section 6.2.2
+					If ID var is numeric but the newid is loaded as string, this
+					could be an import error or a user input error
+				******************/
+				
 				else if substr("`idtype'",1,3) != "str" & substr("`idtypeNew'",1,3) == "str" {
 
-					* Check if [tostringok] is specificed:
+					* Check if [tostringok] is specificed. In this case, the old ID will be turned to string
 					if "`tostringok'" != "" {
 
 						* Make original ID var string
@@ -740,23 +744,33 @@
 						replace  `idvar' = "" if `idvar' == "."
 
 					}
-
-					* Error, IDvar cannot be updated
+					* If it was just an import error, it will be possible to turn the new ID into a number
 					else {
+					
+						* Try to destring the variable
+						destring `newid', replace
+						
+						* Test if it worked
+						cap confirm numeric variable `newid'
+						
+						* Throw an error if it didn't
+						if _rc {
+							* Create a local with all non-numeric values
+							levelsof `newid' if missing(real(`newid')), local(NaN_values) clean
 
-						* Create a local with all non-numeric values
-						levelsof `newid' if missing(real(`newid')), local(NaN_values) clean
-
-						* Output error message
-						di as error "{phang}The ID variable `idvar' is numeric but newid has these non-numeric values: `NaN_values'. Update newid to only contain numeric values or see option tostringok.{p_end}"
-						error 109
-						exit
+							* Output error message
+							di as error "{phang}The ID variable `idvar' is numeric but newid has these non-numeric values: `NaN_values'. Update newid to only contain numeric values or see option tostringok.{p_end}"
+							error 109
+							exit
+						}
 					}
 				}
 
-				*After making sure that type is ok, update the IDs
+				/******************
+					Section 6.2.3
+					After making sure that type is ok, update the IDs
+				******************/
 				replace `idvar' = `newid' if !missing(`newid')
-
 
 
 				/******************
