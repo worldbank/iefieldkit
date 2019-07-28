@@ -129,6 +129,7 @@
 			}
 
 			*********************
+			
 			* Prepare locals for report file path
 			if "`folder'" != ""		local foldertotest 		folder(`folder')
 			if "`suffix'" != ""		local suffixtotest 		suffix(`suffix')
@@ -679,7 +680,7 @@
 					order `listofdiffs', last
 
 					*Export main report
-					export excel using "`using'" , firstrow(variables) replace  nolabel
+					export excel using "`using'"	, firstrow(variables) replace  nolabel
 
 					*Produce output
 					noi di `"{phang}Excel file created at: {browse "`using'":`using'}`daily_output'.{p_end}"'
@@ -999,7 +1000,7 @@ qui {
 		}
 		else if !inlist("`format'", "xls", "xlsx") {
 		
-			noi di as error `"{phang}`format' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or {browse "https://github.com/worldbank/iefieldkit/issues":create an issue on iefieldkit's GitHub repository}.{p_end}"'
+			noi di as error "{phang}`format' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or create an issue on iefielkit's GitHub repository.{p_end}" // TODO: add link to repo
 			noi di ""
 			error 198 //TODO: check error code
 			exit
@@ -1030,6 +1031,8 @@ qui {
 		error 198 // TODO: check error code
 		exit
 	}
+	noi di "format"
+
 	
 	return local filepath 			`using'
 	return local filepath_daily		`using_daily'
