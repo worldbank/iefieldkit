@@ -959,7 +959,7 @@ qui {
 		local using = subinstr("`using'", "\", "/", .)
 	
 		* Separate the folder name from the file name
-		strlast, expression("`using'") character("/")
+		strlast, expression("`using'") character("/")							// Returns index of last forward slash in the string
 		
 		* If a folder was specified, get the folder path
 		if `r(lastpos)' > 0 {
@@ -969,30 +969,37 @@ qui {
 		* Everything that comas after the folder path is the file name and format
 		local file	 	 = substr("`using'", `r(lastpos)' + 1, .)
 		
-		* If a filename was specified, separate the file name from the file format
-		if "`file'" != "" {
-
-			* Get index of separation between file name and file format
-			strlast, expression("`file'") character(".")
-			
-			* If a format was specified, separate name and format
-			if `r(lastpos)' > 0 {
-				local format 	= substr("`file'", `r(lastpos)' + 1, .)				// File format starts at the last period and ends at the end of the string
-				local filename	= substr("`file'", 1, `r(lastpos)' - 1)				// File name starts at the beginning and ends at the last period
-			}
-			* If a format was not specified, the name is everything that follows the
-			* folder path
-			else {
-				local filename 	`file'
-			}
-		}
-		* Check that a folder name was specified and through an error if it wasn't
-		if ("`file'" == "" | ( "`file'" != "" & "`filename'" == "")) {
+		* Check that a folder name was specified
+		if "`file'" == "" {
 			noi di as error "{phang}`using' not a valid filename.{p_end}"
 			noi di ""
 			error 198
 			exit
 		}
+		
+		* Separate the file name from the file format
+		strlast, expression("`file'") character(".")							// Returns index of last period in the string
+		
+		* If a format was specified, separate name and format
+		if `r(lastpos)' > 0 {
+			local format 	= substr("`file'", `r(lastpos)' + 1, .)				// File format starts at the last period and ends at the end of the string
+			local filename	= substr("`file'", 1, `r(lastpos)' - 1)				// File name starts at the beginning and ends at the last period
+		}
+		* If a format was not specified, the name is everything that follows the
+		* folder path
+		else {
+			local filename 	`file'
+		}
+		* Check that a folder name was specified
+		if "`filename'" == "" {
+			noi di as error "{phang}`using' not a valid filename.{p_end}"
+			noi di ""
+			error 198
+			exit
+		}
+		
+		* Create file name for daily report
+		local using_daily	 "`folder'/Daily/`filename'_`today'"
 		
 		* The default format is xlsx. Other possible formats are xls and csv
 		if "`format'" == "" {
@@ -1006,7 +1013,6 @@ qui {
 			exit
 		}
 		
-		* Return names of files to be saved
 		local using 		"`folder'/`filename'.`format'"
 		local using_daily 	"`folder'/Daily/`filename'_`today'.`format'"
 	}
