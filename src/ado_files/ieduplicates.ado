@@ -6,7 +6,7 @@
 
 	qui {
 
-		syntax varname ,  FOLder(string) UNIQUEvars(varlist) [KEEPvars(varlist) tostringok droprest nodaily SUFfix(string) ///
+		syntax varname [using/] , UNIQUEvars(varlist) [FOLder(string) KEEPvars(varlist) tostringok droprest nodaily SUFfix(string) ///
 		duplistid(string) datelisted(string) datefixed(string) correct(string) drop(string) newid(string) initials(string) notes(string) listofdiffs(string)]
 
 		version 11.0
@@ -20,18 +20,15 @@
 
 		**Test that observations have not been deleted from the report before readind
 		* it. Deleted in a way that the report does not make sense. Provide an error
-		* message to this that is more informative.
+		* message to this that is more informative.		
 
 		preserve
 
 			/***********************************************************************
 			************************************************************************
-
 				Section 1 - Set up locals needed in data
-
 				Saving a version of the data to be used before merging corrections
 				back to the original data set and before correcting duplicates
-
 			************************************************************************
 			***********************************************************************/
 
@@ -128,17 +125,25 @@
 				}
 			}
 
+			*********************
+			* Prepare locals for report file path
+			if "`folder'" != ""		local foldertotest 		folder(`folder')
+			if "`suffix'" != ""		local suffixtotest 		suffix(`suffix')
+			if "`using'"  != ""		local usingtotest		`"using "`using'""'
+
+			testpath `usingtotest' , today(`date') `suffixtotest' `foldertotest'
+			
+			local using			= r(filepath)
+			local using_daily	= r(filepath_daily)
+			local folder		= r(folder)
 
 			/***********************************************************************
 			************************************************************************
-
 				Section 2 - Test unique vars
-
 				Test the unique vars so that they are identifying the data set and
 				are not in a time format that might get corrupted by exporting to
 				and importing from Excel. This is needed as the uniquevars are needed
 				to merge the correct correction to the correct duplicat
-
 			************************************************************************
 			***********************************************************************/
 
@@ -170,12 +175,9 @@
 
 			/***********************************************************************
 			************************************************************************
-
 				Section 3 - Test input from Excel file
-
 				If Excel report exists, import it and test for invalid corrections
 				made in the excel report.
-
 			************************************************************************
 			***********************************************************************/
 
@@ -185,7 +187,7 @@
 			******************/
 
 			*Check if file exist. Suffix option can be used to create multiple reports in the same folder
-			cap confirm file "`folder'/iedupreport`suffix'.xlsx"
+			cap confirm file "`using'"
 
 			if !_rc {
 				local fileExists 1
@@ -203,7 +205,7 @@
 			if `fileExists' {
 
 				*Load excel file. Load all vars as string and use metadata from Section 1
-				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow
+				import excel "`using'"	, clear firstrow
 
 				ds
 				local existingExcelVarsRaw  `r(varlist)' // before fixing case
@@ -330,7 +332,6 @@
 				/******************
 					Section 3.3.3
 					Test that maximum one duplicate per duplicate group is indicated as correct
-
 				******************/
 
 				*Generate dummy if correct column is set to yes
@@ -353,7 +354,6 @@
 					correct or newid was indicated for at least one duplicate in
 					a duplicate group, then all other observations should be
 					indicated as drop (unless droprest is specified)
-
 				******************/
 
 				*Generate dummy if there is any correction for this observation
@@ -452,13 +452,10 @@
 
 			/***********************************************************************
 			************************************************************************
-
 				Section 4 - Merge report to original data
-
 				Merge corrections with original data, test that there are no
 				obs in report that are not in main data, and save this data
 				in temp file
-
 			************************************************************************
 			***********************************************************************/
 
@@ -497,12 +494,9 @@
 
 			/***********************************************************************
 			************************************************************************
-
 				Section 5 - Generate the Excel report
-
 				Test if there are duplicates in ID var. If any duplicates exist,
 				then update the Excel file with new and unaddressed cases
-
 			************************************************************************
 			***********************************************************************/
 
@@ -650,7 +644,7 @@
 						}
 
 						*Export the daily file
-						cap export excel using "`folder'/Daily/iedupreport`suffix'_`date'.xlsx"	, firstrow(variables) replace nolabel
+						cap export excel using "`using_daily'"	, firstrow(variables) replace nolabel
 
 						*Print error if daily report cannot be saved
 						if _rc {
@@ -668,21 +662,18 @@
 					order `listofdiffs', last
 
 					*Export main report
-					export excel using "`folder'/iedupreport`suffix'.xlsx"	, firstrow(variables) replace  nolabel
+					export excel using "`using'" , firstrow(variables) replace  nolabel
 
 					*Produce output
-					noi di `"{phang}Excel file created at: {browse "`folder'/iedupreport`suffix'.xlsx":`folder'/iedupreport`suffix'.xlsx}`daily_output'.{p_end}"'
+					noi di `"{phang}Excel file created at: {browse "`using'":`using'}`daily_output'.{p_end}"'
 					noi di ""
 				}
 			}
 
 		/***********************************************************************
 		************************************************************************
-
 			Section 6
-
 			Update the data set and with the new corrections.
-
 		************************************************************************
 		***********************************************************************/
 
@@ -708,13 +699,6 @@
 				section is complicated.
 			******************/
 
-			/******************
-				Section 6.2.1
-				ID var in original file is string. Either
-				newid was imported as string or the variable
-				is made string. Easy.
-			******************/
-
 			*Test if there are any corrections by new ID
 			cap assert missing(`newid')
 			if _rc {
@@ -722,17 +706,28 @@
 				local idtype 	: type `idvar'
 				local idtypeNew : type `newid'
 
-				*If ID var is string but newid is not, then just make it string
+				/******************
+					Section 6.2.1
+					ID var in original file is string. Either
+					newid was imported as string or the variable
+					is made string. Easy.
+				******************/
+			
 				if substr("`idtype'",1,3) == "str" & substr("`idtypeNew'",1,3) != "str" {
 
 					tostring `newid' , replace
 					replace  `newid' = "" if `newid' == "."
 				}
 
-				*If ID var is numeric but the newid is loaded as string
+				/******************
+					Section 6.2.2
+					If ID var is numeric but the newid is loaded as string, this
+					could be an import error or a user input error
+				******************/
+				
 				else if substr("`idtype'",1,3) != "str" & substr("`idtypeNew'",1,3) == "str" {
 
-					* Check if [tostringok] is specificed:
+					* Check if [tostringok] is specificed. In this case, the old ID will be turned to string
 					if "`tostringok'" != "" {
 
 						* Make original ID var string
@@ -740,23 +735,33 @@
 						replace  `idvar' = "" if `idvar' == "."
 
 					}
-
-					* Error, IDvar cannot be updated
+					* If it was just an import error, it will be possible to turn the new ID into a number
 					else {
+					
+						* Try to destring the variable
+						destring `newid', replace
+						
+						* Test if it worked
+						cap confirm numeric variable `newid'
+						
+						* Throw an error if it didn't
+						if _rc {
+							* Create a local with all non-numeric values
+							levelsof `newid' if missing(real(`newid')), local(NaN_values) clean
 
-						* Create a local with all non-numeric values
-						levelsof `newid' if missing(real(`newid')), local(NaN_values) clean
-
-						* Output error message
-						di as error "{phang}The ID variable `idvar' is numeric but newid has these non-numeric values: `NaN_values'. Update newid to only contain numeric values or see option tostringok.{p_end}"
-						error 109
-						exit
+							* Output error message
+							di as error "{phang}The ID variable `idvar' is numeric but newid has these non-numeric values: `NaN_values'. Update newid to only contain numeric values or see option tostringok.{p_end}"
+							error 109
+							exit
+						}
 					}
 				}
 
-				*After making sure that type is ok, update the IDs
+				/******************
+					Section 6.2.3
+					After making sure that type is ok, update the IDs
+				******************/
 				replace `idvar' = `newid' if !missing(`newid')
-
 
 
 				/******************
@@ -794,12 +799,9 @@
 
 		/***********************************************************************
 		************************************************************************
-
 			Section 7
-
 			Return the data set without duplicates and
 			output information regarding unresolved duplicates.
-
 		************************************************************************
 		***********************************************************************/
 
@@ -835,13 +837,10 @@
 
 		/***********************************************************************
 		************************************************************************
-
 			Section 8
-
 			Save data set to be returned outside preserve/restore.
 			Preserve/restore is used so that original data is returned
 			in case an error is thrown.
-
 		************************************************************************
 		***********************************************************************/
 
@@ -854,4 +853,157 @@
 		use `dataToReturn', clear
 
 	}
+end
+
+
+/*******************************************************************************
+	Function to find the last occurrence of a character in a string
+*******************************************************************************/
+
+cap program drop strlast
+	program		 strlast , rclass
+	
+qui {
+
+	syntax , expression(string) character(string)
+
+	local firstpos = strpos("`expression'", "`character'")
+	local lastpos	`firstpos'
+
+	if `firstpos' != 0 {
+		while `firstpos' > 0 {
+			local expression 	= substr("`expression'", `firstpos' + 1, .)
+			local firstpos 		= strpos("`expression'", "`character'")
+			local lastpos 		= `lastpos' + `firstpos'		
+		}
+	}
+	return local lastpos `lastpos'
+	
+}
+
+end
+
+/*******************************************************************************
+	Test file path to save the report and prepare the file name
+*******************************************************************************/
+
+cap program drop testpath
+	program		 testpath , rclass
+
+qui {
+	
+	syntax [using/] , today(string) [folder(string) suffix(string)]
+
+/*******************************************************************************
+	Check that options were correctly specified
+*******************************************************************************/
+
+	* Check that either using or folder options were specified
+	if "`using'" == "" & "`folder'" == "" {
+		noi di as error "{phang}using required.{p_end}"
+		noi di ""
+		error 100
+		exit
+	}
+
+	* Test that user is not using both the old syntax (with folder and suffix)
+	* and the new one (with using) at the same time
+	else if "`using'" != "" & ("`folder'" != "" | "`suffix'" != "") {
+		noi di as error "{phang}Options {inp:using} cannot be used together with options {inp:folder} and {inp:suffix}. {inp:folder} and {inp:suffix} are part of a deprecated syntax, and although supported for backward compatibility purpose, they are no longer documented. We recommend specifying only the {inp:using} option.{p_end}"
+		noi di ""
+		error 198
+		exit
+	}
+
+/*******************************************************************************
+	Prepare file name if option using was specified
+*******************************************************************************/
+
+	* Parse using option to get (1) the folder path (2) the name of the report and
+	* (3) the format selected
+	else if "`using'" != "" {
+	
+		* Replace any backslashes with forward slashes so it's compatible with
+		* different OS and so we know what to look for as separators when parsing
+		local using = subinstr("`using'", "\", "/", .)
+	
+		* Separate the folder name from the file name
+		strlast, expression("`using'") character("/")
+		
+		* If a folder was specified, get the folder path
+		if `r(lastpos)' > 0 {
+			local folder	 = substr("`using'", 1, `r(lastpos)' - 1)
+		}
+
+		* Everything that comas after the folder path is the file name and format
+		local file	 	 = substr("`using'", `r(lastpos)' + 1, .)
+		
+		* If a filename was specified, separate the file name from the file format
+		if "`file'" != "" {
+
+			* Get index of separation between file name and file format
+			strlast, expression("`file'") character(".")
+			
+			* If a format was specified, separate name and format
+			if `r(lastpos)' > 0 {
+				local format 	= substr("`file'", `r(lastpos)' + 1, .)				// File format starts at the last period and ends at the end of the string
+				local filename	= substr("`file'", 1, `r(lastpos)' - 1)				// File name starts at the beginning and ends at the last period
+			}
+			* If a format was not specified, the name is everything that follows the
+			* folder path
+			else {
+				local filename 	`file'
+			}
+		}
+		* Check that a folder name was specified and through an error if it wasn't
+		if ("`file'" == "" | ( "`file'" != "" & "`filename'" == "")) {
+			noi di as error "{phang}`using' not a valid filename.{p_end}"
+			noi di ""
+			error 198
+			exit
+		}
+		
+		* The default format is xlsx. Other possible formats are xls and csv
+		if "`format'" == "" {
+			local	format	xlsx
+		}
+		else if !inlist("`format'", "xls", "xlsx") {
+		
+			noi di as error `"{phang}`format' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or {browse "https://github.com/worldbank/iefieldkit/issues":create an issue on iefieldkit's GitHub repository}.{p_end}"'
+			noi di ""
+			error 198 //TODO: check error code
+			exit
+		}
+		
+		* Return names of files to be saved
+		local using 		"`folder'/`filename'.`format'"
+		local using_daily 	"`folder'/Daily/`filename'_`today'.`format'"
+	}
+	
+	* Create file name if using was not specified
+	else if "`using'" == "" {
+	
+		if "`suffix'" != "" 	local suffix _`suffix'
+		local using	 		 "`folder'/iedupreport`suffix'.xlsx"
+		local using_daily	 "`folder'/Daily/iedupreport`suffix'_`today'.xlsx"
+	}
+
+	* Test that the folder indicated existes
+	mata : st_numscalar("r(dirExist)", direxists("`folder'"))
+
+	** If the folder does not exist, throw an error
+	if `r(dirExist)' == 0  {
+
+		*Variable exist, output error
+		noi di as error "{phang}The folder specified does not exist :`folder'.{p_end}"
+		noi di ""
+		error 198 // TODO: check error code
+		exit
+	}
+	
+	return local filepath 			`using'
+	return local filepath_daily		`using_daily'
+	return local folder				`folder'
+}
+
 end
