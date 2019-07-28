@@ -132,10 +132,12 @@
 			if "`using'"  != ""		local usingtotest		`"using "`using'""'
 
 			testpath `usingtotest' , today(`date') `suffixtotest' `foldertotest'
+
+			local name		= r(name)
+			local folder	= r(folder)
+			local ext		= r(ext)
 			
-			local using			= r(filepath)
-			local using_daily	= r(filepath_daily)
-			local folder		= r(folder)
+			local using			"`folder'/`name'.`ext'"
 
 			/***********************************************************************
 			************************************************************************
@@ -630,29 +632,11 @@
 
 					keep 	`argumentVars' `excelVars'
 					order	`idvar' `excelVars' `uniquevars' `keepvars'
-
+					
+					* Save daily folder
 					if "`daily'" == "" {
 
-						*Returns 0 if folder does not exist, 1 if it does
-						mata : st_numscalar("r(dirExist)", direxists("`folder'/Daily"))
-
-						** If the daily folder is not created, just create it
-						if `r(dirExist)' == 0  {
-
-							*Create the folder since it does not exist
-							mkdir "`folder'/Daily"
-						}
-
-						*Export the daily file
-						cap export excel using "`using_daily'"	, firstrow(variables) replace nolabel
-
-						*Print error if daily report cannot be saved
-						if _rc {
-
-							display as error "{phang}The Daily copy could not be saved to the `folder'/Daily folder. Make sure to close any old daily copy or see the option nodaily.{p_end}"
-							error 603
-							exit
-						}
+						savedaily , folder(`folder') name(`name') ext(`ext') today(`date')			
 
 						*Prepare local for output
 						local daily_output " and a daily copy have been saved to the Daily folder"
@@ -946,46 +930,42 @@ qui {
 			
 			* If a format was specified, separate name and format
 			if `r(lastpos)' > 0 {
-				local format 	= substr("`file'", `r(lastpos)' + 1, .)				// File format starts at the last period and ends at the end of the string
-				local filename	= substr("`file'", 1, `r(lastpos)' - 1)				// File name starts at the beginning and ends at the last period
+				local ext 		= substr("`file'", `r(lastpos)' + 1, .)				// File format starts at the last period and ends at the end of the string
+				local name		= substr("`file'", 1, `r(lastpos)' - 1)				// File name starts at the beginning and ends at the last period
 			}
 			* If a format was not specified, the name is everything that follows the
 			* folder path
 			else {
-				local filename 	`file'
+				local name 	`file'
 			}
 		}
 		* Check that a folder name was specified and through an error if it wasn't
-		if ("`file'" == "" | ( "`file'" != "" & "`filename'" == "")) {
+		if ("`file'" == "" | ( "`file'" != "" & "`name'" == "")) {
 			noi di as error "{phang}`using' not a valid filename.{p_end}"
 			noi di ""
 			error 198
 			exit
 		}
 		
-		* The default format is xlsx. Other possible formats are xls and csv
-		if "`format'" == "" {
-			local	format	xlsx
+		* The default format is xlsx. Other possible formats are xls
+		if "`ext'" == "" {
+			local	ext	xlsx
 		}
-		else if !inlist("`format'", "xls", "xlsx") {
+		else if !inlist("`ext'", "xls", "xlsx") {
 		
-			noi di as error `"{phang}`format' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or {browse "https://github.com/worldbank/iefieldkit/issues":create an issue on iefieldkit's GitHub repository}.{p_end}"'
+			noi di as error `"{phang}`ext' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or {browse "https://github.com/worldbank/iefieldkit/issues":create an issue on iefieldkit's GitHub repository}.{p_end}"'
 			noi di ""
 			error 198 //TODO: check error code
 			exit
 		}
-		
-		* Return names of files to be saved
-		local using 		"`folder'/`filename'.`format'"
-		local using_daily 	"`folder'/Daily/`filename'_`today'.`format'"
 	}
 	
 	* Create file name if using was not specified
 	else if "`using'" == "" {
 	
-		if "`suffix'" != "" 	local suffix _`suffix'
-		local using	 		 "`folder'/iedupreport`suffix'.xlsx"
-		local using_daily	 "`folder'/Daily/iedupreport`suffix'_`today'.xlsx"
+								local name	ieduprepot
+		if "`suffix'" != "" 	local name	`name'_`suffix'
+								local ext	xlsx
 	}
 
 	* Test that the folder indicated existes
@@ -1001,9 +981,91 @@ qui {
 		exit
 	}
 	
-	return local filepath 			`using'
-	return local filepath_daily		`using_daily'
-	return local folder				`folder'
+	return local name 	`name'
+	return local ext	`ext'
+	return local folder	`folder'
 }
 
 end
+
+/*******************************************************************************
+	Save daily report
+*******************************************************************************/
+
+cap program drop savedaily
+	program		 savedaily , rclass
+	
+noi {
+
+	syntax , folder(string) name(string) ext(string) today(string)
+
+	*--------------------------------*
+	* Calculate name of daily file	 *
+	*--------------------------------*
+	local using_daily "`folder'/Daily/`name'_`today'.`ext'"
+
+	*--------------------------------*
+	* Check that daily folder exists *
+	*--------------------------------*
+	
+	* Returns 0 if folder does not exist, 1 if it does
+	mata : st_numscalar("r(dirExist)", direxists("`folder'/Daily"))
+
+	* If the daily folder is not created, just create it
+	if `r(dirExist)' == 0  {
+
+		*Create the folder since it does not exist
+		mkdir "`folder'/Daily"
+	}
+	
+	*--------------------------------------------*
+	* Check that the daily report does not exist *
+	*--------------------------------------------*
+	cap confirm file "`using_daily'"
+
+	* If it does exist, check that it's the same as the current one
+	if !_rc {
+
+		tempfile daily
+		save	 `daily'
+
+		import excel using "`using_daily'", clear firstrow
+
+		cap cf _all using `daily'
+
+		* If it's not the same, save with a timestamp
+		if "`r(Nsum)'" != "0" {
+		
+			local time			= c(current_time)
+
+			foreach colon in h m {
+				noi di `" local time 		= substr("`time'", ":", "`colon'", 1)"'
+				local time 		= subinstr("`time'", ":", "`colon'", 1)
+			}
+
+			local using_daily "`folder'/Daily/`name'_`today'_`time's.`ext'"
+		}
+		else {
+		}
+
+		use `daily', clear
+	}
+
+	*-----------------------*
+	* Export the daily file *
+	*-----------------------*
+	cap export excel using "`using_daily'"	, firstrow(variables) replace nolabel
+
+	*Print error if daily report cannot be saved
+	if _rc {
+
+		display as error "{phang}The Daily copy could not be saved to the `folder'/Daily folder. Make sure to close any old daily copy or see the option nodaily.{p_end}"
+		error 603
+		exit
+	}
+
+}
+
+end
+
+						
