@@ -6,7 +6,7 @@
 
 	qui {
 
-		syntax varname [using/] , UNIQUEvars(varlist) [FOLder(string) KEEPvars(varlist) tostringok droprest nodaily SUFfix(string) ///
+		syntax varname ,  FOLder(string) UNIQUEvars(varlist) [KEEPvars(varlist) tostringok droprest nodaily SUFfix(string) ///
 		duplistid(string) datelisted(string) datefixed(string) correct(string) drop(string) newid(string) initials(string) notes(string) listofdiffs(string)]
 
 		version 11.0
@@ -20,7 +20,7 @@
 
 		**Test that observations have not been deleted from the report before readind
 		* it. Deleted in a way that the report does not make sense. Provide an error
-		* message to this that is more informative.		
+		* message to this that is more informative.
 
 		preserve
 
@@ -128,18 +128,6 @@
 				}
 			}
 
-			*********************
-			
-			* Prepare locals for report file path
-			if "`folder'" != ""		local foldertotest 		folder(`folder')
-			if "`suffix'" != ""		local suffixtotest 		suffix(`suffix')
-			if "`using'"  != ""		local usingtotest		`"using "`using'""'
-
-			testpath `usingtotest' , today(`date') `suffixtotest' `foldertotest'
-			
-			local using			= r(filepath)
-			local using_daily	= r(filepath_daily)
-			local folder		= r(folder)
 
 			/***********************************************************************
 			************************************************************************
@@ -197,7 +185,7 @@
 			******************/
 
 			*Check if file exist. Suffix option can be used to create multiple reports in the same folder
-			cap confirm file "`using'"
+			cap confirm file "`folder'/iedupreport`suffix'.xlsx"
 
 			if !_rc {
 				local fileExists 1
@@ -215,7 +203,7 @@
 			if `fileExists' {
 
 				*Load excel file. Load all vars as string and use metadata from Section 1
-				import excel "`using'"	, clear firstrow
+				import excel "`folder'/iedupreport`suffix'.xlsx"	, clear firstrow
 
 				ds
 				local existingExcelVarsRaw  `r(varlist)' // before fixing case
@@ -662,7 +650,7 @@
 						}
 
 						*Export the daily file
-						cap export excel using "`using_daily'"	, firstrow(variables) replace nolabel
+						cap export excel using "`folder'/Daily/iedupreport`suffix'_`date'.xlsx"	, firstrow(variables) replace nolabel
 
 						*Print error if daily report cannot be saved
 						if _rc {
@@ -680,10 +668,10 @@
 					order `listofdiffs', last
 
 					*Export main report
-					export excel using "`using'"	, firstrow(variables) replace  nolabel
+					export excel using "`folder'/iedupreport`suffix'.xlsx"	, firstrow(variables) replace  nolabel
 
 					*Produce output
-					noi di `"{phang}Excel file created at: {browse "`using'":`using'}`daily_output'.{p_end}"'
+					noi di `"{phang}Excel file created at: {browse "`folder'/iedupreport`suffix'.xlsx":`folder'/iedupreport`suffix'.xlsx}`daily_output'.{p_end}"'
 					noi di ""
 				}
 			}
@@ -881,169 +869,3 @@
 
 	}
 end
-
-
-/*******************************************************************************
-
-	Function to find the last occurrence of a character in a string
-
-*******************************************************************************/
-
-cap program drop strlast
-	program		 strlast , rclass
-	
-qui {
-
-	syntax , expression(string) character(string)
-
-	local firstpos = strpos("`expression'", "`character'")
-	local lastpos	`firstpos'
-
-	if `firstpos' != 0 {
-		while `firstpos' > 0 {
-			local expression 	= substr("`expression'", `firstpos' + 1, .)
-			local firstpos 		= strpos("`expression'", "`character'")
-			local lastpos 		= `lastpos' + `firstpos'		
-		}
-	}
-	return local lastpos `lastpos'
-	
-}
-
-end
-
-/*******************************************************************************
-
-	Test file path to save the report and prepare the file name
-
-*******************************************************************************/
-
-cap program drop testpath
-	program		 testpath , rclass
-
-qui {
-	
-	syntax [using/] , today(string) [folder(string) suffix(string)]
-
-/*******************************************************************************
-	Check that options were correctly specified
-*******************************************************************************/
-
-	* Check that either using or folder options were specified
-	if "`using'" == "" & "`folder'" == "" {
-		noi di as error "{phang}using required.{p_end}"
-		noi di ""
-		error 100
-		exit
-	}
-
-	* Test that user is not using both the old syntax (with folder and suffix)
-	* and the new one (with using) at the same time
-	else if "`using'" != "" & ("`folder'" != "" | "`suffix'" != "") {
-		noi di as error "{phang}Options {inp:using} cannot be used together with options {inp:folder} and {inp:suffix}. {inp:folder} and {inp:suffix} are part of a deprecated syntax, and although supported for backward compatibility purpose, they are no longer documented. We recommend specifying only the {inp:using} option.{p_end}"
-		noi di ""
-		error 198
-		exit
-	}
-
-/*******************************************************************************
-	Prepare file name if option using was specified
-*******************************************************************************/
-
-	* Parse using option to get (1) the folder path (2) the name of the report and
-	* (3) the format selected
-	else if "`using'" != "" {
-	
-		* Replace any backslashes with forward slashes so it's compatible with
-		* different OS and so we know what to look for as separators when parsing
-		local using = subinstr("`using'", "\", "/", .)
-	
-		* Separate the folder name from the file name
-		strlast, expression("`using'") character("/")							// Returns index of last forward slash in the string
-		
-		* If a folder was specified, get the folder path
-		if `r(lastpos)' > 0 {
-			local folder	 = substr("`using'", 1, `r(lastpos)' - 1)
-		}
-
-		* Everything that comas after the folder path is the file name and format
-		local file	 	 = substr("`using'", `r(lastpos)' + 1, .)
-		
-		* Check that a folder name was specified
-		if "`file'" == "" {
-			noi di as error "{phang}`using' not a valid filename.{p_end}"
-			noi di ""
-			error 198
-			exit
-		}
-		
-		* Separate the file name from the file format
-		strlast, expression("`file'") character(".")							// Returns index of last period in the string
-		
-		* If a format was specified, separate name and format
-		if `r(lastpos)' > 0 {
-			local format 	= substr("`file'", `r(lastpos)' + 1, .)				// File format starts at the last period and ends at the end of the string
-			local filename	= substr("`file'", 1, `r(lastpos)' - 1)				// File name starts at the beginning and ends at the last period
-		}
-		* If a format was not specified, the name is everything that follows the
-		* folder path
-		else {
-			local filename 	`file'
-		}
-		* Check that a folder name was specified
-		if "`filename'" == "" {
-			noi di as error "{phang}`using' not a valid filename.{p_end}"
-			noi di ""
-			error 198
-			exit
-		}
-		
-		* Create file name for daily report
-		local using_daily	 "`folder'/Daily/`filename'_`today'"
-		
-		* The default format is xlsx. Other possible formats are xls and csv
-		if "`format'" == "" {
-			local	format	xlsx
-		}
-		else if !inlist("`format'", "xls", "xlsx") {
-		
-			noi di as error "{phang}`format' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or create an issue on iefielkit's GitHub repository.{p_end}" // TODO: add link to repo
-			noi di ""
-			error 198 //TODO: check error code
-			exit
-		}
-		
-		local using 		"`folder'/`filename'.`format'"
-		local using_daily 	"`folder'/Daily/`filename'_`today'.`format'"
-	}
-	
-	* Create file name if using was not specified
-	else if "`using'" == "" {
-	
-		if "`suffix'" != "" 	local suffix _`suffix'
-		local using	 		 "`folder'/iedupreport`suffix'.xlsx"
-		local using_daily	 "`folder'/Daily/iedupreport`suffix'_`today'.xlsx"
-	}
-
-	* Test that the folder indicated existes
-	mata : st_numscalar("r(dirExist)", direxists("`folder'"))
-
-	** If the folder does not exist, throw an error
-	if `r(dirExist)' == 0  {
-
-		*Variable exist, output error
-		noi di as error "{phang}The folder specified does not exist :`folder'.{p_end}"
-		noi di ""
-		error 198 // TODO: check error code
-		exit
-	}
-	noi di "format"
-
-	
-	return local filepath 			`using'
-	return local filepath_daily		`using_daily'
-	return local folder				`folder'
-}
-
-end
-
