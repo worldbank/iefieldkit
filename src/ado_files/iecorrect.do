@@ -249,7 +249,7 @@ cap program drop checksheets
 				noi di as result `"{phang}Observations to be dropped: ``type'vars'{p_end}"'
 			}		
 		}
-		
+
 		* If there are no corrections to be made, save that information and move forward
 		else if `r(N)' == 0 {
 			local	`type'corr	0

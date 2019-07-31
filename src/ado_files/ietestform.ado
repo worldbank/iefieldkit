@@ -1,4 +1,4 @@
-*! version 0.1 12DEC2018  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.3 7JUN2019  DIME Analytics dimeanalytics@worldbank.org
 
 capture program drop ietestform
 		program ietestform , rclass
@@ -7,9 +7,9 @@ qui {
 
 	version 13
 
-	preserve
+	//preserve
 
-	syntax , Surveyform(string) Report(string) [STATAlanguage(string)]
+	syntax , Surveyform(string) Report(string) [STATAlanguage(string) date replace]
 
 	/***********************************************
 		Test input
@@ -55,8 +55,16 @@ qui {
 	noi importchoicesheet, form("`surveyform'") statalanguage(`statalanguage') report_tempfile("`report_tempfile'")
 
 	*Get all choice lists actaually used
-	local all_list_names `r(all_list_names)'
+	local all_list_names 	`r(all_list_names)'
 
+	*Names used in choice sheet, used if outputting unused choice lists
+	local choice_listnamevar		`r(listnamevar)'
+	local choice_valuevar			`r(valuevar)'
+	local choice_labelvars			`r(labelvars)'
+
+	*Create a temp data set that can be reloaded when displaying unused choice lists.
+	tempfile choicesheet
+	save `choicesheet'
 
 	/***********************************************
 		Test the survey sheet independently
@@ -80,18 +88,32 @@ qui {
 	local unused_lists : list all_list_names - all_lists_used
 	if "`unused_lists'" != "" {
 
-		local error_msg "There are lists in the choice sheet that are not used by any field of the survey sheet. These are the unused list(s): [`unused_lists']"
-		report_file add , report_tempfile("`report_tempfile'") testname("UNUSED CHOICE LISTS") message("`error_msg'") wikifragment("Unused_Choice_Lists")
+		*Reload the data to be able to show the unsused lists
+		use `choicesheet', clear
+
+		*Indicate which lists were unused
+		gen unused_list = strpos(" " + "`unused_lists'" + " ", " " + list_name + " ") > 0
+
+		*Write error message and list of unused lists to the report
+		local error_msg "There are lists in the choice sheet that are not used by any field in the survey sheet. While that is allowed in ODK syntax it is an indication of a typo that might casue errors later. Make sure that the following list items are indeed not supposed to be used:"
+		noi report_file add , report_tempfile("`report_tempfile'") testname("UNUSED CHOICE LISTS") message("`error_msg'") wikifragment("Unused_Choice_Lists") table("list row `choice_listnamevar' `choice_valuevar' `choice_labelvars' if unused_list == 1")
+
 	}
 
 	/***********************************************
 		Finsish the report and write it to disk
 	***********************************************/
 
-	*Write the file to disk
-	noi report_file write, report_tempfile("`report_tempfile'") filepath("`report'")
+	*Option date is used, add today's date to file name
+	if "`date'" != ""{
+		local date = subinstr(c(current_date)," ","",.)
+		local report = subinstr("`report'",".csv","_`date'.csv",.)
+	}
 
-	restore
+	*Write the file to disk
+	noi report_file write, report_tempfile("`report_tempfile'") filepath("`report'") `replace'
+
+	//restore
 
 }
 end
@@ -107,7 +129,7 @@ qui {
 	*Import the settings sheet - This is the first time the file is imported so add one layer of custom test
 	cap import excel "`form'", sheet("settings") clear first
 	if _rc == 603 {
-		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an version of Excel.{p_end}"
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an earlier version of Excel.{p_end}"
 		error 603
 	}
 	else if _rc != 0 {
@@ -164,7 +186,6 @@ qui {
 	test_colname , var("choice_list_name") sheetvars(`choicesheetvars') sheetname("choices")
 	local  listnamevar = "`r(checked_varname)'"
 
-
 	/***********************************************
 		Get info from rows/labels and
 		make tests on them
@@ -177,7 +198,7 @@ qui {
 	*  above as the variable row will have value for all rows, and it must be done
 	*  before the drop code below as otherwise the row number will not correspond
 	*  to the row in the excel file.
-	gen row = _n
+	gen row = _n + 1 //Plus 1 as column name is the first row in the Excel file
 	order row
 
 	*After the row number has been created to be identical to form file, then drop empty rows
@@ -203,28 +224,40 @@ qui {
 
 	/***********************************************
 		TEST - List names with leading or trailing
-		spaces in string values in excel file
+		spaces in columns where that can lead to errors
 	***********************************************/
 
-	ds, has(type string)
-	local strvars `r(varlist)'
+	*Values in these columns can cause errors if they include leading or trailing spaces
+	local nospacevars `listnamevar' `labelvars'
 
-	foreach strvar of local strvars {
+	*Keep track if any cases are found
+	local cases_found 0
+
+	foreach nospacevar of local nospacevars {
 		*Test that the list name does not have leading or trailing spaces
-		gen trim_`strvar' = (`strvar' != trim(`strvar'))
+		gen trim_`nospacevar' = (`nospacevar' != trim(`nospacevar'))
 
 		*Add item to report for any row with missing label in the label vars
-		count if trim_`strvar' != 0
+		count if trim_`nospacevar' != 0
 		if `r(N)' > 0 {
 
-			local error_msg "The string values in [`strvar'] column are imported as strings and has leading or trailing spaces in the Excel file"
+			*Write header if this is the first case found
+			if `cases_found' == 0 noi report_title , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (choice sheet)")
 
-			noi report_file add , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (choice sheet; column: `strvar')") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `strvar' if trim_`strvar' != 0")
+			*Prepare message and write it
+			local error_msg "The string values in [`nospacevar'] column in the choice sheet are imported as strings and has leading or trailing spaces in the Excel file in the following cases:"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `nospacevar' if trim_`nospacevar' != 0")
+
+			*Indicate that a case have been found
+			local cases_found 1
 		}
 
 		*Remove leading or trailing spaces so they do not cause errors in later tests
-		replace `strvar' = trim(`strvar')
+		replace `nospacevar' = trim(`nospacevar')
 	}
+
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Leading_and_Trailing_Spaces")
 
 	/***********************************************
 		TEST - Numeric name
@@ -244,7 +277,7 @@ qui {
 
 		local error_msg "There are non numeric values in the [`valuevar'] column of the choice sheet"
 
-		noi report_file add , report_tempfile("`report_tempfile'") testname("NON NUMERIC NAME VALUES") message("`error_msg'") wikifragment("Value.2FName_Numeric") table("list row `listnamevar' `valuevar' if non_numeric != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("NON NUMERIC NAME VALUES") message("`error_msg'") wikifragment("Value.2FName_Numeric") table("list row `listnamevar' `valuevar' `labelvars' if non_numeric != 0")
 
 	}
 	else if _rc != 0 {
@@ -272,7 +305,7 @@ qui {
 
 		local error_msg "There are duplicates in the following list names in varaible `listnamevar's:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") testname("NON NUMERIC LIST NAME VALUES") message("`error_msg'") wikifragment("Duplicated_List_Code") table("list row `listnamevar' `valuevar' if list_item_dup != 0")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("DUPLICATED LIST CODES") message("`error_msg'") wikifragment("Duplicated_List_Code") table("list row `listnamevar' `valuevar' `labelvars' if list_item_dup != 0")
 	}
 
 	/***********************************************
@@ -319,6 +352,9 @@ qui {
 	*Initialize the dummy that indicate if there are duplicates to 0. This is used to store errors on
 	gen label_all_cols_dup = 0
 
+	*Keep track if any cases are found
+	local cases_found 0
+
 	** Loop over each label language column
 	foreach labelvar of local labelvars {
 
@@ -352,13 +388,20 @@ qui {
 		count if label_all_cols_dup == 1
 		if `r(N)' > 0 {
 
+			*Write header if this is the first case found
+			if `cases_found' == 0 noi report_title , report_tempfile("`report_tempfile'") testname("DUPLICATED LABEL WITHIN LIST")
+
+			*Prepare message and write it
 			local error_msg "There are duplicated entries in the [`labelvar'] column of the choice sheet within the [`lists_with_dups'] list(s) for the following labels:"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `listnamevar' `valuevar' `labelvar' if label_all_cols_dup == 1")
 
-			noi report_file add , report_tempfile("`report_tempfile'") testname("DUPLICATED LABEL (column: `labelvar') WITHIN LIST") message("`error_msg'") wikifragment("Duplicated_List_Labels") table("list row `listnamevar' `valuevar' `labelvar' if label_all_cols_dup == 1")
-
+			*Indicate that a case have been found
+			local cases_found 1
 		}
 	}
 
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Duplicated_List_Labels")
 
 	/***********************************************
 		TEST - Stata language for value labels
@@ -399,6 +442,10 @@ qui {
 
 	return local all_list_names				"`all_list_names'"
 
+	return local listnamevar				"`listnamevar'"
+	return local valuevar					"`valuevar'"
+	return local labelvars					"`labelvars'"
+
 }
 end
 
@@ -418,8 +465,8 @@ qui {
 	*Import the choices sheet
 	import excel "`form'", sheet("survey") clear first
 
-	*Gen
-	gen row = _n
+	*Gen row number that corresponds to the row number in the excel file
+	gen row = _n + 1 //Plus 1 as column name is the first row in the Excel file
 	order row
 
 	*Drop rows with all values missing
@@ -443,9 +490,9 @@ qui {
 
 	*Variables that must be included every time
 	local name_vars 		"name"
-	local cmd_vars  		"type required readonly appearance"
-	local msg_vars  		"`labelvars' hint constraintmessage requiredmessage"
-	local code_vars 		"default constraint  relevance  calculation repeat_count choice_filter"
+	local cmd_vars  		"type required appearance" // Include as needed eventually. "readonly"
+	local msg_vars  		"`labelvars'"
+	local code_vars 		"" // Include as needed eventually. " constraint  relevance  calculation repeat_count choice_filter"
 
 	local surveysheetvars_required "`name_vars' `cmd_vars' `msg_vars' `code_vars'"
 
@@ -459,7 +506,22 @@ qui {
 		error 688
 	}
 
-	keep `surveysheetvars_required' row
+	*Variables that are not required to be included but we recommend considering to do so
+	local surveysheetvars_recommended "hint constraintmessage requiredmessage"
+
+	*Test that all recommended vars are in the list and add to report if not
+	if `: list surveysheetvars_recommended in surveysheetvars' == 0 {
+
+		*Generate a list of the vars missing and output to repiort
+		local missing_vars : list surveysheetvars_recommended - surveysheetvars
+		local error_msg "The following column(s) [`missing_vars'] are not required but are often good to include to write a high quality questionnaire. Look them up in SurveyCTO's documentation and consider including them."
+		noi report_file add , report_tempfile("`report_tempfile'") testname("MISSING RECOMMENDED COLUMNS") message("`error_msg'") wikifragment("NOT_YET_CREATED")
+
+		*Remove the missing non-required variables fomr the list used when keeping below
+		local surveysheetvars_recommended : list surveysheetvars_recommended - missing_vars
+	}
+
+	keep `surveysheetvars_required' `surveysheetvars_recommended' row
 
 	*********
 	*make command vars that sometimes are not used and then loaded as numeric
@@ -471,30 +533,56 @@ qui {
 	}
 
 	/***********************************************
-		TEST - List names with leading or trailing
-		spaces in string values in excel file
+		Test that variables that mustn't contain special
+		charcters, like UTF-8 chars, do not contain them
 	***********************************************/
 
-	ds, has(type string)
-	local strvars `r(varlist)'
+	local only_simple_char_vars name
 
-	foreach strvar of local strvars {
+	foreach only_simple_char_var of local only_simple_char_vars {
+
+		*Testing that all values in these vars are only a-z, A-Z, 0-9 and _
+		noi test_illegal_chars `only_simple_char_var', sheet("survey")
+	}
+
+
+
+	/***********************************************
+		TEST - List names with leading or trailing
+		spaces in columns where that can lead to errors
+	***********************************************/
+
+	*The type and name variables should not be written with leading or trailing spaces
+	local nospacevars type name required
+
+	*Keep track if any cases are found
+	local cases_found 0
+
+	foreach nospacevar of local nospacevars {
 		*Test that the list name does not have leading or trailing spaces
-		gen trim_`strvar' = (`strvar' != trim(`strvar'))
+		gen trim_`nospacevar' = (`nospacevar' != trim(`nospacevar'))
 
 		*Add item to report for any row with missing label in the label vars
-		count if trim_`strvar' != 0
+		count if trim_`nospacevar' != 0
 		if `r(N)' > 0 {
 
-			local error_msg "The string values in [`strvar'] column are imported as strings and has leading or trailing spaces in the Excel file"
+			*Write header if this is the first case found
+			if `cases_found' == 0 noi report_title , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (survey sheet)")
 
-			noi report_file add , report_tempfile("`report_tempfile'") testname("SPACES BEFORE OR AFTER STRING (survey sheet; column: `strvar')") message("`error_msg'") wikifragment("NOT_YET_CREATED") table("list row `strvar' if trim_`strvar' != 0")
+			*Prepare message and write it
+			local error_msg "The string values in [`nospacevar'] column in the survey sheet are imported as strings and has leading or trailing spaces in the Excel file"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `nospacevar' if trim_`nospacevar' != 0")
+
+			*Indicate that a case have been found
+			local cases_found 1
 		}
 
 		*Remove leading or trailing spaces so they do not cause errors in later tests
-		replace `strvar' = trim(`strvar')
+		replace `nospacevar' = trim(`nospacevar')
 	}
 
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Leading_and_Trailing_Spaces")
 
 	/***********************************************
 		TEST - Type column
@@ -518,6 +606,48 @@ qui {
 	***********************************************/
 
 	noi test_survey_label, surveysheetvars(`surveysheetvars_required') statalanguage(`statalanguage') report_tempfile("`report_tempfile'")
+
+
+	/***********************************************
+		TEST - require column
+	***********************************************/
+
+	*Create a dummy that is 1 for fields that the required column test is applicable to
+	gen req_relevant = !(typeBeginEnd == 1 | /// begin_group, begin_repeat, end_group, end_repeat does not need to be required
+		inlist(type, "calculate", "calculate_here") | /// calculate fields does not need to be required
+		inlist(type, "audio_audit", "text_audit") | /// quality control meta fields does not need to be reqired
+		inlist(type, "start", "end", "deviceid", "subscriberid", "simserial", "phonenumber", "username", "caseid") | /// Default meta types doen not need to be required
+		missing(type)) /// Rows that are not fields shold be skipped
+
+	*List and output non-note, non-label fields that are not required
+	gen nonnote_nonrequired = (req_relevant == 1 & type != "note" & appearance != "label" & lower(required) != "yes")
+	count if nonnote_nonrequired == 1
+	if `r(N)' > 0 {
+
+		*Prepare message and write it
+		local error_msg "Fields of types other than note should all be required so that it cannot be skipped during the interview. The following fields are not required and could therfore be skipped by the enumerator:"
+		noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Required_Column") message("`error_msg'")  table("list row type name if nonnote_nonrequired == 1") testname("NON-REQUIRED NON-NOTE TYPE FIELD")
+	}
+
+	*List and output note fields that are required
+	gen note_required 		= (req_relevant == 1 & type == "note" & lower(required) == "yes")
+	count if note_required == 1
+	if `r(N)' > 0 {
+
+		*Prepare message and write it
+		local error_msg "Fields of type note creates an impassable view that are impossible for the enumerator to sweep pass. Make sure that is the inentional behavior for the following fields:"
+		noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Required_Column") message("`error_msg'")  table("list row type name if note_required == 1") testname("REQUIRED NOTE TYPE FIELD")
+	}
+
+	*List and output required label fields in field-list groups
+	gen label_required 		= (req_relevant == 1 & appearance == "label" & lower(required) == "yes")
+	count if label_required == 1
+	if `r(N)' > 0 {
+
+		*Prepare message and write it
+		local error_msg "Fields with appearance [label] (inside a field-list group) must not be required. Label fields are currently required in the following rows:"
+		noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Required_Column") message("`error_msg'")  table("list row type name if label_required == 1") testname("REQUIRED LABEL FIELD")
+	}
 
 }
 end
@@ -557,8 +687,29 @@ qui {
 	local begin_end_error = 0
 
 
-	******************************************************************************************
-	*Loop over all rows to test if begin and end match perfectly and give helpful error if not
+	*********
+
+	**********************
+	* Test if any end_repeat or end_group has no name (begin are tested by server). This is not incorrect, but bad practice as it makes bug finding much more difficult.
+
+	gen end_has_no_name = (typeEnd == 1 & missing(name))
+	count if end_has_no_name != 0
+	if `r(N)' > 0 {
+
+		*Prepare message and write it
+		local error_msg "It is bad practice to leave the name column empty for end_group or end_repeat fields. While this is allowed in ODK, it makes error finding harder and slower. The following repeat or end groups have empty name columns:"
+		noi report_file add , report_tempfile("`report_tempfile'") wikifragment("Matching_begin_.2Fend") message("`error_msg'")  table("list row type name if end_has_no_name == 1") testname("MISSING END_GROUP/END_REPEAT NAME")
+
+	}
+
+
+	**********************
+	*Loop over all rows to test if begin and end match NAME prefectly
+
+	*Keep track if any cases are found
+	local cases_found 0
+
+	*Loop over all rows
 	local num_rows = _N
 	forvalues row = 1/`num_rows' {
 
@@ -569,15 +720,6 @@ qui {
 			local row_type = type[`row']
 			local row_name = name[`row']
 			local isBegin = typeBegin[`row']
-
-
-			* Test if any end_repeat or end_group has no name (begin are tested by server). This is not incorrect, but bad practice as it makes bug finding much more difficult.
-			if "`row_name'" == "" {
-
-				local error_msg "It is bad practice to leave the name column empty for end_group or end_repeat fields. While this is allowed in ODK, it makes error finding harder and slower. The following repeat or end groups have empty name columns:"
-
-				noi report_file add , report_tempfile("`report_tempfile'") testname("MISSING END_GROUP/END_REPEAT NAME") message("`error_msg'") wikifragment("Matching_begin_.2Fend") table("list row type name if _n == `row'")
-			}
 
 			*Add begin group to stack if either begin_group or begin_repeat
 			if `isBegin' {
@@ -593,7 +735,7 @@ qui {
 				*Get the type and name of the end_group or end_repeat of this row
 				local endtype = substr("`row_type'", 5,6) //Remove the "end_" part of the type
 				local endname = "`row_name'"
-				local endrow  = "`row'"
+				local endrow  = `row' + 1 //First row in Excel is column name
 
 				*Get the type and name of the most recent begin_group or begin_repeat
 				local lastbegin : word 1 of `type_and_name'			//the most recent is the first in the list
@@ -608,20 +750,30 @@ qui {
 				local beginrow = subinstr("`beginrow'","#","", 1)	//Remove the parse char "#"
 
 				*If the name are not the same it is most likely a different group or repeat group that is incorrectly being closed
-				if "`endname'" != "`beginname'"  {
+				if "`endname'" != "`beginname'" & !missing("`endname'") {
 
-					local error_msg "The [end_`endtype' `endname'] from row [`endrow'] was found before [end_`begintype' `beginname'] from row [`beginrow']. No other than the most recent begin_group or begin_repeat can be ended. Either this is a typo in the names [`endname'] and [`beginname'], the [begin_`endtype' `endname'] or the [end_`begintype' `beginname'] are missing or the order of the begin and end of [`endname'] and [`beginname'] is incorrect."
+					local error_msg "begin_`begintype' [`beginname'] on row `beginrow' and end_`endtype' [`endname'] on row `endrow'"
 
-					noi report_file add ,  report_tempfile("`report_tempfile'") testname("END_ BEGIN_ NAME MISMATCH") message("`error_msg'") wikifragment("Matching_begin_.2Fend")
+					*Write header and intro if this is the first case
+					if `cases_found' == 0 {
 
-				}
+						*Create title
+						noi report_title , report_tempfile("`report_tempfile'") testname("END/BEGIN NAME MISMATCH")
 
-				* If name are the same but types are differnt, then it is most likely a typo in type
-				else if "`endtype'" != "`begintype'" {
+						*Display introduction
+						local intro_msg "The name in the end group/repeat does not match the name in the most recent begin group/repeat. This does not cause an error in ODK, but is recommended to solve programming errors with missmatching group/repeats fields. These cases were found:"
+						noi report_file add , report_tempfile("`report_tempfile'")  message("`intro_msg'")
 
-					local error_msg "The `begintype' [`endname'] on row `endrow' is ended with a [end_`begintype'] on row `beginrow' which is not correct, a begin_`begintype' cannot be closed with a end_`begintype', not a end_`endtype'."
+						*Display error for the first case
+						noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'")
 
-					noi report_file add , report_tempfile("`report_tempfile'") testname("END_ BEGIN_ TYPE MISMATCH") message("`error_msg'") wikifragment("Matching_begin_.2Fend")
+						*Indicate that a case have been found
+						local cases_found 1
+					}
+					else {
+						*Display error for all other cases but the first
+						noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") remove_space_before
+					}
 
 				}
 
@@ -633,6 +785,97 @@ qui {
 			}
 		}
 	}
+
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Matching_begin_.2Fend")
+
+
+	**********************
+	*Loop over all rows to test if begin and end match TYPE prefectly
+
+	*Keep track if any cases are found
+	local cases_found 0
+
+	*Loop over all rows
+	local num_rows = _N
+	forvalues row = 1/`num_rows' {
+
+		*This only applies to rows that end or begin a group or a repeat
+		if typeBeginEnd[`row'] == 1 {
+
+			* Get type and name for this row
+			local row_type = type[`row']
+			local row_name = name[`row']
+			local isBegin = typeBegin[`row']
+
+			*Add begin group to stack if either begin_group or begin_repeat
+			if `isBegin' {
+
+				local begintype = substr("`row_type'", 7,.)
+				local type_and_name "`begintype'#`row_name'#`row' `type_and_name'"
+
+			}
+
+			*If end_group or end_repeat, test that the corresponding group or repeat group was the most recent begin, otherwise throw an error.
+			else {
+
+				*Get the type and name of the end_group or end_repeat of this row
+				local endtype = substr("`row_type'", 5,6) //Remove the "end_" part of the type
+				local endname = "`row_name'"
+				local endrow  = `row' + 1 //First row in Excel is column name
+
+				*Get the type and name of the most recent begin_group or begin_repeat
+				local lastbegin : word 1 of `type_and_name'			//the most recent is the first in the list
+
+
+				*Parse the begintype and reomve parse charecter from rest
+				gettoken begintype beginnameandrow : lastbegin , parse("#")
+				local beginnameandrow = subinstr("`beginnameandrow'","#","", 1)	//Remove the parse char "#"
+
+				*Parse name and row and remove parse charcter from row
+				gettoken beginname beginrow : beginnameandrow , parse("#")
+				local beginrow = subinstr("`beginrow'","#","", 1)	//Remove the parse char "#"
+
+				* If name are the same but types are differnt, then it is most likely a typo in type
+				if "`endtype'" != "`begintype'" {
+
+					*Prepare error message from this case.
+					local error_msg "begin_`begintype' [`beginname'] on row `beginrow' and end_`endtype' [`endname'] on row `endrow'"
+
+					*Write header and intro if this is the first case
+					if `cases_found' == 0 {
+
+						*Create test title
+						noi report_title , report_tempfile("`report_tempfile'") testname("END/BEGIN TYPE MISMATCH")
+
+						*Display introduction
+						local intro_msg "The type in the end group/repeat does not match the type in the most recent begin group/repeat. This is an error in ODK, and is caught by SurveyCTO's server, but here row numbers are listed so it is easier to solve. These cases were found:"
+						noi report_file add , report_tempfile("`report_tempfile'")  message("`intro_msg'")
+
+						*Display error for the first case
+						noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'")
+
+						*Indicate that a case have been found
+						local cases_found 1
+					}
+					else {
+						*Display error for all other cases but the first
+						noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") remove_space_before
+					}
+				}
+
+				*Name and type are the same, this is a correct ending of the group or repeat group
+				else {
+					* The begin_group or begin_repeat is no longer the most recent, so remove it from the string
+					local type_and_name = trim(substr("`type_and_name'", strlen("`lastbegin'")+1, .))
+				}
+			}
+		}
+	}
+
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Matching_begin_.2Fend")
+
 
 	/***********************************************
 		Parse select_one, select_multiple values
@@ -727,7 +970,7 @@ qui {
 
 		local error_msg "These variable names are longer then 32 characters. That is allowed in the data formats used in SurveyCTO - and is therefore allowed in their test - but will cause an error when the data is imported to Stata. The following names should be shortened:"
 
-		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES")  message("`error_msg'") wikifragment("Field_Name_Length") able("list row type name if longname == 1")
+		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES")  message("`error_msg'") wikifragment("Field_Name_Length") table("list row type name if longname == 1")
 
 	}
 
@@ -753,11 +996,63 @@ qui {
 		TEST - Name conflict after long to wide
 	***********************************************/
 
+	*Keep track if any cases are found
+	local cases_found 0
+
 	**List all field names and test if there is a risk that any fieldnames
 	* have name conlicts when repeat field goes from long to wide and
 	* number are suffixed to the end.
 	qui levelsof name if will_be_field == 1 , local(listofnames) clean
-	wide_name_conflicts, fieldnames("`listofnames'")
+	noi wide_name_conflicts, fieldnames("`listofnames'")
+
+	*Get any conflicts
+	local conflicts "`r(conflicts)'"
+
+	*Loop over all identified conflicts. This is skipped if there are none
+	while ("`conflicts'" != "") {
+
+		*Get the next conflict
+		gettoken two_fields conflicts : conflicts
+
+		*Get the two field names from this conflict
+		gettoken field fieldFound : two_fields, parse("@")
+		local fieldFound = subinstr("`fieldFound'", "@", "", .)
+
+		*Get name and row num from field
+		gettoken fieldName fieldRow : field, parse("#")
+		local fieldRow = subinstr("`fieldRow'", "#", "", .)
+
+		*Get name and row num from fieldFound
+		gettoken fieldFoundName fieldFoundRow : fieldFound, parse("#")
+		local fieldFoundRow = subinstr("`fieldFoundRow'", "#", "", .)
+
+
+		*Prepare the error message for this case
+		local error_msg "Repeat field [`fieldName'] on row `fieldRow' and field [`fieldFoundName'] on row `fieldFoundRow'"
+
+		*Write header and intro if this is the first case
+		if `cases_found' == 0 {
+
+			noi report_title , report_tempfile("`report_tempfile'") testname("NAME CONFLICT ACROSS REPEAT GROUP")
+
+			*Display introduction
+			local intro_msg "There is a potential name conflict between field a field inside a repeat group with a field outside the repeat group. When variables in repeat groups are imported to Stata they will be given the suffix fieldname_1, fieldname_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is. The potential conflicts are:"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`intro_msg'")
+
+			*Display error for the first case
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'")
+
+			*Indicate that a case have been found
+			local cases_found 1
+		}
+		else {
+			*Display error for all other cases but the first
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") remove_space_before
+		}
+	}
+
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Repeat_Group_Name_Conflict")
 
 }
 end
@@ -777,7 +1072,7 @@ qui {
 			**Names are unique so this is to get the number of nested repeat
 			* groups deep this field is. If it is zero the name loop below is
 			* skipped as this only relates to field inside loops
-			qui sum num_nested_repeats if name == "`field'"
+			sum num_nested_repeats if name == "`field'"
 			local numNestThisField = `r(mean)'
 
 			**Loop over each level of nesting and add the _# regular
@@ -788,15 +1083,21 @@ qui {
 				local regexpress "`regexpress'_[0-9]+"
 
 				*Start the recursive regression that looks for potential conflicts
-				wide_name_conflicts_rec, field("`field'") fieldnames("`fieldnames'") regexpress("`regexpress'")
+				noi wide_name_conflicts_rec, field("`field'") fieldnames("`fieldnames'") regexpress("`regexpress'")
+
+				*Concatenate any conflicts found
+				local conflicts "`conflicts' `r(conflicts)'"
 			}
 		}
+
+		*Return cases found
+		return local conflicts	=trim(itrim("`conflicts'"))
 }
 end
 
 capture program drop wide_name_conflicts_rec
 	program wide_name_conflicts_rec , rclass
-qui {
+	qui {
 		syntax , field(string) fieldnames(string) regexpress(string)
 
 		*Is there at least one match to the regular expression
@@ -808,12 +1109,6 @@ qui {
 			*Get the name of the matched field
 			local fieldFound	= trim(regexs(0))
 
-			*Display error
-			local error_msg "There is a potential name conflict between field [`field'] and [`fieldFound'] as `field' is in a repeat group. When variables in repeat groups are imported to Stata they will be given the suffix `field'_1, `field'_2 etc. for each repeat in the repeat group. It is therefore bad practice to have a field name that share the name as a field in a repeat group followed by an underscore and a number, no matter how big the number is."
-
-			noi report_file add , report_tempfile("`report_tempfile'") testname("NAME CONFLICT ACROSS REPEAT GROUP") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length")
-
-
 			**Prepare the string to recurse on. Remove eveything up to the matched
 			* field [strpos("`fieldnames'","`fieldFound'")] and the field
 			* itself [strlen("`fieldFound'")] and use only everything after
@@ -822,10 +1117,22 @@ qui {
 			local newFieldnames = substr("`fieldnames'",`stringCut', .)
 
 			*Make the recursive call
-			wide_name_conflicts_rec, field("`field'") fieldnames("`newFieldnames'") regexpress("`regexpress'")
+			noi wide_name_conflicts_rec, field("`field'") fieldnames("`newFieldnames'") regexpress("`regexpress'")
+
+			*Get row for the main field
+			sum row if name == "`field'"
+			local fieldRow `r(mean)'
+
+			*Get row for the field found
+			sum row if name == "`fieldFound'"
+			local fieldFoundRow `r(mean)'
+
+			*Return cases found
+			return local conflicts	"`field'#`fieldRow'@`fieldFound'#`fieldFoundRow' `r(conflicts)'"
 		}
-}
+	}
 end
+
 
 capture program drop test_survey_label
 		program 	 test_survey_label , rclass
@@ -935,12 +1242,35 @@ qui {
 }
 end
 
+*Program that test if column has illegal chars that will cause this command to
+capture program drop test_illegal_chars
+		program 	 test_illegal_chars , rclass
+qui {
+
+		syntax varname, sheet(string)
+
+		**Test if three are any illegal characters in varname. This is done by removing all
+		* legal characters and test if the trimmed result is the empty string.
+		tempvar  illegal_char
+		gen		`illegal_char' = (trim(regexr(`varlist',"[a-zA-Z0-9_/-]*","")) != "")
+
+		*Test if any observation had illegal characters. If so display those cases and an error message.
+		cap assert `illegal_char' == 0
+		if _rc {
+			noi di as error "{phang}The following values in column `varlist' in the `sheet' sheet contains non-standard characters or have a space in the middle. The only characters allowed are a-z, A-Z, 0-9 and _ (underscore). The value has been cleaned from regular spaces before and after the value, but Excel allows for different types of spaces. SurveyCTO's server is able to remove them, but these characters must be removed for this command to work properly. These characters are sometimes the result of copying and pasting text from other resources, so one way to make sure they are not included is to go to the cell with the value in Excel and manually re-enter the text.{p_end}"
+			noi list row `varlist' if `illegal_char' == 1
+			error 688
+		}
+}
+end
+
+
 capture program drop report_file
 		program 	 report_file , rclass
 qui {
 
 		//noi di "report_file command ok"
-		syntax anything , report_tempfile(string) [testname(string) message(string) filepath(string) wikifragment(string) table(string) metav(string) metaid(string) metatitle(string) metafile(string)]
+		syntax anything , report_tempfile(string) [testname(string) message(string) filepath(string) wikifragment(string) table(string) metav(string) metaid(string) metatitle(string) metafile(string) remove_space_before replace]
 		//noi di "report_file syntax ok [`anything']"
 
 		local allowed_tasks		"setup add write"
@@ -977,13 +1307,8 @@ qui {
 				"This report was created by user `user' on `date' using the Stata command ietestform" _n ///
 				_n ///
 				"Use either of these links to read more about this command:" _n ///
-				",https://github.com/worldbank/iefieldkit" _n ///
-				",https://dimewiki.worldbank.org/wiki/Ietestform" _n ///
-				_n ///
-				",Form ID,`metaid'" _n ///
-				",Form Title,`metatitle'" _n ///
-				",Form Version,`metav'" _n ///
-				",Form File,`metafile'" _n _n
+				",https://github.com/worldbank/iefieldkit" _n ",https://dimewiki.worldbank.org/wiki/Ietestform" _n _n ///
+				",Form ID,`metaid'" _n ",Form Title,`metatitle'" _n ",Form Version,`metav'" _n ",Form File,`metafile'" _n _n
 
 			file close 		`report_handler'
 		}
@@ -991,29 +1316,18 @@ qui {
 		*Add item to report
 		else if "`task'" == "add" {
 
-			*Add seperator and error message
-			cap file close 	`report_handler'
-			file open  		`report_handler' using "`report_tempfile'", text write append
-			file write  	`report_handler' ///
-				"----------------------------------------------------------------------" _n ///
-				"----------------------------------------------------------------------" _n ///
-				"TEST: `testname'" _n ///
-				"-----------------------------------" _n _n
-			file close 		`report_handler'
+			*Add table if applicable
+			if "`testname'" != "" noi report_title , report_tempfile("`report_tempfile'") testname("`testname'")
 
 			*Chop the message up in charwidth
-			noi report_message , report_tempfile("`report_tempfile'") message("`message'") charwidth(80)
+			noi report_message , report_tempfile("`report_tempfile'") message("`message'") charwidth(100) `remove_space_before'
 
 			*Add table if applicable
 			if "`table'" != "" noi report_table `table' , report_tempfile("`report_tempfile'")
 
-			*Add link to wiki at the bottom
-			cap file close 	`report_handler'
-			file open  		`report_handler' using "`report_tempfile'", text write append
-			file write  	`report_handler' _n ///
-				"Read more about this test and why this is an error or does not follow the best practices we recommend here:" _n ///
-				"https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n _n
-			file close 		`report_handler'
+			*Add table if applicable
+			if "`wikifragment'" != "" noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("`wikifragment'")
+
 		}
 
 		*Write final file to disk
@@ -1030,18 +1344,22 @@ qui {
 			file close 		`report_handler'
 
 			*Write temporary file to disk
-			cap copy "`report_tempfile'" "`filepath'", replace
+			cap copy "`report_tempfile'" "`filepath'",  `replace'
 
 			if _rc == 608 {
 				noi di as error "{phang}The file `filepath' cannot be overwritten. If you have this file open, close it and run the command again.{p_end}"
 				error 608
+			}
+			else if _rc == 602 {
+				noi di as error "{phang}The file `filepath' already exists. Either use a different name in {cmd:report()} or use the {cmd:replace} option if you want to overwrite the file.{p_end}"
+				error 602
 			}
 			else if !_rc {
 				noi di as result `"{phang}Report saved to: {browse "`filepath'":`filepath'} "'
 			}
 			else {
 				*Something did not work, run the command again to get full error message and return error code
-				copy "`report_tempfile'" "`filepath'", replace
+				copy "`report_tempfile'" "`filepath'", `replace'
 			}
 		}
 
@@ -1052,6 +1370,47 @@ qui {
 		}
 }
 end
+
+*Write the title of each test section
+capture program drop report_title
+		program 	 report_title , rclass
+
+	qui {
+
+		syntax, report_tempfile(string) testname(string)
+
+			tempname report_handler
+			*Add seperator and error message
+			cap file close 	`report_handler'
+			file open  		`report_handler' using "`report_tempfile'", text write append
+			file write  	`report_handler' ///
+				"----------------------------------------------------------------------" _n ///
+				"----------------------------------------------------------------------" _n ///
+				"TEST: `testname'" _n ///
+				"----------------------------------------------------------------------" _n
+			file close 		`report_handler'
+	}
+end
+
+*Write the ending of each test section
+capture program drop report_wikilink
+		program 	 report_wikilink , rclass
+
+	qui {
+
+		syntax, report_tempfile(string) wikifragment(string)
+
+			tempname report_handler
+			*Add link to wiki at the bottom
+			cap file close 	`report_handler'
+			file open  		`report_handler' using "`report_tempfile'", text write append
+			file write  	`report_handler' _n _n ///
+				"Read more about this test and why this is an error or does not follow the best practices we recommend here:" _n ///
+				"https://dimewiki.worldbank.org/wiki/Ietestform#`wikifragment'" _n _n
+			file close 		`report_handler'
+	}
+end
+
 
 
 capture program drop report_table
@@ -1137,9 +1496,17 @@ capture program drop report_message
 		program 	 report_message , rclass
 qui {
 
-	syntax , report_tempfile(string) message(string) charwidth(numlist)
+	syntax , report_tempfile(string) message(string) charwidth(numlist) [remove_space_before]
 
 	tempname report_handler
+
+	if "`remove_space_before'" == "" {
+		*Create one empty row above
+		cap file close 	`report_handler'
+		file open  		`report_handler' using "`report_tempfile'", text write append
+		file write  	`report_handler' _n
+		file close 		`report_handler'
+	}
 
 	*Loop over message and chop up in segments
 	while "`message'" != "" {
