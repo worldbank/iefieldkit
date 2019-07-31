@@ -76,13 +76,13 @@ cap program drop iecodebook
   if ("`subcommand'" == "export") {
 
     cap confirm file "`using'"
-    if (_rc == 0) & (!strpos("`options'","replace")) {
+    if (_rc == 0) & (!strpos(`"`options'"',"replace")) {
       di as err "That codebook already exists. {bf:iecodebook export} will only overwrite it if you specify the [replace] option."
       error 602
     }
 
     cap confirm new file "`using'"
-    if (_rc != 0) & (!strpos("`options'","replace")) {
+    if (_rc != 0) & (!strpos(`"`options'"',"replace")) {
       di as error "{bf:iecodebook} could not create file `using'. Check that the file path is correctly specified."
       error 601
     }
