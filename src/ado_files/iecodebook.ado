@@ -218,6 +218,8 @@ qui {
       tempvar v
       clonevar `v' = v1
       drop i j v1
+      drop if `v' == ""
+      duplicates drop
 
     // Cheat to get all the variables in the dataset
     foreach item in `theVarlist' {
