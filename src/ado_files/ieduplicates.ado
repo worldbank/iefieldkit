@@ -299,11 +299,13 @@
 					Make sure input is yes or y for the correct and drop columns
 				******************/
 
-				* Make string input lower case and change "y" to "yes"
+				* 1. Trim the string of leading and trailing spaces, 2. make it lower case and 3. change "y" to "yes"
+				replace `correct' =  trim(`correct')
+				replace `drop' 	  =  trim(`drop')
 				replace `correct' = lower(`correct')
-				replace `drop' 	= lower(`drop')
-				replace `correct' = "yes" if `correct' 	== "y"
-				replace `drop' 	= "yes" if `drop' 	== "y"
+				replace `drop' 	  = lower(`drop')
+				replace `correct' = "yes" if `correct' == "y"
+				replace `drop' 	  = "yes" if `drop'    == "y"
 
 				*Check that variables are either empty or "yes"
 				gen `inputNotYes' = !((`correct'  == "yes" | `correct' == "") & (`drop'  == "yes" | `drop' == ""))
