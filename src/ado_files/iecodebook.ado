@@ -210,27 +210,30 @@ qui {
         save `a' , replace
     }
 
-    // Loop through every variable in the current dataset and put its name wherever it occurs
-    local x = 1
+    // Reshape one word per line
+      split v1
+      drop v1
+      gen i = _n
+      reshape long v1, i(i) j(j)
+      tempvar v
+      clonevar `v' = v1
+      drop i j v1
+
+    // Cheat to get all the variables in the dataset
     foreach item in `theVarlist' {
-      local ++x
-      gen v`x' = "`item'" if strpos(v1,"`item'")
+      gen `item' = .
     }
 
-    // Collapse to one column to get every variable mentioned in any dofile
-    collapse (firstnm) v* , fast
-      gen n = 1
-      reshape long v , i(n) // Reshape to column of varnames
-      keep v
-      drop if v == ""
-      drop in 1
-
-    // Loop over variable names to build list of variables to keep
-    count
+    // Get all the variables in the dofiles
+    qui count
     forvalues i = 1/`r(N)' {
-      local theNextVar = v[`i']
-      local theKeepList = "`theKeepList' `theNextVar'"
+      local next = `v'[`i']
+      cap unab vars : `next'
+        if _rc == 0 local allVars "`allVars' `vars'"
     }
+
+    // Keep only those variables
+    local theKeepList : list uniq allVars
 
     // Restore and keep variables
     restore
