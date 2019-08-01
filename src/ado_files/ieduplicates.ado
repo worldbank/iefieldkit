@@ -138,13 +138,24 @@
 			if "`suffix'" != ""		local suffixtotest 		suffix(`suffix')
 			if "`using'"  != ""		local usingtotest		`"using "`using'""'
 
-			testpath `usingtotest' , today(`date') `suffixtotest' `foldertotest'
+			noi testpath `usingtotest' , today(`date') `suffixtotest' `foldertotest'
 
 			local name		= r(name)
 			local folder	= r(folder)
 			local ext		= r(ext)
+	
+			if 		"`folder'" != "." {
+				local using		"`folder'`name'`ext'"
+			}
+			else if "`folder'" == "." {
 			
-			local using			"`folder'/`name'.`ext'"
+				local using		"`name'`ext'"
+				
+				noi di 	""
+				noi di	"{phang}Warning: You have not specified a folder path to the duplicates report. {inp:ieduplicates} will save the report to the current working directory, which is `c(pwd)'.{p_end}"
+				noi di `"{phang}DIME Analytics strongly recommends that you do not use {inp:cd} to set the working directory to open and save files. Instead, we recommend using {browse "https://dimewiki.worldbank.org/wiki/Stata_Coding_Practices#File_paths": dynamic, absolute folder paths}.{p_end}"'
+				noi di 	""
+			}
 
 			/***********************************************************************
 			************************************************************************
@@ -651,7 +662,7 @@
 
 					*Making listofdiffs come last
 					order `listofdiffs', last
-
+	
 					*Export main report
 					export excel using "`using'" , firstrow(variables) replace  nolabel
 
@@ -821,7 +832,8 @@
 			noi di	"{phang}There are no unresolved duplicates in this data set. The data set is returned with `idvar' uniquely and fully identifying the data set.{p_end}"
 		}
 		else if "`clear'" == "" {
-			noi di as error	"{phang}There are `numDup' duplicated IDs still unresolved. IDs still containing duplicates: `dup_ids'. The unresolved duplicate observations were exported in the Excel file. Variable `idvar' does not uniquely identify the current data set. The {it:clear} option is required to return the data set without those duplicates.{p_end}"
+			noi di as error	"{phang}There are `numDup' duplicated IDs still unresolved. IDs still containing duplicates: `dup_ids'. The unresolved duplicate observations were exported in the Excel file.{p_end}"
+			noi di as error	"{phang}The variable `idvar' does not uniquely identify the current data set. Option {it:clear} is required to replace the current data set with a version without duplicated observations.{p_end}"
 			error 198
 			restore
 			exit
@@ -886,8 +898,6 @@ end
 
 cap program drop testpath
 	program		 testpath , rclass
-
-qui {
 	
 	syntax [using/] , today(string) [folder(string) suffix(string)]
 
@@ -929,7 +939,10 @@ qui {
 		
 		* If a folder was specified, get the folder path
 		if `r(lastpos)' > 0 {
-			local folder	 = substr("`using'", 1, `r(lastpos)' - 1)
+			local folder	 = substr("`using'", 1, `r(lastpos)')
+		}
+		else {
+			local folder	 ""
 		}
 
 		* Everything that comas after the folder path is the file name and format
@@ -943,7 +956,7 @@ qui {
 			
 			* If a format was specified, separate name and format
 			if `r(lastpos)' > 0 {
-				local ext 		= substr("`file'", `r(lastpos)' + 1, .)				// File format starts at the last period and ends at the end of the string
+				local ext 		= substr("`file'", `r(lastpos)', .)				// File format starts at the last period and ends at the end of the string
 				local name		= substr("`file'", 1, `r(lastpos)' - 1)				// File name starts at the beginning and ends at the last period
 			}
 			* If a format was not specified, the name is everything that follows the
@@ -962,9 +975,9 @@ qui {
 		
 		* The default format is xlsx. Other possible formats are xls
 		if "`ext'" == "" {
-			local	ext	xlsx
+			local	ext	.xlsx
 		}
-		else if !inlist("`ext'", "xls", "xlsx") {
+		else if !inlist("`ext'", ".xls", ".xlsx") {
 		
 			noi di as error `"{phang}`ext' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or {browse "https://github.com/worldbank/iefieldkit/issues":create an issue on iefieldkit's GitHub repository}.{p_end}"'
 			noi di ""
@@ -976,9 +989,10 @@ qui {
 	* Create file name if using was not specified
 	else if "`using'" == "" {
 	
-								local name	ieduprepot
-		if "`suffix'" != "" 	local name	`name'_`suffix'
-								local ext	xlsx
+								local folder	`folder'/
+								local name		iedupreport
+		if "`suffix'" != "" 	local name		`name'_`suffix'
+								local ext		.xlsx
 	}
 
 	* Test that the folder indicated existes
@@ -997,8 +1011,7 @@ qui {
 	return local name 	`name'
 	return local ext	`ext'
 	return local folder	`folder'
-}
-
+	
 end
 
 /*******************************************************************************
@@ -1015,20 +1028,20 @@ noi {
 	*--------------------------------*
 	* Calculate name of daily file	 *
 	*--------------------------------*
-	local using_daily "`folder'/Daily/`name'_`today'.`ext'"
+	local using_daily "`folder'Daily/`name'_`today'`ext'"
 
 	*--------------------------------*
 	* Check that daily folder exists *
 	*--------------------------------*
 	
 	* Returns 0 if folder does not exist, 1 if it does
-	mata : st_numscalar("r(dirExist)", direxists("`folder'/Daily"))
+	mata : st_numscalar("r(dirExist)", direxists("`folder'Daily"))
 
 	* If the daily folder is not created, just create it
 	if `r(dirExist)' == 0  {
 
 		*Create the folder since it does not exist
-		mkdir "`folder'/Daily"
+		mkdir "`folder'Daily"
 	}
 	
 	*--------------------------------------------*
@@ -1056,7 +1069,7 @@ noi {
 				local time 		= subinstr("`time'", ":", "`colon'", 1)
 			}
 
-			local using_daily "`folder'/Daily/`name'_`today'_`time's.`ext'"
+			local using_daily "`folder'Daily/`name'_`today'_`time's`ext'"
 		}
 
 		use `daily', clear
@@ -1070,7 +1083,7 @@ noi {
 	*Print error if daily report cannot be saved
 	if _rc {
 
-		display as error "{phang}The Daily copy could not be saved to the `folder'/Daily folder. Make sure to close any old daily copy or see the option nodaily.{p_end}"
+		display as error "{phang}The Daily copy could not be saved to the `folder'Daily folder. Make sure to close any old daily copy or see the option nodaily.{p_end}"
 		error 603
 		exit
 	}
