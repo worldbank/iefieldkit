@@ -18,7 +18,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {cmdab:ieduplicates}
 {it:ID_varname}
 , {cmdab:fol:der(}{it:string}{cmd:)} {cmdab:unique:vars(}{it:varlist}{cmd:)}
-[{cmdab:force} {cmdab:keep:vars(}{it:varlist}{cmd:)} {cmdab:tostringok} {cmdab:droprest}
+[{cmdab:clear} {cmdab:keep:vars(}{it:varlist}{cmd:)} {cmdab:tostringok} {cmdab:droprest}
 {cmdab:nodaily} {cmdab:suf:fix(}{it:string}{cmd:)}
 {cmdab:duplistid(}{it:string}{cmd:)} {cmdab:datelisted(}{it:string}{cmd:)}
 {cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}
@@ -35,7 +35,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {synoptline}
 {synopt :{cmdab:fol:der(}{it:string}{cmd:)}}folder in which the duplicate report will be saved{p_end}
 {synopt :{cmdab:unique:vars(}{it:varlist}{cmd:)}}variables used as unique ID within groups of duplicates in {it:ID_varname}. May not be in date or time format.{p_end}
-{synopt :{cmdab:force}}specifies that observations duplicated with respect to {it:ID_varname} be dropped.{p_end}
+{synopt :{cmdab:clear}}specifies that it is okay to replace the data in memory.{p_end}
 {synopt :{cmdab:keep:vars(}{it:varlist}{cmd:)}}variables used to be included in the Excel report in addition to {it:ID_varname} and {cmdab:unique:vars()} {p_end}
 {synopt :{cmdab:tostringok}}allows {it:ID_varname} to be recasted to string if required{p_end}
 {synopt :{cmdab:droprest}}disables the requirement that duplicates must be explicitly deleted{p_end}
@@ -115,10 +115,10 @@ then be used in this options. Data that has been downloaded from
 a server usually has a variable called "KEY" or similar. Such a variable would be optimal
 for {cmdab:unique:vars(}{it:varlist}{cmd:)}.
 
-{phang}{cmdab:force} specifies that observations duplicated with respect to {it:ID_varname} be dropped.
-This option is required when there are unresolved duplicates as a reminder that these observations
+{phang}{cmdab:clear} specifies that it is okay to replace the data in memory. This option is 
+required when there are unresolved duplicates as a reminder that these observations
 will be dropped, and the resulting data will be different from the original. Do not save the
-data returned by {cmd:ieduplicates} with option force over the raw data, as information will be lost
+data returned by {cmd:ieduplicates} with option clear over the raw data, as information will be lost
 and {cmd:ieduplicates} will not function on this data set, preventing reproducibility of the process.{p_end}
 
 {phang}{cmdab:keep:vars(}{it:varlist}{cmd:)} list variables to be included in the exported
