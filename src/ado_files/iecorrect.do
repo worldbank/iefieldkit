@@ -66,6 +66,7 @@ cap program drop iecorrect
 				}
 			}
 		*/
+		
 /*******************************************************************************	
 	Create a do file containing the corrections
 *******************************************************************************/		
@@ -84,6 +85,12 @@ cap program drop iecorrect
 			if ``type'corr' {
 				* Open the data set with the numeric corrections
 				cap import excel "`using'", sheet("`type'") firstrow allstring clear
+				
+				* Drop observations with all missing variables
+				tempvar  allmiss
+				egen 	`allmiss' = rownonmiss(*), strok
+				keep if `allmiss' > 0
+				drop 	`allmiss'
 
 				* Open the placeholder do file and write the corrections to be made
 				cap	file close 	`doname'
