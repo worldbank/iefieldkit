@@ -605,7 +605,10 @@ qui {
 
   // Template setup
   if "`template'" != "" {
-    // create empty codebook
+    // Use tempfile for writing loop to avoid problems if failure
+    tempfile codebook
+
+    // Create empty codebook
     preserve
       clear
       set obs 1
@@ -613,20 +616,27 @@ qui {
         label var `generate' "Data Source (do not edit this row)"
         label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
         label val `generate' yesno
-      iecodebook export using "`using'" , `replace'
+      iecodebook export using "`codebook'" , `replace'
     restore
-    // append one codebook per survey
+
+    // Append or merge one codebook per survey
     local x = 0
     foreach survey in `surveys' {
       if `x' == 1 local mergeopt "`merge'"
       local ++x
       local filepath : word `x' of `anything'
-      iecodebook export "`filepath'" using "`using'" ///
+      iecodebook export "`filepath'" using "`codebook'" ///
         , template(`survey') `mergeopt' replace
     }
+
+    // On success copy to final location
+    copy "`codebook'" `"`using'"'
+
   use `raw_data' , clear
   exit
   }
+
+
 
   // Loop over datasets and apply codebook
   local x = 0
