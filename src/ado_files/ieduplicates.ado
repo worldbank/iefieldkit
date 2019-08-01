@@ -1045,8 +1045,6 @@ noi {
 
 			local using_daily "`folder'/Daily/`name'_`today'_`time's.`ext'"
 		}
-		else {
-		}
 
 		use `daily', clear
 	}
