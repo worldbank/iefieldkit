@@ -55,7 +55,7 @@
 			else if `r(more2)' == 1 & "`more2ok'" != "" {
 
 				keep if _n <= 2
-				noi di "{phang}There are more than two observations with (`varlist' == `id'). Comparing the first two observations where this is true.{p_end}"
+				noi di "{phang}There are more than two observations with (`varlist' == `id'). The first two observations with (`varlist' == `id') according to the sort order in the data set will be compared.{p_end}"
 				
 			}
 			else if `r(more2)' == 1 & `"`if'"' != "" {
