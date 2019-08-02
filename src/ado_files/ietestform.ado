@@ -268,6 +268,18 @@ qui {
 		if substr("`var'", 1, 5) == "label" local labelvars "`labelvars' `var'"
 	}
 	local num_label_vars : word count `labelvars'
+	
+	**Make sure all label vars are strings. Only non-string if all values are
+	* digits or all values missing. In both cases these should be changed to
+	* string, and if "." change to missing
+	foreach labelvar of local labelvars {
+
+		cap confirm string variable `labelvar'
+		if _rc {
+			tostring `labelvar', replace
+			replace `labelvar' = "" if `labelvar' == "."
+		}
+	}
 
 	*Create dummies for missing status in the label vars
 	egen 	label_count_miss	 = rowmiss(`labelvars')
