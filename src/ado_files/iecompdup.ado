@@ -274,7 +274,7 @@ capture program drop errormore2
 		local if_message " that also satisfy the {inp:if} condition"
 	}
 	
-	noi di as error "{phang}There are more than 2 observations with (`varlist' == `id')`if_message'. The current version of iecompdup is not able to compare more than 2 duplicates at the time. (How to output the results for groups larger than 2 is non-obvious and suggestions on how to do that are appreciated.) {p_end}"
+	noi di as error "{phang}There are more than 2 observations with (`varlist' == `id')`if_message'. The current version of iecompdup is not able to compare more than 2 duplicates at the time. (How to output the results for groups larger than 2 is non-obvious and suggestions on how to do that are appreciated.){p_end}{break}"
 	noi di as error "{phang}Either use {inp:if} to explicitly select the observations to be compared or specify option {inp:more2ok}, in which case the comparison will be done between the first and the second occurrences of the value `id' in `varlist'.{p_end}"
 	noi di ""
 	error 197
