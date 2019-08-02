@@ -7,7 +7,7 @@
 	qui {
 
 		syntax  varname [using/] , UNIQUEvars(varlist) ///
-            [clear ///
+            [force ///
             FOLder(string) ///
             KEEPvars(varlist) ///
             tostringok ///
@@ -15,7 +15,7 @@
             nodaily ///
             SUFfix(string) ///
             duplistid(string) datelisted(string) datefixed(string) correct(string) drop(string) newid(string) initials(string) notes(string) listofdiffs(string)]
-		
+
 		version 11.0
 
 		*Add version of Stata fix
@@ -818,15 +818,16 @@
 		local numDup	= `:list sizeof dup_ids'
 
 		if `numDup' == 0 {
+			noi di "numDup == 0"
 			noi di	"{phang}There are no unresolved duplicates in this data set. The data set is returned with `idvar' uniquely and fully identifying the data set.{p_end}"
 		}
-		else if "`clear'" == "" {
-			noi di as error	"{phang}There are `numDup' duplicated IDs still unresolved. IDs still containing duplicates: `dup_ids'. The unresolved duplicate observations were exported in the Excel file. Variable `idvar' does not uniquely identify the current data set. The {it:clear} option is required to return the data set without those duplicates.{p_end}"
+		else if "`force'" == "" {
+			noi di as error	"{phang}There are `numDup' duplicated IDs still unresolved. IDs still containing duplicates: `dup_ids'. The unresolved duplicate observations were exported in the Excel file. Variable `idvar' does not uniquely identify the current data set. The {it:force} option is required to return the data set without those duplicates.{p_end}"
 			error 198
 			restore
 			exit
 		}
-		else if "`clear'" != "" {
+		else if "`force'" != "" {
 			noi di	"{phang}There are `numDup' duplicated IDs still unresolved. IDs still containing duplicates: `dup_ids'. The unresolved duplicate observations were exported in the Excel file. The data set is returned without those duplicates and with `idvar' uniquely and fully identifying the data set.{p_end}"
 		}
 
