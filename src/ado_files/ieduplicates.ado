@@ -144,19 +144,8 @@
 			local folder	= r(folder)
 			local ext		= r(ext)
 	
-			if 		"`folder'" != "." {
-				local using		"`folder'`name'`ext'"
-			}
-			else if "`folder'" == "." {
+			local using		"`folder'`name'`ext'"
 			
-				local using		"`name'`ext'"
-				
-				noi di 	""
-				noi di	"{phang}Warning: You have not specified a folder path to the duplicates report. {inp:ieduplicates} will save the report to the current working directory, which is `c(pwd)'.{p_end}"
-				noi di `"{phang}DIME Analytics strongly recommends that you do not use {inp:cd} to set the working directory to open and save files. Instead, we recommend using {browse "https://dimewiki.worldbank.org/wiki/Stata_Coding_Practices#File_paths": dynamic, absolute folder paths}.{p_end}"'
-				noi di 	""
-			}
-
 			/***********************************************************************
 			************************************************************************
 				Section 2 - Test unique vars
@@ -942,7 +931,12 @@ cap program drop testpath
 			local folder	 = substr("`using'", 1, `r(lastpos)')
 		}
 		else {
-			local folder	 ""
+			noi di as error ""
+			noi di as error	"{phang}You have not specified a folder path to the duplicates report. An absolute folder path is required.{p_end}"
+			noi di as error `"{phang}This command will not work if you are trying to use {inp:cd} to set the directory and open or save files. To know more about why this practice is not allow, {browse "https://dimewiki.worldbank.org/wiki/Stata_Coding_Practices#File_paths":see this article in the DIME Wiki}.{p_end}"'
+			noi di as error	""
+			error 198
+			exit
 		}
 
 		* Everything that comas after the folder path is the file name and format
