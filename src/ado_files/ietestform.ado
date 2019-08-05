@@ -81,11 +81,10 @@ qui {
 	*Get the filename and the file extension type from the report file
 	local r_filename = substr(`"`reportsave'"',`r_lastslash'+1, .)
 	local r_filenametype = substr(`"`r_filename'"',strlen(`"`r_filename'"')-strpos(strreverse(`"`r_filename'"'),".")+1,.)
-
 	*Test what the file extension type is
 	if (`"`r_filenametype'"' == "") {
 		*No file type specified, add .csv
-		local report `"`reportsave'.csv"'
+		local reportsave `"`reportsave'.csv"'
 	}
 	else if (`"`r_filenametype'"' != ".csv") {
 		*Incorrect file type added. Throw error
@@ -174,7 +173,7 @@ qui {
 	*Option date is used, add today's date to file name
 	if "`date'" != ""{
 		local date = subinstr(c(current_date)," ","",.)
-		local report = subinstr("`reportsave'",".csv","_`date'.csv",.)
+		local reportsave = subinstr("`reportsave'",".csv","_`date'.csv",.)
 	}
 
 	*Write the file to disk
