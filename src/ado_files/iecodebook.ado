@@ -141,7 +141,7 @@ cap program drop iecodebook_export
 
   syntax [anything] [using/] [if] [in]  ///
     , [replace] [trim(string asis)]     /// User-specified options
-      [merge] [template(string asis)]   // Programming options
+      [match] [template(string asis)]   // Programming options
 
 qui {
 
@@ -277,7 +277,7 @@ qui {
       local theN : word count `allVariables'
 
       local templateN ""
-      if `TEMPLATE' & "`merge'" == "" {
+      if `TEMPLATE' & "`match'" == "" {
         import excel "`using'", clear first sheet("survey")
 
         count
@@ -309,7 +309,7 @@ qui {
         replace choices`template' = `"`theChoices'"'   in `=`i'`templateN''
       }
 
-    if `TEMPLATE' & "`merge'" != "" {
+    if `TEMPLATE' & "`match'" != "" {
       tempfile newdata
         save `newdata' , replace
 
@@ -569,7 +569,7 @@ cap program drop iecodebook_append
 
   syntax [anything] [using/] , ///
     surveys(string asis) [GENerate(string asis)] ///
-    [clear] [merge] [KEEPall] /// User options
+    [clear] [match] [KEEPall] /// User options
     [template] [replace] /// System options
     [*]
 
@@ -622,11 +622,11 @@ qui {
     // Append or merge one codebook per survey
     local x = 0
     foreach survey in `surveys' {
-      if `x' == 1 local mergeopt "`merge'"
+      if `x' == 1 local matchopt "`match'"
       local ++x
       local filepath : word `x' of `anything'
       iecodebook export "`filepath'" using "`codebook'" ///
-        , template(`survey') `mergeopt' replace
+        , template(`survey') `matchopt' replace
     }
 
     // On success copy to final location

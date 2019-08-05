@@ -71,7 +71,7 @@ and optionally produces an export version of the dataset with only variables use
 {p 2 4}{cmdab:iecodebook template} {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break}{p_end}
-{p 2 4}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} [{bf:merge}] [{opth gen:erate(varname)}]{p_end}
+{p 2 4}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} [{bf:match}] [{opth gen:erate(varname)}]{p_end}
 
 {p 2 4}{cmdab:iecodebook append} {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
@@ -114,7 +114,7 @@ For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "
 Names must have no spaces or special characters.
 When importing, this will also be used to create a variable identifying the source of each observation.{p_end}
 {break}
-{synopt:{opt merge}}This option can be used to "auto-align" the {bf:template} command when preparing for {bf:iecodebook append}.
+{synopt:{opt match}}This option can be used to "auto-align" the {bf:template} command when preparing for {bf:iecodebook append}.
 If specified, it will cause any variables in later datasets with the same original name as a variable in the first dataset
 to appear in the same row of the Excel sheet.{p_end}
 {break}
