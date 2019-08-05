@@ -18,12 +18,13 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {cmdab:ieduplicates}
 {it:ID_varname}
 , {cmdab:fol:der(}{it:string}{cmd:)} {cmdab:unique:vars(}{it:varlist}{cmd:)}
-[{cmdab:keep:vars(}{it:varlist}{cmd:)} {cmdab:tostringok} {cmdab:droprest}
+[{cmdab:force} {cmdab:keep:vars(}{it:varlist}{cmd:)} {cmdab:tostringok} {cmdab:droprest}
 {cmdab:nodaily} {cmdab:suf:fix(}{it:string}{cmd:)}
 {cmdab:duplistid(}{it:string}{cmd:)} {cmdab:datelisted(}{it:string}{cmd:)}
 {cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}
 {cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)}
-{cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)}]{p_end}
+{cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)}
+{cmdab:listofdiffs(}{it:string}{cmd:)}]{p_end}
 
 
 
@@ -35,6 +36,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {synoptline}
 {synopt :{cmdab:fol:der(}{it:string}{cmd:)}}folder in which the duplicate report will be saved{p_end}
 {synopt :{cmdab:unique:vars(}{it:varlist}{cmd:)}}variables used as unique ID within groups of duplicates in {it:ID_varname}. May not be in date or time format.{p_end}
+{synopt :{cmdab:force}}specifies that all unresolved duplicates with respect to {it:ID_varname} be dropped.{p_end}
 {synopt :{cmdab:keep:vars(}{it:varlist}{cmd:)}}variables used to be included in the Excel report in addition to {it:ID_varname} and {cmdab:unique:vars()} {p_end}
 {synopt :{cmdab:tostringok}}allows {it:ID_varname} to be recasted to string if required{p_end}
 {synopt :{cmdab:droprest}}disables the requirement that duplicates must be explicitly deleted{p_end}
@@ -53,6 +55,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {synopt :{cmdab:newid(}{it:string}{cmd:)}}customizes variable {it:newid}{p_end}
 {synopt :{cmdab:initials(}{it:string}{cmd:)}}customizes variable {it:initials}{p_end}
 {synopt :{cmdab:notes(}{it:string}{cmd:)}}customizes variable {it:notes}{p_end}
+{synopt :{cmdab:listofdiffs(}{it:string}{cmd:)}}customizes variable {it:listofdiffs}{p_end}
 
 
 {synoptline}
@@ -114,6 +117,12 @@ then be used in this options. Data that has been downloaded from
 a server usually has a variable called "KEY" or similar. Such a variable would be optimal
 for {cmdab:unique:vars(}{it:varlist}{cmd:)}.
 
+{phang}{cmdab:force} specifies that all unresolved duplicates with respect to {it:ID_varname} be dropped.
+This option is required when there are unresolved duplicates as a reminder that these observations
+will be dropped, and the resulting data will be different from the original. Do not save the
+data returned by {cmd:ieduplicates} with option force over the raw data, as information will be lost
+and {cmd:ieduplicates} will not function on this data set, preventing reproducibility of the process.{p_end}
+
 {phang}{cmdab:keep:vars(}{it:varlist}{cmd:)} list variables to be included in the exported
 Excel report. These variables can help team members identifying which observation to keep,
 drop and assign a new ID to. For data integrity reasons, be careful not to export and share
@@ -159,6 +168,7 @@ option {cmdab:nodaily} is used.
 {cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}
 {cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)}
 {cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)}
+{cmdab:listofdiffs(}{it:string}{cmd:)}
 allow the user to set a unique name for each default variable names (e.g. {it:duplistid}, {it:datelisted}, etc.) in the Excel report spreadsheet.
 This is meant to be used when the variable name already exists in the dataset. To avoid error, the command offers a way to modify the variable name in the Excel Report spreadsheet. {p_end}
 
@@ -187,6 +197,11 @@ is sorted at the time {cmd:ieduplicates} is executed.
 
 {phang}{it:datefixed} stores the date a valid correction was imported the first
 time for that duplicate.
+
+{phang}{it:listofdiffs} stores a list with the names of the variables that are
+different in two different observations. This list is truncated at 256 characters
+and is only stores when there are exactly two duplicates. For other cases, {help:iecompdup}
+must be used to get this information.
 
 {dlgtab:Columns in Excel Report to be filled in manually by a user:}
 
@@ -275,18 +290,18 @@ unresolved duplicates were found
 {phang}
 {hi:Example 4.} Using the Excel file. The table below could be the report generated in Example 2 above. Make the viewer window wider and reload the page if the table below does not display properly!
 
-{col 3}{c TLC}{hline 116}{c TRC}
-{col 3}{c |}{col 4}HHID{col 10}duplistid{col 21}datelisted{col 33}datefixed{col 44}correct{col 53}drop{col 59}newid{col 65}initials{col 75}notes{col 94}KEY{col 107}enumerator{col 120}{c |}
-{col 3}{c LT}{hline 116}{c RT}
-{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}7365{col 10}3{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}7365{col 10}4{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}1145{col 10}5{col 21}03Jan2016{col 33}11Jan2016{col 44}   {col 53}   {col 59}1245{col 65}IB{col 75}incorrect id     {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}yes{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}9834{col 10}7{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}9834{col 10}8{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c BLC}{hline 116}{c BRC}
+{col 3}{c TLC}{hline 130}{c TRC}
+{col 3}{c |}{col 4}HHID{col 10}duplistid{col 21}datelisted{col 33}datefixed{col 44}correct{col 53}drop{col 59}newid{col 65}initials{col 75}notes{col 94}KEY{col 107}enumerator{col 121}listofdiffs{col 134}{c |}
+{col 3}{c LT}{hline 130}{c RT}
+{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}7365{col 10}3{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}7365{col 10}4{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}1145{col 10}5{col 21}03Jan2016{col 33}11Jan2016{col 44}   {col 53}   {col 59}1245{col 65}IB{col 75}incorrect id     {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}yes{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}9834{col 10}7{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}9834{col 10}8{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c BLC}{hline 130}{c BRC}
 
 {pmore}The table above shows an example of an Excel report with 4 duplicates groups with
 two duplicates in each groups. The duplicates in 4321 and in 1145 have both been corrected
@@ -309,18 +324,18 @@ observation. One is kept and one is dropped, usually it does not matter which yo
 {phang}
 {hi:Example 5.} {inp:ieduplicates HHID, folder(C:\myImpactEvaluation\baseline\data) uniquevars(KEY) drop(out) notes(notes_enumerators)}
 
-{col 3}{c TLC}{hline 103}{c TRC}
-{col 3}{c |}{col 4}HHID{col 10}duplistid{col 21}datelisted{col 33}datefixed{col 44}correct{col 53}out{col 59}newid{col 65}initials{col 75}notes_enumerators{col 94}KEY{col 107}{c |}
-{col 3}{c LT}{hline 103}{c RT}
-{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}7365{col 10}3{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}7365{col 10}4{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}1145{col 10}5{col 21}03Jan2016{col 33}11Jan2016{col 44}   {col 53}   {col 59}1245{col 65}IB{col 75}incorrect id     {col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}yes{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}9834{col 10}7{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}9834{col 10}8{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c BLC}{hline 103}{c BRC}
+{col 3}{c TLC}{hline 116}{c TRC}
+{col 3}{c |}{col 4}HHID{col 10}duplistid{col 21}datelisted{col 33}datefixed{col 44}correct{col 53}out{col 59}newid{col 65}initials{col 75}notes_enumerators{col 94}KEY{col 107}listofdiffs{col 120}{c |}
+{col 3}{c LT}{hline 116}{c RT}
+{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}7365{col 10}3{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}7365{col 10}4{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}1145{col 10}5{col 21}03Jan2016{col 33}11Jan2016{col 44}   {col 53}   {col 59}1245{col 65}IB{col 75}incorrect id     {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}yes{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}9834{col 10}7{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}9834{col 10}8{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c BLC}{hline 116}{c BRC}
 
 {pmore} The variable names in Excel Report is now changed to the user speficied. If the user changed any of the variable names in the Excel Report, when importing the Excel file back to apply the decisions, run exactly the same code:{p_end}
 {pmore}{inp:ieduplicates HHID, folder(C:\myImpactEvaluation\baseline\data) uniquevars(KEY) drop(out) notes(notes_enumerators)}{p_end}

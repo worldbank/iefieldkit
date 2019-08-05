@@ -268,7 +268,7 @@ qui {
 		if substr("`var'", 1, 5) == "label" local labelvars "`labelvars' `var'"
 	}
 	local num_label_vars : word count `labelvars'
-
+	
 	**Make sure all label vars are strings. Only non-string if all values are
 	* digits or all values missing. In both cases these should be changed to
 	* string, and if "." change to missing
