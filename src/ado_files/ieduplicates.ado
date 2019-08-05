@@ -27,7 +27,7 @@
 
 		**Test that observations have not been deleted from the report before readind
 		* it. Deleted in a way that the report does not make sense. Provide an error
-		* message to this that is more informative.		
+		* message to this that is more informative.
 
 		preserve
 
@@ -143,9 +143,9 @@
 			local name		= r(name)
 			local folder	= r(folder)
 			local ext		= r(ext)
-	
+
 			local using		"`folder'`name'`ext'"
-			
+
 			/***********************************************************************
 			************************************************************************
 				Section 2 - Test unique vars
@@ -639,11 +639,11 @@
 
 					keep 	`argumentVars' `excelVars'
 					order	`idvar' `excelVars' `uniquevars' `keepvars'
-					
+
 					* Save daily folder
 					if "`daily'" == "" {
 
-						savedaily , folder(`folder') name(`name') ext(`ext') today(`date')			
+						savedaily , folder(`folder') name(`name') ext(`ext') today(`date')
 
 						*Prepare local for output
 						local daily_output " and a daily copy have been saved to the Daily folder"
@@ -651,7 +651,7 @@
 
 					*Making listofdiffs come last
 					order `listofdiffs', last
-	
+
 					*Export main report
 					export excel using "`using'" , firstrow(variables) replace  nolabel
 
@@ -703,7 +703,7 @@
 					newid was imported as string or the variable
 					is made string. Easy.
 				******************/
-			
+
 				if substr("`idtype'",1,3) == "str" & substr("`idtypeNew'",1,3) != "str" {
 
 					tostring `newid' , replace
@@ -715,7 +715,7 @@
 					If ID var is numeric but the newid is loaded as string, this
 					could be an import error or a user input error
 				******************/
-				
+
 				else if substr("`idtype'",1,3) != "str" & substr("`idtypeNew'",1,3) == "str" {
 
 					* Check if [tostringok] is specificed. In this case, the old ID will be turned to string
@@ -728,13 +728,13 @@
 					}
 					* If it was just an import error, it will be possible to turn the new ID into a number
 					else {
-					
+
 						* Try to destring the variable
 						destring `newid', replace
-						
+
 						* Test if it worked
 						cap confirm numeric variable `newid'
-						
+
 						* Throw an error if it didn't
 						if _rc {
 							* Create a local with all non-numeric values
@@ -860,7 +860,7 @@ end
 
 cap program drop strlast
 	program		 strlast , rclass
-	
+
 qui {
 
 	syntax , expression(string) character(string)
@@ -872,11 +872,11 @@ qui {
 		while `firstpos' > 0 {
 			local expression 	= substr("`expression'", `firstpos' + 1, .)
 			local firstpos 		= strpos("`expression'", "`character'")
-			local lastpos 		= `lastpos' + `firstpos'		
+			local lastpos 		= `lastpos' + `firstpos'
 		}
 	}
 	return local lastpos `lastpos'
-	
+
 }
 
 end
@@ -887,7 +887,7 @@ end
 
 cap program drop testpath
 	program		 testpath , rclass
-	
+
 	syntax [using/] , today(string) [folder(string) suffix(string)]
 
 /*******************************************************************************
@@ -918,21 +918,21 @@ cap program drop testpath
 	* Parse using option to get (1) the folder path (2) the name of the report and
 	* (3) the format selected
 	else if "`using'" != "" {
-	
+
 		* Replace any backslashes with forward slashes so it's compatible with
 		* different OS and so we know what to look for as separators when parsing
 		local using = subinstr("`using'", "\", "/", .)
-	
+
 		* Separate the folder name from the file name
 		strlast, expression("`using'") character("/")
-		
+
 		* If a folder was specified, get the folder path
 		if `r(lastpos)' > 0 {
 			local folder	 = substr("`using'", 1, `r(lastpos)')
 		}
 		else {
 			noi di as error	"{phang}You have not specified a folder path to the duplicates report. An absolute folder path is required.{p_end}"
-			noi di as error `"{phang}This command will not work if you are trying to use {inp:cd} to set the directory and open or save files. To know more about why this practice is not allow, {browse "https://dimewiki.worldbank.org/wiki/Stata_Coding_Practices#File_paths":see this article in the DIME Wiki}.{p_end}"'
+			noi di as error `"{phang}This command will not work if you are trying to use {inp:cd} to set the directory and open or save files. To know more about why this practice is not allowed, {browse "https://dimewiki.worldbank.org/wiki/Stata_Coding_Practices#File_paths":see this article in the DIME Wiki}.{p_end}"'
 			noi di as error	""
 			error 198
 			exit
@@ -940,13 +940,13 @@ cap program drop testpath
 
 		* Everything that comas after the folder path is the file name and format
 		local file	 	 = substr("`using'", `r(lastpos)' + 1, .)
-		
+
 		* If a filename was specified, separate the file name from the file format
 		if "`file'" != "" {
 
 			* Get index of separation between file name and file format
 			strlast, expression("`file'") character(".")
-			
+
 			* If a format was specified, separate name and format
 			if `r(lastpos)' > 0 {
 				local ext 		= substr("`file'", `r(lastpos)', .)				// File format starts at the last period and ends at the end of the string
@@ -965,23 +965,23 @@ cap program drop testpath
 			error 198
 			exit
 		}
-		
+
 		* The default format is xlsx. Other possible formats are xls
 		if "`ext'" == "" {
 			local	ext	.xlsx
 		}
 		else if !inlist("`ext'", ".xls", ".xlsx") {
-		
+
 			noi di as error `"{phang}`ext' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or {browse "https://github.com/worldbank/iefieldkit/issues":create an issue on iefieldkit's GitHub repository}.{p_end}"'
 			noi di ""
 			error 198 //TODO: check error code
 			exit
 		}
 	}
-	
+
 	* Create file name if using was not specified
 	else if "`using'" == "" {
-	
+
 								local folder	`folder'/
 								local name		iedupreport
 		if "`suffix'" != "" 	local name		`name'_`suffix'
@@ -1000,11 +1000,11 @@ cap program drop testpath
 		error 198 // TODO: check error code
 		exit
 	}
-	
+
 	return local name 	`name'
 	return local ext	`ext'
 	return local folder	`folder'
-	
+
 end
 
 /*******************************************************************************
@@ -1013,7 +1013,7 @@ end
 
 cap program drop savedaily
 	program		 savedaily , rclass
-	
+
 noi {
 
 	syntax , folder(string) name(string) ext(string) today(string)
@@ -1026,7 +1026,7 @@ noi {
 	*--------------------------------*
 	* Check that daily folder exists *
 	*--------------------------------*
-	
+
 	* Returns 0 if folder does not exist, 1 if it does
 	mata : st_numscalar("r(dirExist)", direxists("`folder'Daily"))
 
@@ -1036,7 +1036,7 @@ noi {
 		*Create the folder since it does not exist
 		mkdir "`folder'Daily"
 	}
-	
+
 	*--------------------------------------------*
 	* Check that the daily report does not exist *
 	*--------------------------------------------*
@@ -1054,7 +1054,7 @@ noi {
 
 		* If it's not the same, save with a timestamp
 		if "`r(Nsum)'" != "0" {
-		
+
 			local time			= c(current_time)
 
 			foreach colon in h m {
@@ -1084,5 +1084,3 @@ noi {
 }
 
 end
-
-						
