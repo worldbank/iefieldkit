@@ -5,8 +5,9 @@
 /*******************************************************************************
 	Set up
 *******************************************************************************/
-	
-	global iefieldkit "C:\Users\wb501238\Documents\GitHub\iefieldkit"
+
+	* Add the path to your local clone of the iefieldkit repo
+	global iefieldkit ""
 	do 	"${iefieldkit}\src\ado_files\ieduplicates.ado"
 
 
