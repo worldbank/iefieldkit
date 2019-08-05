@@ -1,6 +1,6 @@
 
 	cscript ieduplicates_test adofile ieduplicates
-	which   ieduplicates 
+	which   ieduplicates
 
 /*******************************************************************************
 	Set up
@@ -15,13 +15,13 @@
 	encode make, gen(uuid)
 	replace uuid = 7 in 16
 	replace uuid = 1 in 2
-	
+
 	tempfile duplicates
 	save	 `duplicates'
 
 /*******************************************************************************
 	No error
-*******************************************************************************/	
+*******************************************************************************/
 
 	* No duplicates
 	ieduplicates make using "${iefieldkit}\foo", uniquevars(make)
@@ -43,38 +43,29 @@
 
 /*******************************************************************************
 	Yes error
-*******************************************************************************/		
-	
+*******************************************************************************/
+
 	* Observations were removed
-	*ieduplicates uuid using "${iefieldkit}", uniquevars(make) 
-	
+	*ieduplicates uuid using "${iefieldkit}", uniquevars(make)
+
 	* Without 'clear' option
 	use `duplicates', clear
 	*ieduplicates uuid using "${iefieldkit}\foo", uniquevars(make)
-	
+
 	* Invalid format
 	use `duplicates', clear
 	*ieduplicates uuid using "${iefieldkit}\foo.csv", uniquevars(make)
-	
+
 	use `duplicates', clear
 	*ieduplicates uuid using "${iefieldkit}\foo.", uniquevars(make) force
-	
+
 	* Invalid name
 	use `duplicates', clear
 	*ieduplicates uuid using "${iefieldkit}\.xlsx", uniquevars(make)
 
-/*******************************************************************************
-	Check that cd is working
-*******************************************************************************/
-
+	*Check that cd is not working
 	cd "${iefieldkit}"
-	
 	use `duplicates', clear
 	ieduplicates uuid using "foo", uniquevars(make) force
-	
-	use `duplicates', clear
-	ieduplicates uuid using "foo bar", uniquevars(make) clear
-	
-	use `duplicates', clear
-	ieduplicates uuid using "foo bar.xls", uniquevars(make) clear
-		
+
+
