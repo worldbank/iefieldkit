@@ -25,22 +25,22 @@
 
 	* No duplicates
 	ieduplicates make using "${iefieldkit}\foo", uniquevars(make)
-	
-	* Test file format	
+
+	* Test file format
 	use `duplicates', clear
-	ieduplicates uuid using "${iefieldkit}\foo.xlsx", uniquevars(make) clear
-	
+	ieduplicates uuid using "${iefieldkit}\foo.xlsx", uniquevars(make) force
+
 	use `duplicates', clear
-	ieduplicates uuid using "${iefieldkit}\foo.xls", uniquevars(make) clear
-	
+	ieduplicates uuid using "${iefieldkit}\foo.xls", uniquevars(make) force
+
 	* Test folder and suffix syntax
 	use `duplicates', clear
-	ieduplicates uuid, uniquevars(make) folder("${iefieldkit}") clear
-	
+	ieduplicates uuid, uniquevars(make) folder("${iefieldkit}") force
+
 	use `duplicates', clear
-	ieduplicates uuid, uniquevars(make) folder("${iefieldkit}") suffix(bar) clear
-	
-	
+	ieduplicates uuid, uniquevars(make) folder("${iefieldkit}") suffix(bar) force
+
+
 /*******************************************************************************
 	Yes error
 *******************************************************************************/		
@@ -57,7 +57,7 @@
 	*ieduplicates uuid using "${iefieldkit}\foo.csv", uniquevars(make)
 	
 	use `duplicates', clear
-	*ieduplicates uuid using "${iefieldkit}\foo.", uniquevars(make) clear
+	*ieduplicates uuid using "${iefieldkit}\foo.", uniquevars(make) force
 	
 	* Invalid name
 	use `duplicates', clear
@@ -70,7 +70,7 @@
 	cd "${iefieldkit}"
 	
 	use `duplicates', clear
-	ieduplicates uuid using "foo", uniquevars(make) clear
+	ieduplicates uuid using "foo", uniquevars(make) force
 	
 	use `duplicates', clear
 	ieduplicates uuid using "foo bar", uniquevars(make) clear
