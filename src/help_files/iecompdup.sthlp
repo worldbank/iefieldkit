@@ -179,6 +179,16 @@ In this example the field team can also see in which village the data was collec
 as well as the name of the enumerator and the supervisor. Any other information
 helpful to the field team can be entered in {inp:keepother()}.
 
+{pstd}{hi:Example 4.}
+
+{phang2}{inp:iecompdup HH_ID if inlist(key, "uuid:0003aad0", "uuid:0009baf1"), id(55424) didifference keepdifference keepother(village enumerator supervisor)}{p_end}
+
+{pmore}When there are several pairs or groups of duplicates, the command should be run
+once for each pair or group, as {cmdab:iecompdup} can oly compare two observations at a time.
+In this case, use an {inp:if} expression to select the observations to be compared.
+Alternatively, you can use the {inp:more2ok} option, which will compare the first two
+duplicates observations.
+
 {title:Acknowledgements}
 
 {phang}I would like to acknowledge the help in testing and proofreading I received in relation to this command and help file from (in alphabetic order):{p_end}
