@@ -973,7 +973,7 @@ cap program drop testpath
 		}
 		else if !inlist("`ext'", ".xls", ".xlsx") {
 			noi di ""
-			noi di as error `"{phang}`ext' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or {browse "https://github.com/worldbank/iefieldkit/issues:create an issue on the iefieldkit GitHub repository"}{p_end}"'
+			noi di as error `"{phang}`ext' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or {browse "https://github.com/worldbank/iefieldkit/issues":create an issue on the iefieldkit GitHub repository.}{p_end}"'
 			noi di ""
 			error 198 //TODO: check error code
 			exit
