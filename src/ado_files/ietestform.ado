@@ -9,7 +9,7 @@ qui {
 
 	//preserve
 
-	syntax , Surveyform(string) Report(string) [STATAlanguage(string) date replace]
+	syntax [using/] ,  Reportsave(string) [Surveyform(string) STATAlanguage(string) date replace]
 
 	/***********************************************
 		Test input
@@ -18,6 +18,18 @@ qui {
 	/*********
 		Test survey file input
 	*********/
+
+	*Test and finally combine the using and surveyform for backward compatibility
+	if `"`using'"' != "" & `"`surveyform'"'  != "" {
+		noi di as error `"{phang}Option surveyform() [`surveyform'] cannot be used together with [using `using']. surveyform() is an undocumneted option allowed for backward compatibility reasons only.{p_end}"'
+		error 198
+	}
+	else if `"`using'`surveyform'"' == "" {
+		noi di as error `"{phang}You must specifiy your survey form with [using].{p_end}"'
+		error 198
+	}
+	local surveyform `"`using'`surveyform'"'
+
 
 	* Test for form file is xls or xsls
 	local surveyformtype = substr(`"`surveyform'"',strlen(`"`surveyform'"')-strpos(strreverse(`"`surveyform'"'),".")+1,.)
@@ -44,40 +56,39 @@ qui {
 	**Start by finding the position of the last forward slash. If no forward
 	* slash exist, it is zero, then replace to to string len so it is never
 	* the min() below.
-	local r_f_slash = strpos(strreverse(`"`report'"'),"\")
-	if   `r_f_slash' == 0 local r_f_slash = strlen(`"`report'"')
+	local r_f_slash = strpos(strreverse(`"`reportsave'"'),"\")
+	if   `r_f_slash' == 0 local r_f_slash = strlen(`"`reportsave'"')
 
 	**Start by finding the position of the last backward slash. If no backward
 	* slash exist, it is zero, then replace to to string len so it is never
 	* the min() below.
-	local r_b_slash = strpos(strreverse(`"`report'"'),"/")
-	if   `r_b_slash' == 0 local r_b_slash = strlen(`"`report'"')
+	local r_b_slash = strpos(strreverse(`"`reportsave'"'),"/")
+	if   `r_b_slash' == 0 local r_b_slash = strlen(`"`reportsave'"')
 
 	*Get the last slash in the report file path regardless of back or forward
-	local r_lastslash = strlen(`"`report'"')-min(`r_f_slash',`r_b_slash')
+	local r_lastslash = strlen(`"`reportsave'"')-min(`r_f_slash',`r_b_slash')
 
 	*Get the folder
-	local r_folder = substr(`"`report'"',1,`r_lastslash')
+	local r_folder = substr(`"`reportsave'"',1,`r_lastslash')
 
     *Test that the folder for the report file exists
 	mata : st_numscalar("r(dirExist)", direxists("`r_folder'"))
 	if `r(dirExist)' == 0  {
-		noi di as error `"{phang}The folder used in [`report'] does not exist.{p_end}"'
+		noi di as error `"{phang}The folder used in [`reportsave'] does not exist.{p_end}"'
 		error 601
 	}
 
 	*Get the filename and the file extension type from the report file
-	local r_filename = substr(`"`report'"',`r_lastslash'+1, .)
+	local r_filename = substr(`"`reportsave'"',`r_lastslash'+1, .)
 	local r_filenametype = substr(`"`r_filename'"',strlen(`"`r_filename'"')-strpos(strreverse(`"`r_filename'"'),".")+1,.)
-
 	*Test what the file extension type is
 	if (`"`r_filenametype'"' == "") {
 		*No file type specified, add .csv
-		local report `"`report'.csv"'
+		local reportsave `"`reportsave'.csv"'
 	}
 	else if (`"`r_filenametype'"' != ".csv") {
 		*Incorrect file type added. Throw error
-		noi di as error `"{phang}The report  file [`report'] may only have the file extension .csv.{p_end}"'
+		noi di as error `"{phang}The report  file [`reportsave'] may only have the file extension .csv.{p_end}"'
 		error 601
 	}
 	else {
@@ -131,7 +142,6 @@ qui {
 	*Get all choice lists actaually used
 	local all_lists_used `r(all_lists_used)'
 
-
 	/***********************************************
 		Tests based on info from multiple sheets
 	***********************************************/
@@ -163,11 +173,11 @@ qui {
 	*Option date is used, add today's date to file name
 	if "`date'" != ""{
 		local date = subinstr(c(current_date)," ","",.)
-		local report = subinstr("`report'",".csv","_`date'.csv",.)
+		local reportsave = subinstr("`reportsave'",".csv","_`date'.csv",.)
 	}
 
 	*Write the file to disk
-	noi report_file write, report_tempfile("`report_tempfile'") filepath("`report'") `replace'
+	noi report_file write, report_tempfile("`report_tempfile'") filepath("`reportsave'") `replace'
 
 	//restore
 
