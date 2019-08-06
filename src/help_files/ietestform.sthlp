@@ -13,8 +13,7 @@ help for {hi:ietestform}
 {title:Syntax}
 
 {phang2}
-{cmdab:ietestform}
-, {cmdab:s:urveyform(}{it:"/path/to/form.xlsx"}{cmd:)} {cmdab:r:eport(}{it:"/path/to/report.csv"}{cmd:)} [{cmdab:stata:language(}{it:string}{cmd:)} {cmd:replace} {cmd:date}]
+{cmdab:ietestform} using {it:"/path/to/form.xlsx"}, {cmdab:r:eportsave(}{it:"/path/to/report.csv"}{cmd:)} [{cmdab:stata:language(}{it:string}{cmd:)} {cmd:replace} {cmd:date}]
 
 
 {marker opts}{...}
@@ -22,8 +21,8 @@ help for {hi:ietestform}
 {synopthdr:Options}
 {synoptline}
 {phang}{it:Required}{p_end}
-{synopt :{cmdab:s:urveyform(}{it:"/path/to/form.xlsx"}{cmd:)}}Specify the file path to the file with the SurveyCTO form definition.{p_end}
-{synopt :{cmdab:r:eport(}{it:"/path/to/report.csv"}{cmd:)}}Specify the file path to the .csv report you want to create listing all issues found.{p_end}
+{synopt :{cmdab:using }{it:"/path/to/form.xlsx"}}Specify the file path to the file with the SurveyCTO form definition.{p_end}
+{synopt :{cmdab:r:eportsave(}{it:"/path/to/report.csv"}{cmd:)}}Specify the file path to the .csv report you want to create listing all issues found.{p_end}
 
 {phang}{it:Optional}{p_end}
 {synopt :{cmdab:stata:language(}{it:string}{cmd:)}}Specify the name used for the Stata language label in the form definition. Default is {it:stata} which works if the column name is {it:label:stata}.{p_end}
@@ -44,9 +43,9 @@ help for {hi:ietestform}
 
 {title:Options}
 
-{phang}{cmdab:s:urveyform(}{it:"/path/to/form.xlsx"}{cmd:)} specifies the file path to the file with the SurveyCTO form definition. The form definition can be either in .xlsx or .xls format. If you are using an older version of Stata and a newer version of Excel, then you might encounter issues with the .xslx format. You can then save the file in .xls format but you might lose conditional formatting and other newer features, although no data will be lost.{p_end}
+{phang}{cmdab:using }{it:"/path/to/form.xlsx"} specifies the file path to the file with the SurveyCTO form definition. The form definition can be either in .xlsx or .xls format. If you are using an older version of Stata and a newer version of Excel, then you might encounter issues with the .xslx format. You can then save the file in .xls format but you might lose conditional formatting and other newer features, although no data will be lost. The old syntax {inp:surveyform(}{it:"/path/to/form.xlsx"}{inp:)} is still allowed for backward compatibility with earlier versions of {cmd:ietestform}.{p_end}
 
-{phang}{cmdab:r:eport(}{it:"/path/to/report.csv"}{cmd:)} specifies the file path to the .csv report you want to create listing all issues found.{p_end}
+{phang}{cmdab:r:eportsave(}{it:"/path/to/report.csv"}{cmd:)} specifies the file path to the .csv report you want to create listing all issues found.{p_end}
 
 {phang}{cmdab:stata:language(}{it:string}{cmd:)} specifies the name used for the Stata language label in the form definition. Default is {it:stata} which works if the column name is {it:label:stata}. Whatever you call your columns, do not include {it:label:} in this option, only what comes after the colon in the column name in the form definition.{p_end}
 
@@ -64,13 +63,13 @@ help for {hi:ietestform}
 
 {pstd}{hi:Example 1.}
 
-{pstd}{inp:ietestform}, {inp:surveyform(}{it:"$formdef/form.xlsx"}{inp:)} {inp:report(}{it:"$output/report.csv"}{inp:)}
+{pstd}{inp:ietestform using} {it:"$formdef/form.xlsx"}, {inp:reportsave(}{it:"$output/report.csv"}{inp:)}
 
 {pstd}This is the simplest possible way this command can be run. In this example the form {it:form.xslx} is read and all tests are applied to the form definition. A report with the name {it:report.csv} written to disk and it will include any cases caught by the command.{p_end}
 
 {pstd}{hi:Example 2.}
 
-{pstd}{inp:ietestform}, {inp:surveyform(}{it:"$formdef/form.xlsx"}{inp:)} {inp:report(}{it:"$output/report.csv"}{inp:)} {inp:date} {inp:replace}
+{pstd}{inp:ietestform using} {it:"$formdef/form.xlsx"}, {inp:reportsave(}{it:"$output/report.csv"}{inp:)} {inp:date} {inp:replace}
 
 {pstd}This example will work very similarly to Example 1. But this command will overwrite any report already in the {it:$output} folder since the option {cmd:replace} is used. Also, since the option {cmd:date} the name of the report file will be {it:report_31JAN2019.csv} (the date will obviously be updated to the current date). Since {cmd:replace} and {cmd:date} are used together, then the last report created each day will be saved for documentation.{p_end}
 
