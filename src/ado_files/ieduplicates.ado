@@ -742,17 +742,6 @@
 							* Create a local with all non-numeric values
 							levelsof `newid' if missing(real(`newid')), local(NaN_values) clean
 
-						* Try to destring the variable
-						destring `newid', replace
-
-						* Test if it worked
-						cap confirm numeric variable `newid'
-
-						* Throw an error if it didn't
-						if _rc {
-							* Create a local with all non-numeric values
-							levelsof `newid' if missing(real(`newid')), local(NaN_values) clean
-
 							* Output error message
 							di as error "{phang}The ID variable `idvar' is numeric but newid has these non-numeric values: `NaN_values'. Update newid to only contain numeric values or see option tostringok.{p_end}"
 							error 109
@@ -831,7 +820,6 @@
 		local numDup	= `:list sizeof dup_ids'
 
 		if `numDup' == 0 {
-			noi di "numDup == 0"
 			noi di	"{phang}There are no unresolved duplicates in this data set. The data set is returned with `idvar' uniquely and fully identifying the data set.{p_end}"
 		}
 		else if "`force'" == "" {
@@ -984,8 +972,8 @@ cap program drop testpath
 			local	ext	.xlsx
 		}
 		else if !inlist("`ext'", ".xls", ".xlsx") {
-
-			noi di as error `"{phang}`ext' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or {browse "https://github.com/worldbank/iefieldkit/issues":create an issue on iefieldkit's GitHub repository}.{p_end}"'
+			noi di ""
+			noi di as error `"{phang}`ext' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or {browse "https://github.com/worldbank/iefieldkit/issues:create an issue on the iefieldkit GitHub repository"}{p_end}"'
 			noi di ""
 			error 198 //TODO: check error code
 			exit
