@@ -198,7 +198,8 @@ qui {
 		* This command does not allow numeric ID variables that are not integers
 		if _rc {
 			di as error "{phang}The ID variable is only allowed to be either string or only consist of integers. Integer in this context is not the same as the variable type int. Integer in this context means numeric values without decimals. Please consider using integers as your ID or convert your ID variable to a string.{p_end}"
-
+			error 109
+			exit
 		}
 		else {
 
