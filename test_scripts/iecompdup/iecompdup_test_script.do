@@ -2,12 +2,9 @@
 *Test for user specified variable names in Excel report
 ********************************************************
 	
-	cd "${GitHub}"
 	
-	cscript iecompdup_test adofile iecompdup
-	which 	iecompdup
-	
-	clear all
+	global GitHub // Add path to your github folder
+	do "${GitHub}/iefieldkit/src/ado_files/iecompdup.ado"
 	
 /*******************************************************************************
 	Prepare data
@@ -83,7 +80,7 @@
 	*iecompdup uuid if key == 210938, id(0)
 	
 *-------------------------------------------------------------------------------
-* 	Two duplicates
+* 	Options incorrectly specified
 *------------------------------------------------------------------------------- 
 
 	*iecompdup uuid, id(1) keepother(oi)
