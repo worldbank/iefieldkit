@@ -1,14 +1,10 @@
 
-	cscript ieduplicates_test adofile ieduplicates
-	which   ieduplicates
-
 /*******************************************************************************
 	Set up
 *******************************************************************************/
 
 	* Add the path to your local clone of the iefieldkit repo
-	global iefieldkit ""
-	do 	"${iefieldkit}\src\ado_files\ieduplicates.ado"
+	do 	"${iefieldkit}/src/ado_files/ieduplicates.ado"
 
 
 	sysuse auto, clear
@@ -46,26 +42,32 @@
 *******************************************************************************/
 
 	* Observations were removed
-	*ieduplicates uuid using "${iefieldkit}", uniquevars(make)
-
+	cap ieduplicates uuid using "${iefieldkit}", uniquevars(make)
+	assert _rc == 9
+	
 	* Without 'clear' option
 	use `duplicates', clear
-	*ieduplicates uuid using "${iefieldkit}\foo", uniquevars(make)
+	cap ieduplicates uuid using "${iefieldkit}\foo", uniquevars(make)
+	assert _rc == 198
 
 	* Invalid format
 	use `duplicates', clear
-	*ieduplicates uuid using "${iefieldkit}\foo.csv", uniquevars(make)
+	cap ieduplicates uuid using "${iefieldkit}\foo.csv", uniquevars(make)
+	assert _rc == 198
 
 	use `duplicates', clear
-	*ieduplicates uuid using "${iefieldkit}\foo.", uniquevars(make) force
+	cap ieduplicates uuid using "${iefieldkit}\foo.", uniquevars(make) force
+	assert _rc == 198
 
 	* Invalid name
 	use `duplicates', clear
-	*ieduplicates uuid using "${iefieldkit}\.xlsx", uniquevars(make)
+	cap ieduplicates uuid using "${iefieldkit}\.xlsx", uniquevars(make)
+	assert _rc == 198
 
 	*Check that cd is not working
 	cd "${iefieldkit}"
 	use `duplicates', clear
-	ieduplicates uuid using "foo", uniquevars(make) force
+	cap ieduplicates uuid using "foo", uniquevars(make) force
+	assert _rc == 198
 
 
