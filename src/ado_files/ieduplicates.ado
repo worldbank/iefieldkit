@@ -1,4 +1,4 @@
-*! version 1.3 7JUN2019  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.4 8AUG2019  DIME Analytics dimeanalytics@worldbank.org
 
 	capture program drop ieduplicates
 	program ieduplicates , rclass
@@ -730,13 +730,13 @@
 					}
 					* If it was just an import error, it will be possible to turn the new ID into a number
 					else {
-					
+
 						* Try to destring the variable
 						destring `newid', replace
-						
+
 						* Test if it worked
 						cap confirm numeric variable `newid'
-						
+
 						* Throw an error if it didn't
 						if _rc {
 							* Create a local with all non-numeric values
