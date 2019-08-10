@@ -16,12 +16,16 @@ qui {
 
 	* Set folder paths
 	global GitHub		""
+	global AnalyticsDB	""
+
+	* Calculate globals
 	global iefieldkit	"${GitHub}/iefieldkit"
+	global form			"${AnalyticsDB}/Data Coordinator/iefieldkit/ietestform"
 	
 	* Select commands to test
 	local ieduplicates	1
 	local iecompdup		1
-	local ietestform	0
+	local ietestform	1
 	local iecodebook	0
 	local iefieldkit	0
 	
@@ -48,5 +52,8 @@ qui {
 	
 	* Test iecompdup
 	if `iecompdup' do "${iefieldkit}/run/ieduplicates.do"	
+	
+	* Test ietestform
+	if `ietestform' do "${iefieldkit}/run/ietestform.do"	
 	
 *************************** End of Master Do-File ******************************
