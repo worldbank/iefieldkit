@@ -1,5 +1,5 @@
 {smcl}
-{* 7 Jun 2019}{...}
+{* 8 Aug 2019}{...}
 {hline}
 help for {hi:ieduplicates}
 {hline}
@@ -16,30 +16,30 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 
 {phang2}
 {cmdab:ieduplicates}
-{it:ID_varname}
-, {cmdab:fol:der(}{it:string}{cmd:)} {cmdab:unique:vars(}{it:varlist}{cmd:)}
-[{cmdab:keep:vars(}{it:varlist}{cmd:)} {cmdab:tostringok} {cmdab:droprest}
-{cmdab:nodaily} {cmdab:suf:fix(}{it:string}{cmd:)}
+{it:ID_varname} {help using} {it:"/path/to/duplicates_report.xlsx"}
+, {cmdab:unique:vars(}{it:varlist}{cmd:)} {break}
+[{cmdab:force} {cmdab:keep:vars(}{it:varlist}{cmd:)} {cmdab:tostringok} {cmdab:droprest}
+{cmdab:nodaily} {break}
 {cmdab:duplistid(}{it:string}{cmd:)} {cmdab:datelisted(}{it:string}{cmd:)}
-{cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}
+{cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}{break}
 {cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)}
-{cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)}]{p_end}
+{cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)}
+{cmdab:listofdiffs(}{it:string}{cmd:)}]{p_end}
 
 
 
-{phang2}where {it:ID_varname} is the variable that will be controlled for duplicates
+{phang2}where {it:ID_varname} is the variable that will be controlled for duplicates, and {it:"/path/to/duplicates_report.xlsx"} is the absolute file path where the duplicates report will be saved.
 
 {marker opts}{...}
 {synoptset 28}{...}
 {synopthdr:options}
 {synoptline}
-{synopt :{cmdab:fol:der(}{it:string}{cmd:)}}folder in which the duplicate report will be saved{p_end}
 {synopt :{cmdab:unique:vars(}{it:varlist}{cmd:)}}variables used as unique ID within groups of duplicates in {it:ID_varname}. May not be in date or time format.{p_end}
+{synopt :{cmdab:force}}specifies that all unresolved duplicates with respect to {it:ID_varname} be dropped.{p_end}
 {synopt :{cmdab:keep:vars(}{it:varlist}{cmd:)}}variables used to be included in the Excel report in addition to {it:ID_varname} and {cmdab:unique:vars()} {p_end}
 {synopt :{cmdab:tostringok}}allows {it:ID_varname} to be recasted to string if required{p_end}
 {synopt :{cmdab:droprest}}disables the requirement that duplicates must be explicitly deleted{p_end}
 {synopt :{cmdab:nodaily}}disables daily back-up copies of the Excel report{p_end}
-{synopt :{cmdab:suf:fix(}{it:string}{cmd:)}}allows the user to add a suffix to the filename of the Excel report{p_end}
 
 {pstd}{it:    {ul:{hi:Excel variable name options:}}}{p_end}
 
@@ -53,6 +53,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {synopt :{cmdab:newid(}{it:string}{cmd:)}}customizes variable {it:newid}{p_end}
 {synopt :{cmdab:initials(}{it:string}{cmd:)}}customizes variable {it:initials}{p_end}
 {synopt :{cmdab:notes(}{it:string}{cmd:)}}customizes variable {it:notes}{p_end}
+{synopt :{cmdab:listofdiffs(}{it:string}{cmd:)}}customizes variable {it:listofdiffs}{p_end}
 
 
 {synoptline}
@@ -64,14 +65,14 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 and return the data set {it:without} those duplicates. Each time {cmd:ieduplicates} executes, it first
 looks for an already created version of the Excel report, and applies any corrections already listed in it
 before generating a new report. Note that there is no need to import the corrections manually. This command
-reads the corrections directly from the Excel file as long as it is saved at the same folder location
-with the same file name.
+reads the corrections directly from the Excel file as long as it is saved with the same file name.
 
 {dlgtab:In more detail:}
 {pstd}{cmd:ieduplicates} takes duplicates observations in {it:ID_varname} and exports
-them to an Excel report in directory {cmdab:fol:der(}{it:string}{cmd:)}. {it:ID_varname}
+them to a duplicates report in the Excel file specified by {help using}. {it:ID_varname}
 is by definition not unique in this Excel report and {cmdab:unique:vars(}{it:varlist}{cmd:)}
-needs to be specified in order to have a unique reference for each row in the Excel report when merging the corrections back to the original data set. The
+needs to be specified in order to have a unique reference for each row in the Excel report
+when merging the corrections back to the original data set. The
 {it:varlist} in {cmdab:unique:vars(}{it:varlist}{cmd:)} must uniquely and fully identify all
 observations in the Excel report, either on its own or together with {it:ID_varname}. {cmd:ieduplicates}
 then returns the data set without these duplicates.
@@ -81,7 +82,7 @@ Each of them represents one way to correct the duplicates. If {it:correct} is in
 a "Yes" then that observation is kept unchanged, if {it:drop} is indicated with a "Yes" then
 that observation is deleted and if {it:newid} is indicated then that observation is assigned
 a new ID using the value in column {it:newid}. After corrections are entered, the report should
-be saved in the same location {cmdab:fol:der(}{it:string}{cmd:)} without any changes to its name.
+be saved in the same location and without any changes to its name.
 
 {pstd}Before outputting a new report {cmd:ieduplicates} always checks if there already is an
 Excel report with corrections and applies those corrections before generating a new report. It is
@@ -99,10 +100,10 @@ as an excellent documentation of the correction made.
 
 {title:Options}
 
-{phang}{cmdab:fol:der(}{it:string}{cmd:)} specifies the folder where previous Excel
-files will be looked for, and where the updated Excel report will be exported. Note that
-this folder needs to have a subfolder called {it:Daily} where the duplicate report
-file is backed up daily.
+{phang}{help cmdab:using} specifies the file path where previous Excel
+files will be looked for, and where the updated Excel report will be saved. Note that this needs to be
+an absolute file path. A subfolder called {it:Daily}, where the duplicate report file is backed up daily,
+will be created in the same folder as this file.
 
 {phang}{cmdab:unique:vars(}{it:varlist}{cmd:)} list variables that by themselves or together
 with {it:ID_varname} uniquely identifies all observations. This varlist is required when the corrections are
@@ -113,6 +114,12 @@ into Stata. The time variable can be turned into a string variable using {inp: g
 then be used in this options. Data that has been downloaded from
 a server usually has a variable called "KEY" or similar. Such a variable would be optimal
 for {cmdab:unique:vars(}{it:varlist}{cmd:)}.
+
+{phang}{cmdab:force} specifies that all unresolved duplicates with respect to {it:ID_varname} be dropped.
+This option is required when there are unresolved duplicates as a reminder that these observations
+will be dropped, and the resulting data will be different from the original. Do not save the
+data returned by {cmd:ieduplicates} with option force over the raw data, as information will be lost
+and {cmd:ieduplicates} will not function on this data set, preventing reproducibility of the process.{p_end}
 
 {phang}{cmdab:keep:vars(}{it:varlist}{cmd:)} list variables to be included in the exported
 Excel report. These variables can help team members identifying which observation to keep,
@@ -136,20 +143,9 @@ two observations are not explicitly indicated to be dropped. It is recommended
 to not use {cmdab:droprest} and to manually indicate all deletions to avoid
 mistakes, but this option exists for cases when that might be very inconvenient.
 
-{phang}{cmdab:suf:fix(}{it:string}{cmd:)} allows the user to set a unique file name suffix to
-the Excel report. This is meant to be used when a project has multiple data sets that are
-checked for duplicates separately. The command will not work as intended (most likely even
-crash) if the duplicate report for one data set is used when checking for duplicates in
-another data set. To prevent this, the Excel report must either be exported to separate folders or
-be assigned different file names using this option. If the string in suffix() is, for example, "AAA",
-then the report exported will be "iedupreport_AAA.xlsx". Any characters allowed in file names in
-Excel and in Stata are allowed in suffix(). Note, that if suffix() is added after the first report is outputted,
-then the name of the outputted report must be updated manually. The command will otherwise not
-apply any changes already entered in the original report.
-
 {phang}{cmdab:nodaily} disables the generation of daily back-up copies of the
 Excel report. The default is that the command saves dated copies of the Excel
-report in a sub-folder called Daily in the folder specified in {cmdab:folder()}. If
+report in a sub-folder called Daily in the folder specified in {help using}. If
 the folder /Daily/ does not exist, then it is created unless the
 option {cmdab:nodaily} is used.
 
@@ -159,17 +155,19 @@ option {cmdab:nodaily} is used.
 {cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}
 {cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)}
 {cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)}
+{cmdab:listofdiffs(}{it:string}{cmd:)}
 allow the user to set a unique name for each default variable names (e.g. {it:duplistid}, {it:datelisted}, etc.) in the Excel report spreadsheet.
 This is meant to be used when the variable name already exists in the dataset. To avoid error, the command offers a way to modify the variable name in the Excel Report spreadsheet. {p_end}
 
 
 {title:The Excel Report}
 
-{pstd}A report of duplicates will be created in {cmdab:fol:der(}{it:string}{cmd:)}
-if any duplicates in {it:ID_varname} were found. The folder listed in
-{cmdab:fol:der(}{it:string}{cmd:)} must have a subfolder called {it:Daily}
-where daily back-ups of the report are saved. If a report is backed up already
-that day, then that report will be overwritten.
+{pstd}A report of duplicates will be created in the file path specified by {help using}
+if any duplicates in {it:ID_varname} were found. The command will create a subfolder called {it:Daily}
+in the folder where this report is saved. Daily back-ups of the report will be saved in the {it: Daily}
+subfolder. If a report is backed up already that day, that report will not be overwritten. In case
+the command is run more than once in a day, and creates different reports, a time-stamped report for
+the same date will be saved instead.
 
 {pstd}All duplicates in a group of duplicates must have a correction indicated. If
 one or more duplicates are indicated as correct in {it:correct} or assigned a new
@@ -187,6 +185,11 @@ is sorted at the time {cmd:ieduplicates} is executed.
 
 {phang}{it:datefixed} stores the date a valid correction was imported the first
 time for that duplicate.
+
+{phang}{it:listofdiffs} stores a list with the names of the variables that are
+different in two different observations. This list is truncated at 256 characters
+and is only stores when there are exactly two duplicates. For other cases, {help:iecompdup}
+must be used to get this information.
 
 {dlgtab:Columns in Excel Report to be filled in manually by a user:}
 
@@ -246,11 +249,11 @@ on how to resume the execution of the code if Stata is paused.
 {pstd}
 {hi:Example 1.}
 
-{phang2}{inp:ieduplicates HHID, folder(C:\myImpactEvaluation\baseline\data) uniquevars(KEY)}{p_end}
+{phang2}{inp:ieduplicates HHID "C:\myImpactEvaluation\baseline\data\DuplicatesReport.xls" uniquevars(KEY)}{p_end}
 
-{pmore}Specified like this {cmdab:ieduplicates} start by looking for any corrections in any
-duplicates report in the folder C:\myImpactEvaluation\baseline\data. If there is a report
-with corrections those corrections are applied to the data set. Then the command looks for
+{pmore}Specified like this {cmdab:ieduplicates} start by looking for the file
+"C:\myImpactEvaluation\baseline\data\DuplicatesReport.xls". If there is a report
+with corrections, those corrections are applied to the data set. Then the command looks for
 unresolved duplicates in HHID and exports a new report if any duplicates were found. The data
 set is returned without any of the unresolved duplicates. The variable KEY is used to separate
 observations that are duplication in the ID var.
@@ -258,7 +261,7 @@ observations that are duplication in the ID var.
 {phang}
 {hi:Example 2.}
 
-{phang2}{inp:ieduplicates HHID, folder(C:\myImpactEvaluation\baseline\data) keepvars(enumerator) uniquevars(KEY)}{p_end}
+{phang2}{inp:ieduplicates HHID using "C:\myImpactEvaluation\baseline\data\DuplicatesReport.xls", keepvars(enumerator) uniquevars(KEY)}{p_end}
 
 {pmore}Similar to the example above, but it also includes the variable enumerator in the Excel
 report which is most likely helpful if the data set is collected through a household survey.
@@ -267,7 +270,7 @@ report which is most likely helpful if the data set is collected through a house
 {hi:Example 3.} Using {cmd:r(numDup)} to pause the execution of the code if
 unresolved duplicates were found
 
-{phang2}{inp:ieduplicates HHID, folder(C:\myImpactEvaluation\baseline\data) uniquevars(KEY)}{p_end}
+{phang2}{inp:ieduplicates HHID using "C:\myImpactEvaluation\baseline\data\DuplicatesReport.xls", uniquevars(KEY)}{p_end}
 {phang2}{inp:if (r(numDup) != 0) {c -(}}{p_end}
 {phang3}{inp:pause}{p_end}
 {phang2}{inp:{c )-}}{p_end}
@@ -275,18 +278,18 @@ unresolved duplicates were found
 {phang}
 {hi:Example 4.} Using the Excel file. The table below could be the report generated in Example 2 above. Make the viewer window wider and reload the page if the table below does not display properly!
 
-{col 3}{c TLC}{hline 116}{c TRC}
-{col 3}{c |}{col 4}HHID{col 10}duplistid{col 21}datelisted{col 33}datefixed{col 44}correct{col 53}drop{col 59}newid{col 65}initials{col 75}notes{col 94}KEY{col 107}enumerator{col 120}{c |}
-{col 3}{c LT}{hline 116}{c RT}
-{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}7365{col 10}3{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}7365{col 10}4{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}1145{col 10}5{col 21}03Jan2016{col 33}11Jan2016{col 44}   {col 53}   {col 59}1245{col 65}IB{col 75}incorrect id     {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}yes{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}9834{col 10}7{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c |}{col 4}9834{col 10}8{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 120}{c |}
-{col 3}{c BLC}{hline 116}{c BRC}
+{col 3}{c TLC}{hline 130}{c TRC}
+{col 3}{c |}{col 4}HHID{col 10}duplistid{col 21}datelisted{col 33}datefixed{col 44}correct{col 53}drop{col 59}newid{col 65}initials{col 75}notes{col 94}KEY{col 107}enumerator{col 121}listofdiffs{col 134}{c |}
+{col 3}{c LT}{hline 130}{c RT}
+{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}7365{col 10}3{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}7365{col 10}4{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}1145{col 10}5{col 21}03Jan2016{col 33}11Jan2016{col 44}   {col 53}   {col 59}1245{col 65}IB{col 75}incorrect id     {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}yes{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}9834{col 10}7{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}9834{col 10}8{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c BLC}{hline 130}{c BRC}
 
 {pmore}The table above shows an example of an Excel report with 4 duplicates groups with
 two duplicates in each groups. The duplicates in 4321 and in 1145 have both been corrected
@@ -307,23 +310,23 @@ observation. One is kept and one is dropped, usually it does not matter which yo
 
 
 {phang}
-{hi:Example 5.} {inp:ieduplicates HHID, folder(C:\myImpactEvaluation\baseline\data) uniquevars(KEY) drop(out) notes(notes_enumerators)}
+{hi:Example 5.} {inp:ieduplicates HHIDusing "C:\myImpactEvaluation\baseline\data\DuplicatesReport.xls", uniquevars(KEY) drop(out) notes(notes_enumerators)}
 
-{col 3}{c TLC}{hline 103}{c TRC}
-{col 3}{c |}{col 4}HHID{col 10}duplistid{col 21}datelisted{col 33}datefixed{col 44}correct{col 53}out{col 59}newid{col 65}initials{col 75}notes_enumerators{col 94}KEY{col 107}{c |}
-{col 3}{c LT}{hline 103}{c RT}
-{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}7365{col 10}3{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}7365{col 10}4{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}1145{col 10}5{col 21}03Jan2016{col 33}11Jan2016{col 44}   {col 53}   {col 59}1245{col 65}IB{col 75}incorrect id     {col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}yes{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}9834{col 10}7{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c |}{col 4}9834{col 10}8{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{c |}
-{col 3}{c BLC}{hline 103}{c BRC}
+{col 3}{c TLC}{hline 116}{c TRC}
+{col 3}{c |}{col 4}HHID{col 10}duplistid{col 21}datelisted{col 33}datefixed{col 44}correct{col 53}out{col 59}newid{col 65}initials{col 75}notes_enumerators{col 94}KEY{col 107}listofdiffs{col 120}{c |}
+{col 3}{c LT}{hline 116}{c RT}
+{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}7365{col 10}3{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}7365{col 10}4{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}1145{col 10}5{col 21}03Jan2016{col 33}11Jan2016{col 44}   {col 53}   {col 59}1245{col 65}IB{col 75}incorrect id     {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}yes{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}9834{col 10}7{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}9834{col 10}8{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c BLC}{hline 116}{c BRC}
 
 {pmore} The variable names in Excel Report is now changed to the user speficied. If the user changed any of the variable names in the Excel Report, when importing the Excel file back to apply the decisions, run exactly the same code:{p_end}
-{pmore}{inp:ieduplicates HHID, folder(C:\myImpactEvaluation\baseline\data) uniquevars(KEY) drop(out) notes(notes_enumerators)}{p_end}
+{pmore}{inp:ieduplicates HHIDusing "C:\myImpactEvaluation\baseline\data\DuplicatesReport.xls", uniquevars(KEY) drop(out) notes(notes_enumerators)}{p_end}
 
 
 {title:Acknowledgements}
