@@ -126,6 +126,47 @@ program iecodebook_template
 
 end
 
+// Hashdata subroutine for export --------------------------------------------------------------
+
+cap prog drop iecodebook_hashdata
+prog def iecodebook_hashdata
+
+  syntax ///
+    using/     /// Location of the desired datafile placement
+  , ///
+    [replace]  /// replace DTA-file
+    [reset]    /// EVEN IF HASH FAILS: resetting dtasig
+    [textonly] /// plaintext description
+
+
+  // Setup
+  preserve // Respect current data
+
+  // Load target data
+  if `"`anything'"' != `""' use `anything' , clear
+
+  // Check existing hash, if any
+  cap datasignature confirm  using "`using'sig" , strict
+    // If not found OR altered and no reset
+    if ("`reset'" == "") {
+      datasignature confirm using "`using'sig" , strict
+    }
+    // If altered OR missing AND reset ordered
+    else {
+      datasignature set , saving("`using'sig" , replace) reset
+    }
+
+  // Describe if requested
+  if "`textonly'" != "" noisily {
+    local theTextFile = subinstr(`"`using'"',".dta",".txt",.)
+      cap log close hashdata
+      log using "`theTextFile'" , nomsg text replace name(hashdata)
+      noisily : codebook, compact
+      log close hashdata
+  }
+
+end
+
 // Export subroutine ---------------------------------------------------------------------------
 
 cap program drop iecodebook_export
@@ -133,6 +174,7 @@ cap program drop iecodebook_export
 
   syntax [anything] [using/] [if] [in]  ///
     , [replace] [trim(string asis)]     /// User-specified options
+      [hash] [reset] [TEXTonly]         /// Hashdata options
       [match] [template(string asis)]   // Programming options
 
 qui {
@@ -244,10 +286,14 @@ qui {
       compress
       local savedta = subinstr(`"`using'"',".xls",".dta",.)
       local savedta = subinstr(`"`using'"',".dtax",".dta",.)
+      if "`hash'" != "" {
+        noisily : iecodebook_hashdata using "`savedta'" , `textonly' `reset'
+      }
       save "`savedta'" , replace
   } // End [trim] option
 
   // Create XLSX file with all current/remaining variable names and labels
+if "`textonly'" == "" {
   preserve
 
     // Record dataset info
@@ -407,7 +453,7 @@ qui {
   // Success message
   if "`template'" == "" local template "current"
   if `c(N)' > 1 di `"Codebook for `template' data created using {browse "`using'": `using'}"'
-
+} // End textonly flag
 } // end qui
 end
 
