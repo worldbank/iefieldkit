@@ -231,7 +231,7 @@ qui {
     forvalues i = 1/`r(N)' {
       local next = `v'[`i']
       cap unab vars : `next'
-        if _rc == 0 local allVars "`allVars' `vars'"
+        if (_rc == 0 & !strpos("`vars'","__")) local allVars "`allVars' `vars'"
     }
 
     // Keep only those variables
