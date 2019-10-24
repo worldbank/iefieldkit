@@ -465,6 +465,7 @@ qui {
     forvalues i = 2/`r(N)' {
       local theName    = name`survey'[`i']
         local theRename   = name[`i']
+        local theRename = trim("`theRename'")
         if strtoname("`theRename'") != "`theRename'" & "`theRename'" != "." {
           di as err "Error: [`theRename'] on line `i' is not a valid Stata variable name."
           local QUITFLAG = 1
