@@ -56,7 +56,7 @@ cap program drop iecodebook
   	}
 
   // Throw error on [template] if codebook already exists
-  if ("`subcommand'" == "template") & !strpos("`options'","replace") {
+  if ("`subcommand'" == "template") & !strpos(`"`options'"',"replace") {
 
     cap confirm file "`using'"
     if _rc == 0 {
@@ -73,7 +73,7 @@ cap program drop iecodebook
     }
   }
 
-  if ("`subcommand'" == "export") & !strpos("`options'","replace") {
+  if ("`subcommand'" == "export") & !strpos(`"`options'"',"replace") {
 
     cap confirm file "`using'"
     if (_rc == 0) & (!strpos(`"`options'"',"replace")) {
