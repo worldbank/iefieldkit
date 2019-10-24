@@ -56,7 +56,7 @@ cap program drop iecodebook
   	}
 
   // Throw error on [template] if codebook already exists
-  if ("`subcommand'" == "template") {
+  if ("`subcommand'" == "template") & !strpos("`options'","replace") {
 
     cap confirm file "`using'"
     if _rc == 0 {
@@ -73,7 +73,7 @@ cap program drop iecodebook
     }
   }
 
-  if ("`subcommand'" == "export") {
+  if ("`subcommand'" == "export") & !strpos("`options'","replace") {
 
     cap confirm file "`using'"
     if (_rc == 0) & (!strpos(`"`options'"',"replace")) {
@@ -98,7 +98,7 @@ cap program drop iecodebook
   iecodebook_labclean // Do this first in case export or template syntax
   iecodebook_`subcommand' `anything' using "`using'" , `options'
   iecodebook_labclean // Do this again to clean up after apply or append
-  qui compress
+  qui cap compress
 
 end
 
@@ -630,13 +630,11 @@ qui {
     }
 
     // On success copy to final location
-    copy "`codebook'" `"`using'"'
+    copy "`codebook'" `"`using'"' , `replace'
 
   use `raw_data' , clear
   exit
   }
-
-
 
   // Loop over datasets and apply codebook
   local x = 0
@@ -665,8 +663,8 @@ qui {
 
   // Final codebook
   local using = subinstr("`using'",".xlsx","_appended.xlsx",.)
-    iecodebook export using "`using'"
     use `final_data' , clear
+    iecodebook export using "`using'" , `replace'
 
 } // end qui
 end
