@@ -134,9 +134,7 @@ prog def iecodebook_hashdata
   syntax ///
     using/     /// Location of the desired datafile placement
   , ///
-    [replace]  /// replace DTA-file
-    [reset]    /// EVEN IF HASH FAILS: resetting dtasig
-    [textonly] /// plaintext description
+    [reset]    /// reset dtasig if has fails
 
 
   // Setup
@@ -156,15 +154,6 @@ prog def iecodebook_hashdata
       datasignature set , saving("`using'sig" , replace) reset
     }
 
-  // Describe if requested
-  if "`textonly'" != "" noisily {
-    local theTextFile = subinstr(`"`using'"',".dta",".txt",.)
-      cap log close hashdata
-      log using "`theTextFile'" , nomsg text replace name(hashdata)
-      noisily : codebook, compact
-      log close hashdata
-  }
-
 end
 
 // Export subroutine ---------------------------------------------------------------------------
@@ -173,7 +162,7 @@ cap program drop iecodebook_export
   program    iecodebook_export
 
   syntax [anything] [using/] [if] [in]  ///
-    , [replace] [trim(string asis)]     /// User-specified options
+    , [replace] [COPYdata] [trim(string asis)]     /// User-specified options
       [hash] [reset] [TEXTonly]         /// Hashdata options
       [match] [template(string asis)]   // Programming options
 
@@ -292,72 +281,91 @@ qui {
       save "`savedta'" , replace
   } // End [trim] option
 
+  // Save data copy if requestedx
+  if "`copydata'" != "" {
+    compress
+    local savedta = subinstr(`"`using'"',".xlsx",".dta",.)
+    if "`hash'" != "" {
+      noisily : iecodebook_hashdata using "`savedta'" , `reset'
+    }
+    save "`savedta'" , `replace'
+  }
+
+  // Write text codebook if requested
+  if "`textonly'" != "" noisily {
+    local theTextFile = subinstr(`"`using'"',".dta",".txt",.)
+      cap log close hashdata
+      log using "`theTextFile'" , nomsg text replace name(hashdata)
+      noisily : codebook, compact
+      log close hashdata
+  }
+
   // Create XLSX file with all current/remaining variable names and labels
-if "`textonly'" == "" {
-  preserve
+  if "`textonly'" == "" {
+    preserve
 
-    // Record dataset info
+      // Record dataset info
 
-      local allVariables
-      local allLabels
-      local allChoices
+        local allVariables
+        local allLabels
+        local allChoices
 
-      foreach var of varlist * {
-        local theVariable = "`var'"
-        local theLabel    : var label `var'
-        local theChoices  : val label `var'
-        local theType     : type `var'
+        foreach var of varlist * {
+          local theVariable = "`var'"
+          local theLabel    : var label `var'
+          local theChoices  : val label `var'
+          local theType     : type `var'
 
-        local allVariables   `"`allVariables'   "`theVariable'" "'
-        local allLabels      `"`allLabels'      "`theLabel'"    "'
-        local allChoices     `"`allChoices'     "`theChoices'"  "'
-        local allTypes       `"`allTypes'       "`theType'"     "'
-      }
+          local allVariables   `"`allVariables'   "`theVariable'" "'
+          local allLabels      `"`allLabels'      "`theLabel'"    "'
+          local allChoices     `"`allChoices'     "`theChoices'"  "'
+          local allTypes       `"`allTypes'       "`theType'"     "'
+        }
 
-    // Write to new dataset
+      // Write to new dataset
 
-      clear
+        clear
 
-      local theN : word count `allVariables'
+        local theN : word count `allVariables'
 
-      local templateN ""
-      if `TEMPLATE' & "`match'" == "" {
+        local templateN ""
+        if `TEMPLATE' & "`match'" == "" {
+          import excel "`using'", clear first sheet("survey")
+
+          count
+          local templateN "+ `r(N)'"
+        }
+
+        set obs `=`theN' `templateN''
+
+        gen name`template' = ""
+          label var name`template' "name`template_colon'"
+        gen label`template' = ""
+          label var label`template' "label`template_colon'"
+        gen type`template' = ""
+          label var type`template' "type`template_colon'"
+        gen choices`template' = ""
+          label var choices`template' "choices`template_colon'"
+        if `TEMPLATE' gen recode`template' = ""
+          if `TEMPLATE' label var recode`template' "recode`template_colon'"
+
+        forvalues i = 1/`theN' {
+          local theVariable : word `i' of `allVariables'
+          local theLabel    : word `i' of `allLabels'
+          local theChoices  : word `i' of `allChoices'
+          local theType     : word `i' of `allTypes'
+
+          replace name`template'    = `"`theVariable'"'  in `=`i'`templateN''
+          replace label`template'   = `"`theLabel'"'     in `=`i'`templateN''
+          replace type`template'    = `"`theType'"'      in `=`i'`templateN''
+          replace choices`template' = `"`theChoices'"'   in `=`i'`templateN''
+        }
+
+      if `TEMPLATE' & "`match'" != "" {
+        tempfile newdata
+          save `newdata' , replace
+
         import excel "`using'", clear first sheet("survey")
-
-        count
-        local templateN "+ `r(N)'"
-      }
-
-      set obs `=`theN' `templateN''
-
-      gen name`template' = ""
-        label var name`template' "name`template_colon'"
-      gen label`template' = ""
-        label var label`template' "label`template_colon'"
-      gen type`template' = ""
-        label var type`template' "type`template_colon'"
-      gen choices`template' = ""
-        label var choices`template' "choices`template_colon'"
-      if `TEMPLATE' gen recode`template' = ""
-        if `TEMPLATE' label var recode`template' "recode`template_colon'"
-
-      forvalues i = 1/`theN' {
-        local theVariable : word `i' of `allVariables'
-        local theLabel    : word `i' of `allLabels'
-        local theChoices  : word `i' of `allChoices'
-        local theType     : word `i' of `allTypes'
-
-        replace name`template'    = `"`theVariable'"'  in `=`i'`templateN''
-        replace label`template'   = `"`theLabel'"'     in `=`i'`templateN''
-        replace type`template'    = `"`theType'"'      in `=`i'`templateN''
-        replace choices`template' = `"`theChoices'"'   in `=`i'`templateN''
-      }
-
-    if `TEMPLATE' & "`match'" != "" {
-      tempfile newdata
-        save `newdata' , replace
-
-      import excel "`using'", clear first sheet("survey")
 
       qui lookfor name
       clonevar name`template' = `: word 2 of `r(varlist)''
@@ -382,14 +390,15 @@ if "`textonly'" == "" {
         drop `order'
     }
 
-    // Export variable information to "survey" sheet
-    cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
-    local rc = _rc
-    forvalues i = 1/10 {
-      if `rc' != 0 {
-        sleep `i'000
-        cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
-        local rc = _rc
+      // Export variable information to "survey" sheet
+      cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
+      local rc = _rc
+      forvalues i = 1/10 {
+        if `rc' != 0 {
+          sleep `i'000
+          cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
+          local rc = _rc
+        }
       }
     }
     if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by file syncing the file or having the file open."
@@ -397,63 +406,63 @@ if "`textonly'" == "" {
     if `rc' != 0 error 603
   restore
 
-  // Create value labels sheet
+    // Create value labels sheet
 
-    // Fill temp dataset with value labels
-    foreach var of varlist * {
-      use `var' using `allData' in 1 , clear
-      local theLabel : value label `var'
-      if "`theLabel'" != "" {
-        cap label save `theLabel' using `theLabels' ,replace
-        if _rc==0 {
-          import delimited using `theLabels' , clear delimit(", modify", asstring)
-          append using `theCommands'
-            save `theCommands' , replace emptyok
+      // Fill temp dataset with value labels
+      foreach var of varlist * {
+        use `var' using `allData' in 1 , clear
+        local theLabel : value label `var'
+        if "`theLabel'" != "" {
+          cap label save `theLabel' using `theLabels' ,replace
+          if _rc==0 {
+            import delimited using `theLabels' , clear delimit(", modify", asstring)
+            append using `theCommands'
+              save `theCommands' , replace emptyok
+          }
         }
       }
-    }
 
-    // Clean up value labels for export - use SurveyCTO syntax for sheet names and column names
-    use `theCommands' , clear
-    count
-    if `r(N)' > 0 {
-      duplicates drop
-      drop v2
-      replace v1 = trim(subinstr(v1,"label define","",.))
-      split v1 , parse(`"""')
-      split v11 , parse(`" "')
-      keep v111 v112 v12
-      order v111 v112 v12
+      // Clean up value labels for export - use SurveyCTO syntax for sheet names and column names
+      use `theCommands' , clear
+      count
+      if `r(N)' > 0 {
+        duplicates drop
+        drop v2
+        replace v1 = trim(subinstr(v1,"label define","",.))
+        split v1 , parse(`"""')
+        split v11 , parse(`" "')
+        keep v111 v112 v12
+        order v111 v112 v12
 
-      rename (v111 v112 v12)(list_name value label)
-    }
-    else {
-      set obs 1
-      gen list_name = ""
-      gen value = ""
-      gen label = ""
-    }
-
-    // Export value labels to "choices" sheet
-    cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
-    local rc = _rc
-    forvalues i = 1/10 {
-      if `rc' != 0 {
-        sleep `i'000
-        cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
-        local rc = _rc
+        rename (v111 v112 v12)(list_name value label)
       }
-    }
-    if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
-    if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
-    if `rc' != 0 error 603
+      else {
+        set obs 1
+        gen list_name = ""
+        gen value = ""
+        gen label = ""
+      }
 
-  // Reload original data
-  use "`allData'" , clear
-  // Success message
-  if "`template'" == "" local template "current"
-  if `c(N)' > 1 di `"Codebook for `template' data created using {browse "`using'": `using'}"'
-} // End textonly flag
+      // Export value labels to "choices" sheet
+      cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
+      local rc = _rc
+      forvalues i = 1/10 {
+        if `rc' != 0 {
+          sleep `i'000
+          cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
+          local rc = _rc
+        }
+      }
+      if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
+      if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
+      if `rc' != 0 error 603
+
+    // Reload original data
+    use "`allData'" , clear
+    // Success message
+    if "`template'" == "" local template "current"
+    if `c(N)' > 1 di `"Codebook for `template' data created using {browse "`using'": `using'}"'
+  } // End textonly flag
 } // end qui
 end
 
