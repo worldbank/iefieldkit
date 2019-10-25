@@ -80,11 +80,12 @@ and optionally produces an export version of the dataset with only variables use
 [{opth gen:erate(varname)} {opt miss:ingvalues(# "label" [# "label" ...])} {bf:keepall}]{p_end}
 
 
-{dlgtab 0:Export: Creating a full codebook of the current data}
+{dlgtab 0:Export: Creating codebooks and signatures for datasets}
 
-{p 2 4}{cmdab:iecodebook export} [{help if}] [{help in}] {break}
+{p 2 4}{cmdab:iecodebook export} ["/path/to/data.dta"] [{help if}] [{help in}] {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
-{p 2 3}, [{bf:replace}] [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
+{p 2 4}, [{bf:replace}] [{opt text:only}] [{opt copy:data}] [{opt hash}] [{opt reset}] {break}
+    [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
 
 {hline}
 
@@ -136,10 +137,19 @@ For example, appending a same-named string variable to a numeric variable may ca
 {marker Options}{...}
 {synopthdr:Export Options}
 {synoptline}
-{synopt:{opt replace}}This option allows {cmdab:iecodebook export} to overwrite an existing codebook.{p_end}
+{synopt:{opt replace}}This option allows {cmdab:iecodebook export} to overwrite an existing codebook or dataset.{p_end}
 {break}
-{synopt:{opt trim()}} Takes one or more dofiles and trims the current dataset to only include variables used in those dofiles,
-and saves an identically named .dta file at the location specified in {it:"/path/to/codebook.xlsx"}.{p_end}
+{synopt:{opt text:only}}This option requests that the codebook be created as a plaintext file.{p_end}
+{break}
+{synopt:{opt copy:data}}This option requests that a copy of the data be placed at the same location as the codebook, with the same name.{p_end}
+{break}
+{synopt:{opt hash}}This option requests that a {help datasignature} be placed at the same location as the codebook,
+and will return an error if a datasignature file is already there and is different.{p_end}
+{break}
+{synopt:{opt reset}}This option allows {cmdab:iecodebook export} to overwrite an existing datasignature.{p_end}
+{break}
+{synopt:{opt trim()}}This option takes one or more dofiles as inputs, and trims the current dataset to only include variables used in those dofiles,
+before executing any of the other {bf: export} tasks requested.{p_end}
 {synoptline}
 
 {marker example}
