@@ -134,7 +134,7 @@ prog def iecodebook_hashdata
   syntax ///
     using/     /// Location of the desired datafile placement
   , ///
-    [reset]    /// reset dtasig if has fails
+    [reset]    /// reset dtasig if hash fails
 
 
   // Setup
