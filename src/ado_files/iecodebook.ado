@@ -152,14 +152,14 @@ prog def iecodebook_hashdata
   if `"`anything'"' != `""' use `anything' , clear
 
   // Check existing hash, if any
-  cap datasignature confirm  using "`using'sig" , strict
+  cap datasignature confirm  using "`using'" , strict
     // If not found OR altered and no reset
     if ("`reset'" == "") {
-      datasignature confirm using "`using'sig" , strict
+      datasignature confirm using "`using'" , strict
     }
     // If altered OR missing AND reset ordered
     else {
-      datasignature set , saving("`using'sig" , replace) reset
+      datasignature set , saving("`using'" , replace) reset
     }
 
 end
@@ -277,12 +277,13 @@ qui {
       keep `theKeepList' // Keep only variables mentioned in the dofiles
   } // End [trim] option
 
-  // Save data copy if requestedx
+  // Save data copy if requested
   if "`copydata'" != "" {
     compress
     local savedta = subinstr(`"`using'"',".xlsx",".dta",.)
+    local hashloc = subinstr(`"`savedta'"',".dta","-sig.txt",.)
     if "`hash'" != "" {
-      noisily : iecodebook_hashdata using "`savedta'" , `reset'
+      noisily : iecodebook_hashdata using "`hashloc'" , `reset'
     }
     save "`savedta'" , `replace'
   }
