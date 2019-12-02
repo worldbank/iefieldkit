@@ -67,6 +67,14 @@ cap program drop iecorrect
 			}
 		*/
 		
+		* Test type of idvar
+		cap confirm string variable `idvar'
+		if !_rc {
+			local stringid		stringid
+			noi di "Is string"
+		}
+		
+		
 /*******************************************************************************	
 	Create a do file containing the corrections
 *******************************************************************************/		
@@ -96,7 +104,7 @@ cap program drop iecorrect
 				cap	file close 	`doname'
 					file open  	`doname' using "`dofile'", text write append
 				
-					do`type', 	 doname("`doname'") idvar("`idvar'")
+					do`type', 	 doname("`doname'") idvar("`idvar'") `stringid'
 				
 				* Add an extra space before the next set of corrections
 					file write  `doname'		  _n _n					
@@ -352,7 +360,7 @@ cap program drop doheader
 cap program drop donumeric
 	program 	 donumeric
 	
-	syntax , doname(string) idvar(string)
+	syntax , doname(string) idvar(string) [stringid]
 		
 	file write  `doname' "** Correct entries in numeric variables " _n								// <---- Writing in do file here
 	
@@ -362,7 +370,7 @@ cap program drop donumeric
 	
 	* Write one line of correction for each line in the data set
 		forvalues row = 1/`r(N)' {
-			
+	
 			* Calculate the user-specified inputs for this line
 			local var			= numvar[`row']
 			local valuecurrent 	= valuecurrent[`row']
@@ -370,27 +378,29 @@ cap program drop donumeric
 			local idvalue		= idvalue[`row']
 
 			** Prepare a local with the line to be written in the do-file
-			
+	
 			* The main variable will be corrected to new value, but a condition needs to be specified.
 			* The condition can be one ID variable and/or one current value.
 			local line	`"replace `var' = `value' if "'												
-			
+	
 			* If it's an ID variables, write that in the line
-			if "`idvalue'" != "" {
+			if `"`idvalue'"' != "" {
+				if "`stringid'" != "" {
+					local idvalue = `""idvalue""'
+				}
 				local line	`"`line' `idvar' == `idvalue'"'											
-				
+	
 				* If it's both, add an "and"
 				if "`valuecurrent'" != "" {
 					local line	`"`line' & "'														
 				}
 			}
-			
+	
 			* If there's a current value, write that in the line
 			if "`valuecurrent'" != "" {
-				noi di "enter valuecurrent"
 				local line	`"`line'`var' == `valuecurrent'"'										
 			}
-			
+	
 			** Write the line to the do file
 			file write  `doname' `"`line'"' _n															// <---- Writing in do file here
 		}	
@@ -403,7 +413,7 @@ cap program drop donumeric
 cap program drop dostring
 	program 	 dostring
 	
-	syntax , doname(string) idvar(string)
+	syntax , doname(string) idvar(string) [stringid]
 
 	file write  `doname'		  "** Correct entries in strin variables " _n								// <---- Writing in do file here
 
@@ -422,9 +432,13 @@ cap program drop dostring
 
 		local line		`"replace `var' = "`value'" if"'
 		
-		if "`idvalue'" != "" {
+		if `"`idvalue'"' != "" {
 			*Confirm that ID var was specified
 			*Confirmed that ID var is the same type as idvaue
+			
+			if "`stringid'" != "" {
+				local idvalue = `""idvalue""'
+			}
 			
 			local line	`"`line' `idvar' == `idvalue'"'
 			
@@ -450,7 +464,7 @@ cap program drop dostring
 cap program drop dodrop
 	program 	 dodrop
 	
-	syntax , doname(string) idvar(string)
+	syntax , doname(string) idvar(string) [stringid]
 
 	file write  `doname'		  "** Drop observations " _n								// <---- Writing in do file here
 
@@ -460,11 +474,14 @@ cap program drop dodrop
 		
 		local idvalue		= idvalue[`row']
 
-		if "`idvalue'" != "" {
+		if `"`idvalue'"' != "" {
 			*Confirm that ID var was specified
 			*Confirmed that ID var is the same type as idvaue
 
 			** Write the line to the do file
+			if "`stringid'" != "" {
+				local idvalue = `""idvalue""'
+			}
 			file write `doname'	`"drop if `idvar' == `idvalue' "' _n							// <---- Writing in do file here
 			
 		}
