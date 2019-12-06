@@ -319,8 +319,14 @@ qui {
       clonevar name`template' = `: word 2 of `r(varlist)''
         label var name`template' "name`template_colon'"
 
-      merge 1:1 name`template' using `newdata' , nogen
+        tempvar order
+        gen `order' = _n
+
+      merge m:1 name`template' using `newdata' , nogen
       replace name`template' = "" if type`template' == ""
+
+        sort `order'
+        drop `order'
     }
 
     // Export variable information to "survey" sheet
