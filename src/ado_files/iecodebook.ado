@@ -529,7 +529,7 @@ qui {
       // Add missing values if requested
       if `"`missingvalues'"' != "" {
         foreach theValueLabel in `theValueLabels' {
-          local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `missingvalues' "'
+          if "`theValueLabel'" != "." local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `missingvalues' "'
         }
       }
 
