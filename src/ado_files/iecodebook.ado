@@ -543,6 +543,11 @@ qui {
 
     // Drop leftovers if requested
     cap drop `allDrops'
+      qui des
+      if `r(k)' == 0 {
+        noi di as err "You are dropping all the variables in a dataset. This is not allowed. {bf:iecodebook} will exit."
+        error 102
+      }
 
     // Apply all recodes, choices, and labels
     foreach type in Recodes Choices Labels {
