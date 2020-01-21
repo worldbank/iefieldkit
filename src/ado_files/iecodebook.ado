@@ -541,13 +541,13 @@ qui {
         local theNextValue = value[`i']
         local theNextLabel = label[`i']
         local theValueLabel = list_name[`i']
-        local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `theNextValue' "`theNextLabel'" "'
+        local L_`theValueLabel' `" `L_`theValueLabel'' `theNextValue' "`theNextLabel'" "'
       }
 
       // Add missing values if requested
       if `"`missingvalues'"' != "" {
         foreach theValueLabel in `theValueLabels' {
-          if "`theValueLabel'" != "." local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `missingvalues' "'
+          if "`theValueLabel'" != "." local L_`theValueLabel' `" `L_`theValueLabel'' `missingvalues' "'
         }
       }
 
@@ -556,7 +556,7 @@ qui {
 
     // Define value labels
     foreach theValueLabel in `theValueLabels' {
-      if "`theValueLabel'" != "." label def `theValueLabel' `theLabelList_`theValueLabel'', replace
+      if "`theValueLabel'" != "." label def `theValueLabel' `L_`theValueLabel'', replace
       }
 
     // Drop leftovers if requested
