@@ -483,6 +483,10 @@ qui {
         }
       local theLabel    = label[`i']
       local theChoices  = choices[`i']
+        if strtoname("`theChoices'") != "`theChoices'" & "`theChoices'" != "." {
+          di as err "Error: [`theChoices'] on line `i' is not a valid Stata choice list name."
+          local QUITFLAG = 1
+        }
       local theRecode   = recode`survey'[`i']
 
       if "`theName'"   != "" {
