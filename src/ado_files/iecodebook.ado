@@ -210,6 +210,11 @@ qui {
         save `a' , replace
     }
 
+    // Clean up common characters
+    foreach character in , . < > / ? [ ] | & ! ^ + - : * = ( ) "{" "}" "`" "'" {
+      replace v1 = subinstr(v1,"`character'"," ",.)
+    }
+
     // Reshape one word per line
       split v1
       drop v1
@@ -230,7 +235,7 @@ qui {
     qui count
     forvalues i = 1/`r(N)' {
       local next = `v'[`i']
-      cap unab vars : `next'
+      cap novarabbrev unab vars : `next'
         if (_rc == 0 & strpos("`vars'","__")!=1 ) local allVars "`allVars' `vars'"
     }
 
