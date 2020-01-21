@@ -322,7 +322,16 @@ qui {
 
       qui lookfor name
       clonevar name`template' = `: word 2 of `r(varlist)''
+        local theNames = "`r(varlist)'"
         label var name`template' "name`template_colon'"
+
+        // Allow matching for more rounds
+        local nNames : list sizeof theNames
+        if `nNames' > 2 {
+          forvalues i = 2/`nNames' {
+            replace name`template' = `: word `i' of `theNames'' if name`template' == ""
+          }
+        }
 
         tempvar order
         gen `order' = _n
