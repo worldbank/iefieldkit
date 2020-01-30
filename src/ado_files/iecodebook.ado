@@ -241,6 +241,11 @@ qui {
         save `a' , replace
     }
 
+    // Clean up common characters
+    foreach character in , . < > / ? [ ] | & ! ^ + - : * = ( ) "{" "}" "`" "'" {
+      replace v1 = subinstr(v1,"`character'"," ",.)
+    }
+
     // Reshape one word per line
       split v1
       drop v1
@@ -261,7 +266,7 @@ qui {
     qui count
     forvalues i = 1/`r(N)' {
       local next = `v'[`i']
-      cap unab vars : `next'
+      cap novarabbrev unab vars : `next'
         if (_rc == 0 & strpos("`vars'","__")!=1 ) local allVars "`allVars' `vars'"
     }
 
@@ -364,13 +369,28 @@ qui {
 
         import excel "`using'", clear first sheet("survey")
 
-        qui lookfor name
-        clonevar name`template' = `: word 2 of `r(varlist)''
-          label var name`template' "name`template_colon'"
+      qui lookfor name
+      clonevar name`template' = `: word 2 of `r(varlist)''
+        local theNames = "`r(varlist)'"
+        label var name`template' "name`template_colon'"
 
-        merge 1:1 name`template' using `newdata' , nogen
-        replace name`template' = "" if type`template' == ""
-      }
+        // Allow matching for more rounds
+        local nNames : list sizeof theNames
+        if `nNames' > 2 {
+          forvalues i = 2/`nNames' {
+            replace name`template' = `: word `i' of `theNames'' if name`template' == ""
+          }
+        }
+
+        tempvar order
+        gen `order' = _n
+
+      merge m:1 name`template' using `newdata' , nogen
+      replace name`template' = "" if type`template' == ""
+
+        sort `order'
+        drop `order'
+    }
 
       // Export variable information to "survey" sheet
       cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
@@ -521,6 +541,10 @@ qui {
         }
       local theLabel    = label[`i']
       local theChoices  = choices[`i']
+        if strtoname("`theChoices'") != "`theChoices'" & "`theChoices'" != "." {
+          di as err "Error: [`theChoices'] on line `i' is not a valid Stata choice list name."
+          local QUITFLAG = 1
+        }
       local theRecode   = recode`survey'[`i']
 
       if "`theName'"   != "" {
@@ -566,13 +590,13 @@ qui {
         local theNextValue = value[`i']
         local theNextLabel = label[`i']
         local theValueLabel = list_name[`i']
-        local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `theNextValue' "`theNextLabel'" "'
+        local L_`theValueLabel' `" `L_`theValueLabel'' `theNextValue' "`theNextLabel'" "'
       }
 
       // Add missing values if requested
       if `"`missingvalues'"' != "" {
         foreach theValueLabel in `theValueLabels' {
-          local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `missingvalues' "'
+          if "`theValueLabel'" != "." local L_`theValueLabel' `" `L_`theValueLabel'' `missingvalues' "'
         }
       }
 
@@ -581,11 +605,16 @@ qui {
 
     // Define value labels
     foreach theValueLabel in `theValueLabels' {
-      if "`theValueLabel'" != "." label def `theValueLabel' `theLabelList_`theValueLabel'', replace
+      if "`theValueLabel'" != "." label def `theValueLabel' `L_`theValueLabel'', replace
       }
 
     // Drop leftovers if requested
     cap drop `allDrops'
+      qui des
+      if `r(k)' == 0 {
+        noi di as err "You are dropping all the variables in a dataset. This is not allowed. {bf:iecodebook} will exit."
+        error 102
+      }
 
     // Apply all recodes, choices, and labels
     foreach type in Recodes Choices Labels {
