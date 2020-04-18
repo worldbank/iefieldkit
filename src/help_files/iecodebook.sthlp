@@ -4,13 +4,6 @@
 help for {hi:iecodebook}
 {hline}
 
-    _                     __     __                __
-   (_)__  _________  ____/ /__  / /_  ____  ____  / /__
-  / / _ \/ ___/ __ \/ __  / _ \/ __ \/ __ \/ __ \/ //_/
- / /  __/ /__/ /_/ / /_/ /  __/ /_/ / /_/ / /_/ / ,<
-/_/\___/\___/\____/\__,_/\___/_.___/\____/\____/_/|_|
-
-
 {title:Title}
 
 {p}{cmdab:iecodebook} {hline 2} performs common data cleaning tasks using dataset definitions (codebooks) written in Excel files. {p_end}
