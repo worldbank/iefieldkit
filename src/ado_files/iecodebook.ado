@@ -26,6 +26,7 @@ cap program drop iecodebook
   }
 
   // Select subcommand
+  noi di " "
   gettoken subcommand anything : anything
 
   // Check folder exists
@@ -146,7 +147,7 @@ cap program drop iecodebook_export
 qui {
 
   // Return a warning if there are lots of variables
-  if `c(k)' >= 1000 di "This dataset has `c(k)' variables. This may take a long time! Consider subsetting your variables first."
+  if `c(k)' >= 1000 noi di "This dataset has `c(k)' variables. This may take a long time! Consider subsetting your variables first."
 
   // Template Setup
     // Load dataset if argument
@@ -353,8 +354,8 @@ qui {
         local rc = _rc
       }
     }
-    if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
-    if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
+    if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by file syncing the file or having the file open."
+    if `rc' != 0 di as err "Consider turning file syncing off or using a non-synced location. You may need to delete the file and try again."
     if `rc' != 0 error 603
   restore
 
@@ -630,8 +631,8 @@ qui {
     local drop "drop"
   }
   else {
-    di "You have specified [keepall], which means you are forcing all variables to be appended even if you did not manually harmonize them."
-    di "Make sure to check the resulting dataset carefully. Forcibly appending data, especially of different types, may result in loss of information."
+    noi di "You have specified [keepall], which means you are forcing all variables to be appended even if you did not manually harmonize them."
+    noi di "Make sure to check the resulting dataset carefully. Forcibly appending data, especially of different types, may result in loss of information."
     local drop ""
   }
 
@@ -698,7 +699,7 @@ qui {
   }
 
   // Success message
-  di `"Applied codebook using `using' to `anything' – check your data carefully!"'
+  noi di `"Applied codebook {browse `using'} to `anything' – check your data carefully!"'
 
   // Final codebook
   local using = subinstr("`using'",".xlsx","_report.xlsx",.)
