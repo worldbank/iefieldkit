@@ -523,6 +523,14 @@ qui {
       // Prepare list of values for each value label.
       import excel "`using'" , first clear sheet(choices) allstring
 
+      noi levelsof list_name , local(theListedLabels)
+      local leftovers : list theValueLabels - theListedLabels
+      if `"`leftovers'"' != "" {
+        di as err "You have specified a value label in [choices] which is not defined in the {it:choices} sheet."
+        di as err "{bf:iecodebook} will exit. Define the value label and re-run the command to continue."
+        error 100
+      }
+
       // Check for broken things, namely quotation marks
       foreach var of varlist * {
         cap confirm string variable `var'
