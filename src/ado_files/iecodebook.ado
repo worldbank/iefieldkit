@@ -608,7 +608,7 @@ cap program drop iecodebook_append
 
   syntax [anything] [using/] , ///
     surveys(string asis) [GENerate(string asis)] ///
-    [clear] [match] [KEEPall] /// User options
+    [clear] [match] [KEEPall] [report] /// User options
     [template] [replace] /// System options
     [*]
 
@@ -701,9 +701,12 @@ qui {
   di `"Applied codebook using `using' to `anything' – check your data carefully!"'
 
   // Final codebook
-  local using = subinstr("`using'",".xlsx","_appended.xlsx",.)
+  local using = subinstr("`using'",".xlsx","_report.xlsx",.)
     use `final_data' , clear
-    iecodebook export using "`using'" , `replace'
+    if "`report'" != "" {
+      iecodebook export using "`using'" , `replace'
+      noi di `"Wrote report to {browse `using'}!"'
+    }
 
 } // end qui
 end
