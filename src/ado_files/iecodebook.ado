@@ -523,6 +523,7 @@ qui {
       // Prepare list of values for each value label.
       import excel "`using'" , first clear sheet(choices) allstring
 
+      // Catch any labels called on choices that are not defined in choice sheet
       levelsof list_name , local(theListedLabels)
       local leftovers : list theValueLabels - theListedLabels
       if `"`leftovers'"' != "" {
