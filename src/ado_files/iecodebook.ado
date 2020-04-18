@@ -523,7 +523,7 @@ qui {
       // Prepare list of values for each value label.
       import excel "`using'" , first clear sheet(choices) allstring
 
-      noi levelsof list_name , local(theListedLabels)
+      levelsof list_name , local(theListedLabels)
       local leftovers : list theValueLabels - theListedLabels
       if `"`leftovers'"' != "" {
         di as err "You have specified a value label in [choices] which is not defined in the {it:choices} sheet."
