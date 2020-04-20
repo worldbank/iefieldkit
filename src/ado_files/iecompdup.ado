@@ -1,4 +1,4 @@
-*! version 1.3 7JUN2019  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.4 8AUG2019  DIME Analytics dimeanalytics@worldbank.org
 
 	capture program drop iecompdup
 	program iecompdup , rclass
@@ -23,10 +23,10 @@
 				error 197
 				exit
 			}
-		
+
 			* Option keep other can only be used with option keepdifference
 			if "`keepdifference'" == "" & "`keepother'" != "" {
-			
+
 				noi di as error "{phang}Not allowed to specify option {inp:keepother()} without specifying {inp:keepdifference}.{p_end}"
 				noi di ""
 				error 197
@@ -39,39 +39,39 @@
 
 			* Turn ID var to string so that the rest of the command works similarly
 			stringid `varlist'
-			
+
 			* Only keep duplicates with the ID specified
 			keep if  `varlist' == "`id'"
 
 			* Test number of duplicates
 			testnumobs `varlist', id("`id'")
 
-			* If there are more than 2 observations, either the user must 
+			* If there are more than 2 observations, either the user must
 			* explicitly select the observations to compare, or aknowledge that
 			* only the first two will be compared, or the command will not run
-			if `r(more2)' == 1 & "`more2ok'" == "" & `"`if'"' == "" {			
-				errormore2 `varlist', id("`id'")				
+			if `r(more2)' == 1 & "`more2ok'" == "" & `"`if'"' == "" {
+				errormore2 `varlist', id("`id'")
 			}
 			else if `r(more2)' == 1 & "`more2ok'" != "" {
 
 				keep if _n <= 2
 				noi di "{phang}There are more than two observations with (`varlist' == `id'). The first two observations with (`varlist' == `id') according to the sort order in the data set will be compared.{p_end}"
-				
+
 			}
 			else if `r(more2)' == 1 & `"`if'"' != "" {
-				
+
 				* Remove observations excluded by if
 				marksample touse,  novarlist
 				keep if `touse'
-				
+
 				* Test that now we have the right number of observations
 				testnumobs `varlist', id("`id'")
-				
+
 				if `r(more2)' == 1 {
 					errormore2 `varlist', id("`id'") ifused
 				}
 			}
-			
+
 /*******************************************************************************
 	Compare all variables
 *******************************************************************************/
@@ -160,13 +160,13 @@
 			}
 		}
 	}
-	
+
 	end
 
 /*******************************************************************************
 
 	Subprograms to test inputs and prepare data
-	
+
 *******************************************************************************/
 
 *------------------------------------------------------------------------------*
@@ -177,9 +177,9 @@ capture program drop stringid
 		program 	 stringid
 
 qui {
-	
+
 	syntax varname
-		
+
 	* Test if ID variable fully identifies the data (otherwise, the next test will not work)
 	qui count if missing(`varlist')
 	if r(N) != 0 {
@@ -187,7 +187,7 @@ qui {
 		error 459
 		exit
 	}
-			
+
 	* Test if ID variable is numeric or string
 	cap confirm numeric variable `varlist'
 	if !_rc {
@@ -198,7 +198,8 @@ qui {
 		* This command does not allow numeric ID variables that are not integers
 		if _rc {
 			di as error "{phang}The ID variable is only allowed to be either string or only consist of integers. Integer in this context is not the same as the variable type int. Integer in this context means numeric values without decimals. Please consider using integers as your ID or convert your ID variable to a string.{p_end}"
-
+			error 109
+			exit
 		}
 		else {
 
@@ -223,19 +224,19 @@ qui {
 end
 
 *------------------------------------------------------------------------------*
-*	Test the number of duplicates 
+*	Test the number of duplicates
 *------------------------------------------------------------------------------*
 
 capture program drop testnumobs
 		program		 testnumobs , rclass
 
 qui {
-	
-	syntax varname, id(string) 
-	
+
+	syntax varname, id(string)
+
 	* Count number of observations
 	count
-		
+
 		 if `r(N)' == 2		local more2 0
 	else if `r(N)' == 0 {
 
@@ -252,13 +253,13 @@ qui {
 		exit
 	}
 	else if `r(N)' > 2 {
-	
+
 		local more2	1
 	}
-	
+
 	return local more2	`more2'
-}		
-		
+}
+
 end
 
 *------------------------------------------------------------------------------*
@@ -267,19 +268,17 @@ end
 
 capture program drop errormore2
 		program		 errormore2
-		
+
 	syntax varname, id(string) [ifused]
-	
+
 	if "`ifused'" != "" {
 		local if_message " that also satisfy the {inp:if} condition"
 	}
-	
+
 	noi di as error "{phang}There are more than 2 observations with (`varlist' == `id')`if_message'. The current version of iecompdup is not able to compare more than 2 duplicates at the time. (How to output the results for groups larger than 2 is non-obvious and suggestions on how to do that are appreciated.){p_end}{break}"
 	noi di as error "{phang}Either use {inp:if} to explicitly select the observations to be compared or specify option {inp:more2ok}, in which case the comparison will be done between the first and the second occurrences of the value `id' in `varlist'.{p_end}"
 	noi di ""
 	error 197
 	exit
-	
-end
 
-	
+end

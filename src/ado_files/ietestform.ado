@@ -1,4 +1,4 @@
-*! version 1.3 7JUN2019  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.4 8AUG2019  DIME Analytics dimeanalytics@worldbank.org
 
 capture program drop ietestform
 		program ietestform , rclass
@@ -278,7 +278,7 @@ qui {
 		if substr("`var'", 1, 5) == "label" local labelvars "`labelvars' `var'"
 	}
 	local num_label_vars : word count `labelvars'
-	
+
 	**Make sure all label vars are strings. Only non-string if all values are
 	* digits or all values missing. In both cases these should be changed to
 	* string, and if "." change to missing

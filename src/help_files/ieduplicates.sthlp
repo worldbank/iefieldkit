@@ -1,5 +1,5 @@
 {smcl}
-{* 7 Jun 2019}{...}
+{* 8 Aug 2019}{...}
 {hline}
 help for {hi:ieduplicates}
 {hline}
@@ -23,7 +23,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {cmdab:duplistid(}{it:string}{cmd:)} {cmdab:datelisted(}{it:string}{cmd:)}
 {cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}{break}
 {cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)}
-{cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)} 
+{cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)}
 {cmdab:listofdiffs(}{it:string}{cmd:)}]{p_end}
 
 
@@ -167,7 +167,7 @@ if any duplicates in {it:ID_varname} were found. The command will create a subfo
 in the folder where this report is saved. Daily back-ups of the report will be saved in the {it: Daily}
 subfolder. If a report is backed up already that day, that report will not be overwritten. In case
 the command is run more than once in a day, and creates different reports, a time-stamped report for
-the same date will be saved instead. 
+the same date will be saved instead.
 
 {pstd}All duplicates in a group of duplicates must have a correction indicated. If
 one or more duplicates are indicated as correct in {it:correct} or assigned a new

@@ -1,13 +1,5 @@
 
-*Test for user specified variable names in Excel report
-********************************************************
-	
-	cd "${GitHub}"
-	
-	cscript iecompdup_test adofile iecompdup
-	which 	iecompdup
-	
-	clear all
+	do "${GitHub}/iefieldkit/src/ado_files/iecompdup.ado"
 	
 /*******************************************************************************
 	Prepare data
@@ -79,25 +71,33 @@
 * 	No duplicates
 *------------------------------------------------------------------------------- 
 	
-	*iecompdup uuid, id(15)
-	*iecompdup uuid if key == 210938, id(0)
+	cap iecompdup uuid, id(15)
+	assert _rc == 2001
+	
+	cap iecompdup uuid if key == 210938, id(0)
+	assert _rc == 2000
 	
 *-------------------------------------------------------------------------------
-* 	Two duplicates
+* 	Options incorrectly specified
 *------------------------------------------------------------------------------- 
 
-	*iecompdup uuid, id(1) keepother(oi)
+	cap iecompdup uuid, id(1) keepother(oi)
+	assert _rc == 197
 
 *-------------------------------------------------------------------------------
 * 	More than two duplicates
 *------------------------------------------------------------------------------- 
 
-	*iecompdup uuid, id(2)
-	*iecompdup uuid if inlist(key, 53, 54, 3), id(2)
+	cap iecompdup uuid, id(2)
+	assert _rc == 197
+	
+	cap iecompdup uuid if inlist(key, 53, 54, 3), id(2)
+	assert _rc == 197
 	
 *-------------------------------------------------------------------------------
 * 	An ID value is numeric but not an integer.
 *------------------------------------------------------------------------------- 
 	
 	replace uuid = 1.5 if (uuid == 1)
-	iecompdup uuid, id(1.5)
+	cap iecompdup uuid, id(1.5)
+	assert _rc == 109

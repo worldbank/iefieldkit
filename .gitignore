@@ -49,3 +49,8 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+# Folders and files that are only relevant for testing
+run/
+admin/
+*.xls
+*.xlsx
