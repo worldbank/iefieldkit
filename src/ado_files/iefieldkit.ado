@@ -36,6 +36,6 @@ program iefieldkit, rclass
 	noi di ""
 	noi di _col(4) "This package includes the following commands:"
 	noi di _col(8) "- {help iecodebook}"
-	noi di _col(8) "- {help ieduplocates}/{help iecompdup}"
+	noi di _col(8) "- {help ieduplicates}/{help iecompdup}"
 	noi di _col(8) "- {help ietestform}"
 end

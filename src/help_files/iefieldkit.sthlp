@@ -29,7 +29,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/iefieldkit":
 
 {pstd}This package includes the following commands:{p_end}
 {pmore}- {help iecodebook}{p_end}
-{pmore}- {help ieduplocates} and {help iecompdup}{p_end}
+{pmore}- {help ieduplicates} and {help iecompdup}{p_end}
 {pmore}- {help ietestform}{p_end}
 
 {marker optslong}
