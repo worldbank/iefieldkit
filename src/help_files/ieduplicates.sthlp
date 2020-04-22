@@ -187,9 +187,9 @@ is sorted at the time {cmd:ieduplicates} is executed.
 time for that duplicate.
 
 {phang}{it:listofdiffs} stores a list with the names of the variables that are
-different in two different observations. This list is truncated at 256 characters
-and is only stores when there are exactly two duplicates. For other cases, {help:iecompdup}
-must be used to get this information.
+different in two different observations. This list is truncated at 250 characters
+and is only stores when there are exactly two duplicates. For full list or cases
+where there are more then two duplicates, {help:iecompdup} should be used.
 
 {dlgtab:Columns in Excel Report to be filled in manually by a user:}
 

@@ -576,9 +576,8 @@
 						* Only checking variables in the original data set and not variables in Excel report.
 						local diffvars: list diffvars - excelVars
 
-						*Truncate list when longer than 256 to fit in old Stata string formats.
-						*255-29 (characters for " ||| List truncated, use iecompdup for full list")= 226
-						if strlen("`diffvars'") > 256 local difflist_`nospaceid'  = substr("`r(diffvars)'" ,1 ,207) + " ||| List truncated, use iecompdup for full list"
+						*Truncate list when longer than 250 to look better in report
+						if strlen("`diffvars'") > 250 local difflist_`nospaceid'  = substr("`r(diffvars)'" ,1 ,200) + " ||| List truncated, use iecompdup for full list"
 						else local difflist_`nospaceid' "`diffvars'" //List of diff is short enough to show in its entirety
 					}
 
