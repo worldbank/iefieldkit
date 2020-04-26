@@ -1039,14 +1039,14 @@ qui {
 	gen namelen_repeat2 = namelen + num_nested_repeats * 3 //Adding "_10" for each loop
 
 	*Names that are always too long
-	gen longname    = (namelen > 32)
-    gen longname1   = (namelen_repeat1 > 32 & longname 	== 0) 	//if longname is 1, then this test is redundant
-    gen longname2   = (namelen_repeat2 > 32 & longname1 == 0) 	//if longname1 is 1, then this test is redundant
+	gen longname    = (namelen >= 32)
+	gen longname1   = (namelen_repeat1 >= 32 & longname  == 0) 	//if longname is 1, then this test is redundant
+	gen longname2   = (namelen_repeat2 >= 32 & longname1 == 0) 	//if longname1 is 1, then this test is redundant
 
 	cap assert longname == 0
 	if _rc {
 
-		local error_msg "These variable names are longer then 32 characters. That is allowed in the data formats used in SurveyCTO - and is therefore allowed in their test - but will cause an error when the data is imported to Stata. The following names should be shortened:"
+		local error_msg "These variable names are longer then 31 characters. That is allowed in the data formats used in SurveyCTO - and is therefore allowed in their test - but will cause an error when the data is imported to Stata. (Technically 32 characters are allowed, but best practice is max 31 as some commands needs use the last character.) The following names should be shortened:"
 
 		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES")  message("`error_msg'") wikifragment("Field_Name_Length") table("list row type name if longname == 1")
 
@@ -1055,7 +1055,7 @@ qui {
 	cap assert longname1 == 0
 	if _rc {
 
-		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add [_x] to the variable name for each repeat group this variable is in, where [x] is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ([_x]) are needed. The following variables's name will be longer then 32 characters if two characters are added per repeat group and should therefore be shortened:"
+		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add [_x] to the variable name for each repeat group this variable is in, where [x] is the repeat count for that repeat. This test assumed that the repeat count is less than 9 so that only two characters ([_x]) are needed. The following variables's name will be longer then 31 characters if two characters are added per repeat group and should therefore be shortened: (Technically 32 characters are allowed, but best practice is max 31 as some commands needs use the last character.)"
 
 		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES WITH REPEAT SUFFIX") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length") table("list row type name num_nested_repeats if longname1 == 1")
 
@@ -1064,7 +1064,7 @@ qui {
 	cap assert longname2 == 0
 	if _rc {
 
-		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add [_xx] to the variable name for each repeat group this variable is in, where [xx] is the repeat count for that repeat. This test assumed that the repeat count is between 10 and 99 so that up to three characters [_xx] are needed. The following variables are are longer then 32 characters if two characters will be added per repeat group and should therefore be shortened:"
+		local error_msg "These variable are inside one or several repeat groups. When this data is imported to Stata it will add [_xx] to the variable name for each repeat group this variable is in, where [xx] is the repeat count for that repeat. This test assumed that the repeat count is between 10 and 99 so that up to three characters [_xx] are needed. The following variables are are longer then 31 characters if two characters will be added per repeat group and should therefore be shortened: (Technically 32 characters are allowed, but best practice is max 31 as some commands needs use the last character.)"
 
 		noi report_file add , report_tempfile("`report_tempfile'") testname("TOO LONG FIELD NAMES WITH REPEAT SUFFIX (double digit)") message("`error_msg'") wikifragment("Repeat_Group_Field_Name_Length") table("list row type name num_nested_repeats if longname2 == 1")
 
