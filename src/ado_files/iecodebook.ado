@@ -31,30 +31,35 @@ cap program drop iecodebook
 
   // Check folder exists
 
-  	// Start by finding the position of the last forward slash. If no forward
-  	* slash exist, it is zero, then replace to to string len so it is never
-  	* the min() below.
-  	local r_f_slash = strpos(strreverse(`"`using'"'),"\")
-  	if   `r_f_slash' == 0 local r_f_slash = strlen(`"`using'"')
+  // Start by standardize all slashes to forward slashes, and get the position of the last slash
+  local using = subinstr("`using'","\","/",.)
+  local r_lastslash = strlen(`"`using'"') - strpos(strreverse(`"`using'"'),"/")
+  if strpos(strreverse(`"`using'"'),"/") == 0 local r_lastslash -1 // Set to -1 if there is no slash
 
-  	// Start by finding the position of the last backward slash. If no backward
-  	* slash exist, it is zero, then replace to to string len so it is never
-  	* the min() below.
-  	local r_b_slash = strpos(strreverse(`"`using'"'),"/")
-  	if   `r_b_slash' == 0 local r_b_slash = strlen(`"`using'"')
+  // Get the full folder path and the file name
+  local r_folder = substr(`"`using'"',1,`r_lastslash')
+  local r_file = substr(`"`using'"',`r_lastslash'+2,.)
 
-  	// Get the last slash in the report file path regardless of back or forward
-  	local r_lastslash = strlen(`"`using'"')-min(`r_f_slash',`r_b_slash')
+  // Test that the folder for the report file exists
+  mata : st_numscalar("r(dirExist)", direxists("`r_folder'"))
+  if `r(dirExist)' == 0  {
+    noi di as error `"{phang}The folder [`r_folder'/] does not exist.{p_end}"'
+    error 601
+  }
 
-  	// Get the folder
-  	local r_folder = substr(`"`using'"',1,`r_lastslash')
+  // Find the position of the last dot in the file name and get the file format extension
+  local r_lastsdot = strlen(`"`r_file'"') - strpos(strreverse(`"`r_file'"'),".")
+  local r_fileextension = substr(`"`r_file'"',`r_lastsdot'+1,.)
 
-    // Test that the folder for the report file exists
-  	mata : st_numscalar("r(dirExist)", direxists("`r_folder'"))
-  	if `r(dirExist)' == 0  {
-  		noi di as error `"{phang}The folder [`r_folder'/] does not exist.{p_end}"'
-  		error 601
-  	}
+  // If no fileextension was used, then add .xslx to "`using'"
+  if "`r_fileextension'" == "" {
+    local using  "`using'.xlsx"
+  }
+  // Throw an error if user input uses any extension other than the allowed
+  else if !inlist("`r_fileextension'",".xlsx",".xls") {
+    di as error "The codebook may only have the file extension [.xslx] or [.xls]. The format [`r_fileextension'] is not allowed."
+    error 601
+  }
 
   // Throw error on [template] if codebook already exists
   if ("`subcommand'" == "template") & !strpos(`"`options'"',"replace") {

@@ -6,6 +6,11 @@
 	* Add the path to your local clone of the iefieldkit repo
 	do 	"${iefieldkit}/src/ado_files/ieduplicates.ado"
 
+	local iedup_output "${testouput}/ieduplicates_output"
+
+	** Test if output folder exists, if not create it
+	mata : st_numscalar("r(dirExist)", direxists("`iedup_output'"))
+	if `r(dirExist)' == 0  mkdir "`iedup_output'"
 
 	sysuse auto, clear
 	encode make, gen(uuid)
@@ -20,54 +25,56 @@
 *******************************************************************************/
 
 	* No duplicates
-	ieduplicates make using "${iefieldkit}\foo", uniquevars(make)
+	ieduplicates make using "`iedup_output'\foo", uniquevars(make)
 
 	* Test file format
 	use `duplicates', clear
-	ieduplicates uuid using "${iefieldkit}\foo.xlsx", uniquevars(make) force
+	ieduplicates uuid using "`iedup_output'\foo.xlsx", uniquevars(make) force
 
 	use `duplicates', clear
-	ieduplicates uuid using "${iefieldkit}\foo.xls", uniquevars(make) force
+	ieduplicates uuid using "`iedup_output'\foo.xls", uniquevars(make) force
 
 	* Test folder and suffix syntax
 	use `duplicates', clear
-	ieduplicates uuid, uniquevars(make) folder("${iefieldkit}") force
+	ieduplicates uuid, uniquevars(make) folder("`iedup_output'") force
 
 	use `duplicates', clear
-	ieduplicates uuid, uniquevars(make) folder("${iefieldkit}") suffix(bar) force
-
+	ieduplicates uuid, uniquevars(make) folder("`iedup_output'") suffix(bar) force
 
 /*******************************************************************************
 	Yes error
 *******************************************************************************/
 
 	* Observations were removed
-	cap ieduplicates uuid using "${iefieldkit}", uniquevars(make)
+	cap ieduplicates uuid using "`iedup_output'\iedupreport.xlsx", uniquevars(make)
+	di _rc
 	assert _rc == 9
-	
-	* Without 'clear' option
+
+	* Without 'force' option
 	use `duplicates', clear
-	cap ieduplicates uuid using "${iefieldkit}\foo", uniquevars(make)
+	cap ieduplicates uuid using "`iedup_output'\foo", uniquevars(make)
+	di _rc
 	assert _rc == 198
 
 	* Invalid format
 	use `duplicates', clear
-	cap ieduplicates uuid using "${iefieldkit}\foo.csv", uniquevars(make)
+	cap ieduplicates uuid using "`iedup_output'\foo.csv", uniquevars(make)
 	assert _rc == 198
 
 	use `duplicates', clear
-	cap ieduplicates uuid using "${iefieldkit}\foo.", uniquevars(make) force
+	cap ieduplicates uuid using "`iedup_output'\foo.", uniquevars(make) force
+	di _rc
 	assert _rc == 198
 
 	* Invalid name
 	use `duplicates', clear
-	cap ieduplicates uuid using "${iefieldkit}\.xlsx", uniquevars(make)
+	cap ieduplicates uuid using "`iedup_output'\.xlsx", uniquevars(make)
+	di _rc
 	assert _rc == 198
 
 	*Check that cd is not working
-	cd "${iefieldkit}"
+	cd "`iedup_output'"
 	use `duplicates', clear
 	cap ieduplicates uuid using "foo", uniquevars(make) force
+	di _rc
 	assert _rc == 198
-
-
