@@ -251,7 +251,8 @@ qui {
       }
       keep `theKeepList' // Keep only variables mentioned in the dofiles
       compress
-      local savedta = subinstr(`"`using'"',".xlsx",".dta",.)
+      local savedta = subinstr(`"`using'"',".xls",".dta",.)
+      local savedta = subinstr(`"`using'"',".dtax",".dta",.)
       save "`savedta'" , replace
   } // End [trim] option
 
@@ -702,7 +703,7 @@ qui {
   noi di `"Applied codebook {browse `using'} to `anything' – check your data carefully!"'
 
   // Final codebook
-  local using = subinstr("`using'",".xlsx","_report.xlsx",.)
+  local using = subinstr("`using'",".xls","_report.xls",.)
     use `final_data' , clear
     if "`report'" != "" {
       iecodebook export using "`using'" , `replace'
