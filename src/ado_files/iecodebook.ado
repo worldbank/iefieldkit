@@ -1,4 +1,4 @@
-*! version 1.4 8AUG2019  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.3 7JUN2019  DIME Analytics dimeanalytics@worldbank.org
 
 // Main syntax ---------------------------------------------------------------------------------
 
@@ -551,13 +551,13 @@ qui {
         local theNextValue = value[`i']
         local theNextLabel = label[`i']
         local theValueLabel = list_name[`i']
-        local L_`theValueLabel' `" `L_`theValueLabel'' `theNextValue' "`theNextLabel'" "'
+        local L`theValueLabel' `" `L`theValueLabel'' `theNextValue' "`theNextLabel'" "'
       }
 
       // Add missing values if requested
       if `"`missingvalues'"' != "" {
         foreach theValueLabel in `theValueLabels' {
-          if "`theValueLabel'" != "." local L_`theValueLabel' `" `L_`theValueLabel'' `missingvalues' "'
+          if "`theValueLabel'" != "." local L`theValueLabel' `" `L`theValueLabel'' `missingvalues' "'
         }
       }
 
@@ -566,7 +566,7 @@ qui {
 
     // Define value labels
     foreach theValueLabel in `theValueLabels' {
-      if "`theValueLabel'" != "." label def `theValueLabel' `L_`theValueLabel'', replace
+      if "`theValueLabel'" != "." label def `theValueLabel' `L`theValueLabel'', replace
       }
 
     // Drop leftovers if requested
