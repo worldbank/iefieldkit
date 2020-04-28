@@ -361,7 +361,7 @@ qui {
       }
     }
     if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by file syncing the file or having the file open."
-    if `rc' != 0 di as err "Consider turning file syncing off or using a non-synced location. You may need to delete the file and try again."
+    if `rc' != 0 di as err "If the file is not currently open, consider turning file syncing off or using a non-synced location. You may need to delete the file and try again."
     if `rc' != 0 error 603
   restore
 
