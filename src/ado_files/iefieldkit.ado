@@ -33,5 +33,9 @@ program iefieldkit, rclass
 	noi di ""
 	noi di _col(4) "This version of iefieldkit installed is version " _col(54)"`version'"
 	noi di _col(4) "This version of iefieldkit was released on " _col(54)"`versionDate'"
-
+	noi di ""
+	noi di _col(4) "This package includes the following commands:"
+	noi di _col(8) "- {help iecodebook}"
+	noi di _col(8) "- {help ieduplicates}/{help iecompdup}"
+	noi di _col(8) "- {help ietestform}"
 end

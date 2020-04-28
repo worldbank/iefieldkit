@@ -4,13 +4,6 @@
 help for {hi:iecodebook}
 {hline}
 
-    _                     __     __                __
-   (_)__  _________  ____/ /__  / /_  ____  ____  / /__
-  / / _ \/ ___/ __ \/ __  / _ \/ __ \/ __ \/ __ \/ //_/
- / /  __/ /__/ /_/ / /_/ /  __/ /_/ / /_/ / /_/ / ,<
-/_/\___/\___/\____/\__,_/\___/_.___/\____/\____/_/|_|
-
-
 {title:Title}
 
 {p}{cmdab:iecodebook} {hline 2} performs common data cleaning tasks using dataset definitions (codebooks) written in Excel files. {p_end}
@@ -77,7 +70,8 @@ and optionally produces an export version of the dataset with only variables use
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
 {p 2 3}, {bf:clear} {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} {break}
-[{opth gen:erate(varname)} {opt miss:ingvalues(# "label" [# "label" ...])} {bf:keepall}]{p_end}
+[{opth gen:erate(varname)} {opt miss:ingvalues(# "label" [# "label" ...])}]{break}
+[{bf:report replace keepall}] {p_end}
 
 
 {dlgtab 0:Export: Creating a full codebook of the current data}
@@ -123,6 +117,11 @@ This must be specified during both the template and append steps.{p_end}
 {break}
 {synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every value-labeled answer.{p_end}
+{break}
+{synopt:{opt report}}This option writes a codebook in the standard {bf:export} format describing the appended dataset.
+It will be placed in the same folder as the append codeboook, with the same name, with "_report" added to the filename.{p_end}
+{break}
+{synopt:{opt replace}}This option is required to overwrite a previous report.{p_end}
 {break}
 {synopt:{opt keep:all}}By default, {cmdab:iecodebook append} will only retain those variables with a new {it:name} explicitly written in the codebook to signify manual review for harmonization.
 {bf:Specifying this option will keep all variables from all datasets. Use carefully!}
