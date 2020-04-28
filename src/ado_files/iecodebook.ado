@@ -26,43 +26,49 @@ cap program drop iecodebook
   }
 
   // Select subcommand
+  noi di " "
   gettoken subcommand anything : anything
 
   // Check folder exists
 
-  	// Start by finding the position of the last forward slash. If no forward
-  	* slash exist, it is zero, then replace to to string len so it is never
-  	* the min() below.
-  	local r_f_slash = strpos(strreverse(`"`using'"'),"\")
-  	if   `r_f_slash' == 0 local r_f_slash = strlen(`"`using'"')
+  // Start by standardize all slashes to forward slashes, and get the position of the last slash
+  local using = subinstr("`using'","\","/",.)
+  local r_lastslash = strlen(`"`using'"') - strpos(strreverse(`"`using'"'),"/")
+  if strpos(strreverse(`"`using'"'),"/") == 0 local r_lastslash -1 // Set to -1 if there is no slash
 
-  	// Start by finding the position of the last backward slash. If no backward
-  	* slash exist, it is zero, then replace to to string len so it is never
-  	* the min() below.
-  	local r_b_slash = strpos(strreverse(`"`using'"'),"/")
-  	if   `r_b_slash' == 0 local r_b_slash = strlen(`"`using'"')
+  // Get the full folder path and the file name
+  local r_folder = substr(`"`using'"',1,`r_lastslash')
+  local r_file = substr(`"`using'"',`r_lastslash'+2,.)
 
-  	// Get the last slash in the report file path regardless of back or forward
-  	local r_lastslash = strlen(`"`using'"')-min(`r_f_slash',`r_b_slash')
+  // Test that the folder for the report file exists
+  mata : st_numscalar("r(dirExist)", direxists("`r_folder'"))
+  if `r(dirExist)' == 0  {
+    noi di as error `"{phang}The folder [`r_folder'/] does not exist.{p_end}"'
+    error 601
+  }
 
-  	// Get the folder
-  	local r_folder = substr(`"`using'"',1,`r_lastslash')
+  // Find the position of the last dot in the file name and get the file format extension
+  local r_lastsdot = strlen(`"`r_file'"') - strpos(strreverse(`"`r_file'"'),".")
+  local r_fileextension = substr(`"`r_file'"',`r_lastsdot'+1,.)
 
-    // Test that the folder for the report file exists
-  	mata : st_numscalar("r(dirExist)", direxists("`r_folder'"))
-  	if `r(dirExist)' == 0  {
-  		noi di as error `"{phang}The folder [`r_folder'/] does not exist.{p_end}"'
-  		error 601
-  	}
+  // If no fileextension was used, then add .xslx to "`using'"
+  if "`r_fileextension'" == "" {
+    local using  "`using'.xlsx"
+  }
+  // Throw an error if user input uses any extension other than the allowed
+  else if !inlist("`r_fileextension'",".xlsx",".xls") {
+    di as error "The codebook may only have the file extension [.xslx] or [.xls]. The format [`r_fileextension'] is not allowed."
+    error 601
+  }
 
   // Throw error on [template] if codebook already exists
-  if ("`subcommand'" == "template") {
+  if ("`subcommand'" == "template") & !strpos(`"`options'"',"replace") {
 
     cap confirm file "`using'"
     if _rc == 0 {
       di as err "That template already exists. {bf:iecodebook} does not allow you to overwrite an existing template,"
       di as err " since you may already have set it up. If you are {bf:sure} that you want to delete this template,"
-      di as err `" you need to manually remove it from `using'. {bf:iecodebook} will now exit."'
+      di as err `" you need to manually delete the file `using'. {bf:iecodebook} will now exit."'
       error 602
     }
 
@@ -73,7 +79,7 @@ cap program drop iecodebook
     }
   }
 
-  if ("`subcommand'" == "export") {
+  if ("`subcommand'" == "export") & !strpos(`"`options'"',"replace") {
 
     cap confirm file "`using'"
     if (_rc == 0) & (!strpos(`"`options'"',"replace")) {
@@ -98,7 +104,7 @@ cap program drop iecodebook
   iecodebook_labclean // Do this first in case export or template syntax
   iecodebook_`subcommand' `anything' using "`using'" , `options'
   iecodebook_labclean // Do this again to clean up after apply or append
-  qui compress
+  qui cap compress
 
 end
 
@@ -146,7 +152,7 @@ cap program drop iecodebook_export
 qui {
 
   // Return a warning if there are lots of variables
-  if `c(k)' >= 1000 di "This dataset has `c(k)' variables. This may take a long time! Consider subsetting your variables first."
+  if `c(k)' >= 1000 noi di "This dataset has `c(k)' variables. This may take a long time! Consider subsetting your variables first."
 
   // Template Setup
     // Load dataset if argument
@@ -210,6 +216,11 @@ qui {
         save `a' , replace
     }
 
+    // Clean up common characters
+    foreach character in , . < > / ? [ ] | & ! ^ + - : * = ( ) "{" "}" "`" "'" {
+      replace v1 = subinstr(v1,"`character'"," ",.)
+    }
+
     // Reshape one word per line
       split v1
       drop v1
@@ -230,8 +241,8 @@ qui {
     qui count
     forvalues i = 1/`r(N)' {
       local next = `v'[`i']
-      cap unab vars : `next'
-        if _rc == 0 local allVars "`allVars' `vars'"
+      cap novarabbrev unab vars : `next'
+        if (_rc == 0 & strpos("`vars'","__")!=1 ) local allVars "`allVars' `vars'"
     }
 
     // Keep only those variables
@@ -245,7 +256,8 @@ qui {
       }
       keep `theKeepList' // Keep only variables mentioned in the dofiles
       compress
-      local savedta = subinstr(`"`using'"',".xlsx",".dta",.)
+      local savedta = subinstr(`"`using'"',".xls",".dta",.)
+      local savedta = subinstr(`"`using'"',".dtax",".dta",.)
       save "`savedta'" , replace
   } // End [trim] option
 
@@ -317,10 +329,25 @@ qui {
 
       qui lookfor name
       clonevar name`template' = `: word 2 of `r(varlist)''
+        local theNames = "`r(varlist)'"
         label var name`template' "name`template_colon'"
 
-      merge 1:1 name`template' using `newdata' , nogen
+        // Allow matching for more rounds
+        local nNames : list sizeof theNames
+        if `nNames' > 2 {
+          forvalues i = 2/`nNames' {
+            replace name`template' = `: word `i' of `theNames'' if name`template' == ""
+          }
+        }
+
+        tempvar order
+        gen `order' = _n
+
+      merge m:1 name`template' using `newdata' , nogen
       replace name`template' = "" if type`template' == ""
+
+        sort `order'
+        drop `order'
     }
 
     // Export variable information to "survey" sheet
@@ -333,8 +360,8 @@ qui {
         local rc = _rc
       }
     }
-    if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
-    if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
+    if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by file syncing the file or having the file open."
+    if `rc' != 0 di as err "If the file is not currently open, consider turning file syncing off or using a non-synced location. You may need to delete the file and try again."
     if `rc' != 0 error 603
   restore
 
@@ -465,12 +492,17 @@ qui {
     forvalues i = 2/`r(N)' {
       local theName    = name`survey'[`i']
         local theRename   = name[`i']
+        local theRename = trim("`theRename'")
         if strtoname("`theRename'") != "`theRename'" & "`theRename'" != "." {
           di as err "Error: [`theRename'] on line `i' is not a valid Stata variable name."
           local QUITFLAG = 1
         }
       local theLabel    = label[`i']
       local theChoices  = choices[`i']
+        if strtoname("`theChoices'") != "`theChoices'" & "`theChoices'" != "." {
+          di as err "Error: [`theChoices'] on line `i' is not a valid Stata choice list name."
+          local QUITFLAG = 1
+        }
       local theRecode   = recode`survey'[`i']
 
       if "`theName'"   != "" {
@@ -498,6 +530,20 @@ qui {
       // Prepare list of values for each value label.
       import excel "`using'" , first clear sheet(choices) allstring
 
+      // Catch any labels called on choices that are not defined in choice sheet
+      levelsof list_name , local(theListedLabels)
+      local leftovers : list theValueLabels - theListedLabels
+      if `"`leftovers'"' != "" {
+        di as err "You have specified a value label in [choices] which is not defined in the {it:choices} sheet."
+        di as err "{bf:iecodebook} will exit. Define the following value labels and re-run the command to continue:"
+        di as err " "
+        foreach element in `leftovers' {
+          di as err "  `element'"
+        }
+        di as err " "
+        error 100
+      }
+
       // Check for broken things, namely quotation marks
       foreach var of varlist * {
         cap confirm string variable `var'
@@ -516,13 +562,13 @@ qui {
         local theNextValue = value[`i']
         local theNextLabel = label[`i']
         local theValueLabel = list_name[`i']
-        local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `theNextValue' "`theNextLabel'" "'
+        local L`theValueLabel' `" `L`theValueLabel'' `theNextValue' "`theNextLabel'" "'
       }
 
       // Add missing values if requested
       if `"`missingvalues'"' != "" {
         foreach theValueLabel in `theValueLabels' {
-          local theLabelList_`theValueLabel' `" `theLabelList_`theValueLabel'' `missingvalues' "'
+          if "`theValueLabel'" != "." local L`theValueLabel' `" `L`theValueLabel'' `missingvalues' "'
         }
       }
 
@@ -531,11 +577,16 @@ qui {
 
     // Define value labels
     foreach theValueLabel in `theValueLabels' {
-      if "`theValueLabel'" != "." label def `theValueLabel' `theLabelList_`theValueLabel'', replace
+      if "`theValueLabel'" != "." label def `theValueLabel' `L`theValueLabel'', replace
       }
 
     // Drop leftovers if requested
     cap drop `allDrops'
+      qui des
+      if `r(k)' == 0 {
+        noi di as err "You are dropping all the variables in a dataset. This is not allowed. {bf:iecodebook} will exit."
+        error 102
+      }
 
     // Apply all recodes, choices, and labels
     foreach type in Recodes Choices Labels {
@@ -569,7 +620,7 @@ cap program drop iecodebook_append
 
   syntax [anything] [using/] , ///
     surveys(string asis) [GENerate(string asis)] ///
-    [clear] [match] [KEEPall] /// User options
+    [clear] [match] [KEEPall] [report] /// User options
     [template] [replace] /// System options
     [*]
 
@@ -591,8 +642,8 @@ qui {
     local drop "drop"
   }
   else {
-    di "You have specified [keepall], which means you are forcing all variables to be appended even if you did not manually harmonize them."
-    di "Make sure to check the resulting dataset carefully. Forcibly appending data, especially of different types, may result in loss of information."
+    noi di "You have specified [keepall], which means you are forcing all variables to be appended even if you did not manually harmonize them."
+    noi di "Make sure to check the resulting dataset carefully. Forcibly appending data, especially of different types, may result in loss of information."
     local drop ""
   }
 
@@ -630,13 +681,11 @@ qui {
     }
 
     // On success copy to final location
-    copy "`codebook'" `"`using'"'
+    copy "`codebook'" `"`using'"' , `replace'
 
   use `raw_data' , clear
   exit
   }
-
-
 
   // Loop over datasets and apply codebook
   local x = 0
@@ -661,12 +710,15 @@ qui {
   }
 
   // Success message
-  di `"Applied codebook using `using' to `anything' – check your data carefully!"'
+  noi di `"Applied codebook {browse `using'} to `anything' – check your data carefully!"'
 
   // Final codebook
-  local using = subinstr("`using'",".xlsx","_appended.xlsx",.)
-    iecodebook export using "`using'"
+  local using = subinstr("`using'",".xls","_report.xls",.)
     use `final_data' , clear
+    if "`report'" != "" {
+      iecodebook export using "`using'" , `replace'
+      noi di `"Wrote report to {browse `using'}!"'
+    }
 
 } // end qui
 end

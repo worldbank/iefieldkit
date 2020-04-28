@@ -1,5 +1,5 @@
 {smcl}
-{* 7 Jun 2019}{...}
+{* 8 Aug 2019}{...}
 {hline}
 help for {hi:ieduplicates}
 {hline}
@@ -23,7 +23,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Ieduplicates
 {cmdab:duplistid(}{it:string}{cmd:)} {cmdab:datelisted(}{it:string}{cmd:)}
 {cmdab:datefixed(}{it:string}{cmd:)} {cmdab:correct(}{it:string}{cmd:)}{break}
 {cmdab:drop(}{it:string}{cmd:)} {cmdab:newid(}{it:string}{cmd:)}
-{cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)} 
+{cmdab:initials(}{it:string}{cmd:)} {cmdab:notes(}{it:string}{cmd:)}
 {cmdab:listofdiffs(}{it:string}{cmd:)}]{p_end}
 
 
@@ -79,7 +79,7 @@ then returns the data set without these duplicates.
 
 {pstd}The Excel report includes three columns called {it:correct}, {it:drop} and {it:newid}.
 Each of them represents one way to correct the duplicates. If {it:correct} is indicated with
-a "Yes" then that observation is kept unchanged, if {it:drop} is indicated with a "Yes" then
+a "correct" then that observation is kept unchanged, if {it:drop} is indicated with a "drop" then
 that observation is deleted and if {it:newid} is indicated then that observation is assigned
 a new ID using the value in column {it:newid}. After corrections are entered, the report should
 be saved in the same location and without any changes to its name.
@@ -167,7 +167,7 @@ if any duplicates in {it:ID_varname} were found. The command will create a subfo
 in the folder where this report is saved. Daily back-ups of the report will be saved in the {it: Daily}
 subfolder. If a report is backed up already that day, that report will not be overwritten. In case
 the command is run more than once in a day, and creates different reports, a time-stamped report for
-the same date will be saved instead. 
+the same date will be saved instead.
 
 {pstd}All duplicates in a group of duplicates must have a correction indicated. If
 one or more duplicates are indicated as correct in {it:correct} or assigned a new
@@ -187,23 +187,21 @@ is sorted at the time {cmd:ieduplicates} is executed.
 time for that duplicate.
 
 {phang}{it:listofdiffs} stores a list with the names of the variables that are
-different in two different observations. This list is truncated at 256 characters
-and is only stores when there are exactly two duplicates. For other cases, {help:iecompdup}
-must be used to get this information.
+different in two different observations. This list is truncated at 250 characters
+and is only stores when there are exactly two duplicates. For full list or cases
+where there are more then two duplicates, {help:iecompdup} should be used.
 
 {dlgtab:Columns in Excel Report to be filled in manually by a user:}
 
-{phang}{it:correct} is used to indicate that the duplicate should be kept. Valid values are
-restricted to "yes" and "y" to reduce the risk of unintended entries. The values
-are not sensitive to case. All valid values are changed to "yes" lower case when
-imported. If {it:correct} is indicated then both {it:drop} and {it:newid} must be
-left empty.
+{phang}{it:correct} is used to indicate that the duplicate should be kept. The only
+valid value is "correct" to reduce the risk of unintended entries ("yes" is also
+allowed for backward compatibility). The values are not sensitive to case. If {it:correct}
+is indicated then both {it:drop} and {it:newid} must be left empty.
 
-{phang}{it:drop} is used to indicate that the duplicate should be deleted. Valid values are
-restricted to "yes" and "y" to reduce the risk of unintended entries. The values
-are not sensitive to case. All valid values are changed to "yes" lower case when
-imported. If {it:drop} is indicated then both {it:correct} and {it:newid} must be
-left empty.
+{phang}{it:drop} is used to indicate that the duplicate should be deleted. The only
+valid value is "drop" to reduce the risk of unintended entries ("yes" is also
+allowed for backward compatibility). The values are not sensitive to case. If {it:drop}
+is indicated then both {it:correct} and {it:newid} must be left empty.
 
 {phang}{it:newid} is used to assign a new ID values to a duplicate. If {it:ID_varname}
 is a string then all values are valid for {it:newid}. If {it:ID_varname} is numeric then
@@ -281,12 +279,12 @@ unresolved duplicates were found
 {col 3}{c TLC}{hline 130}{c TRC}
 {col 3}{c |}{col 4}HHID{col 10}duplistid{col 21}datelisted{col 33}datefixed{col 44}correct{col 53}drop{col 59}newid{col 65}initials{col 75}notes{col 94}KEY{col 107}enumerator{col 121}listofdiffs{col 134}{c |}
 {col 3}{c LT}{hline 130}{c RT}
-{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
-{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}correct{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}drop{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
 {col 3}{c |}{col 4}7365{col 10}3{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
 {col 3}{c |}{col 4}7365{col 10}4{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
 {col 3}{c |}{col 4}1145{col 10}5{col 21}03Jan2016{col 33}11Jan2016{col 44}   {col 53}   {col 59}1245{col 65}IB{col 75}incorrect id     {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
-{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}yes{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
+{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}correct{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
 {col 3}{c |}{col 4}9834{col 10}7{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
 {col 3}{c |}{col 4}9834{col 10}8{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:keepvarvalue}{col 121}{it:varlist}{col 134}{c |}
 {col 3}{c BLC}{hline 130}{c BRC}
@@ -315,12 +313,12 @@ observation. One is kept and one is dropped, usually it does not matter which yo
 {col 3}{c TLC}{hline 116}{c TRC}
 {col 3}{c |}{col 4}HHID{col 10}duplistid{col 21}datelisted{col 33}datefixed{col 44}correct{col 53}out{col 59}newid{col 65}initials{col 75}notes_enumerators{col 94}KEY{col 107}listofdiffs{col 120}{c |}
 {col 3}{c LT}{hline 116}{c RT}
-{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}yes{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
-{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}yes{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}4321{col 10}1{col 21}27Dec2015{col 33}02Jan2016{col 44}correct{col 53}   {col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}4321{col 10}2{col 21}27Dec2015{col 33}02Jan2016{col 44}   {col 53}drop{col 59}    {col 65}KB{col 75}double submission{col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
 {col 3}{c |}{col 4}7365{col 10}3{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
 {col 3}{c |}{col 4}7365{col 10}4{col 21}03Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
 {col 3}{c |}{col 4}1145{col 10}5{col 21}03Jan2016{col 33}11Jan2016{col 44}   {col 53}   {col 59}1245{col 65}IB{col 75}incorrect id     {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
-{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}yes{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
+{col 3}{c |}{col 4}1145{col 10}6{col 21}03Jan2016{col 33}11Jan2016{col 44}correct{col 53}   {col 59}    {col 65}IB{col 75}correct id       {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
 {col 3}{c |}{col 4}9834{col 10}7{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
 {col 3}{c |}{col 4}9834{col 10}8{col 21}11Jan2016{col 33}         {col 44}   {col 53}   {col 59}    {col 65}  {col 75}                 {col 94}{it:uniquevalue}{col 107}{it:varlist}{col 120}{c |}
 {col 3}{c BLC}{hline 116}{c BRC}

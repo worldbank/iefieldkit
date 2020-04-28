@@ -1,51 +1,71 @@
-#ietoolkit specific files
+########################################################################
+#
+# Based on DIME .gitignore template. Follow the instructions in the URL
+# below to set up this template in your own repository
+# https://github.com/worldbank/dime-github-trainings/tree/master/GitHub-resources/DIME-GitHub-Templates
+#
+# Note that if you are using GitKraken, you need to use version 5.x or more
+# recent for this template to work properly
+#
+########################################################################
+
+#######################
+# Start by ignoring everything, and below we are explicitly saying
+# what to not ignore
+*
+
+#######################
+# List of files with GitHub functionality anywhere in the repo
+# that we do not want to ignore
+
+# These files include GitHub settings
+!.gitignore
+!.gitattributes
+
+# Keep markdown files used for documentation on GitHub
+!README.md
+!CONTRIBUTING.md
+!LICENSE*
+
+#######################
+# For performance reasons, if a folder is already ignored, then
+# GitHub does not check the content for that folder for matches
+# with additional rules. The line below includes folder in the
+# top folder (but not their content), so that anything matching
+# the rules below will still not be ignored.
+!*/
+
+#######################
+# The following file types are code that should always be
+# included no matter where in the repository folder they are
+# located unless you explicitly ignore that folder
+
+# Stata
+!/**/*.do
+!/**/*.ado
+
+# R
+!/**/*.R
+!/**/*.Rmd
+
+# LaTeX
+!/**/*.tex
+!/**/*.bib
+
+# Python
+!/**/*.py
+!/**/*.ipynb
+# Still ignore .ipynb files in checkpoint folders
+.ipynb_checkpoints
+
+# Matlab
+!/**/*.m
+
+# Markdown
+!/**/*.md
+
+# Julia
+!/**/*.jl
+
+#Ignore test folder
 test/
-
-# Windows image file caches
-Thumbs.db
-ehthumbs.db
-
-# Folder config file
-Desktop.ini
-
-# Recycle Bin used on file shares
-$RECYCLE.BIN/
-
-# Windows Installer files
-*.cab
-*.msi
-*.msm
-*.msp
-
-# Windows shortcuts
-*.lnk
-
-# =========================
-# Operating System Files
-# =========================
-
-# OSX
-# =========================
-
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# Thumbnails
-._*
-
-# Files that might appear in the root of a volume
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-
-# Directories potentially created on remote AFP share
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
-
