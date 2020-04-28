@@ -535,7 +535,12 @@ qui {
       local leftovers : list theValueLabels - theListedLabels
       if `"`leftovers'"' != "" {
         di as err "You have specified a value label in [choices] which is not defined in the {it:choices} sheet."
-        di as err "{bf:iecodebook} will exit. Define the value label and re-run the command to continue."
+        di as err "{bf:iecodebook} will exit. Define the following value labels and re-run the command to continue:"
+        di as err " "
+        foreach element in `leftovers' {
+          di as err "  `element'"
+        }
+        di as err " "
         error 100
       }
 
