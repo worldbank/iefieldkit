@@ -1,4 +1,4 @@
-*! version 1.4 8AUG2019  DIME Analytics dimeanalytics@worldbank.org
+*! version 1.5 28APR2020  DIME Analytics dimeanalytics@worldbank.org
 
 	capture program drop ieduplicates
 	program ieduplicates , rclass
@@ -301,25 +301,28 @@
 				*Locals indicating in which ways input is incorrect (if any)
 				local local_multiInp 		0
 				local local_multiCorr		0
-				local local_inputNotYes		0
+				local local_inputNotYes	0
 				local local_notDrop			0
 
 
 				/******************
 					Section 3.3.1
-					Make sure input is yes or y for the correct and drop columns
+					Make sure input is "correct" or "drop" for the correct and drop columns
+					"Yes" and "y" are allowed for backward compatibility
 				******************/
 
-				* 1. Trim the string of leading and trailing spaces, 2. make it lower case and 3. change "y" to "yes"
-				replace `correct' =  trim(`correct')
-				replace `drop' 	  =  trim(`drop')
-				replace `correct' = lower(`correct')
-				replace `drop' 	  = lower(`drop')
-				replace `correct' = "yes" if `correct' == "y"
-				replace `drop' 	  = "yes" if `drop'    == "y"
+				* 1. Trim the string of leading and trailing spaces, 2. make it lower case
+				* and 3. (change "y" to "yes" : backward compatibility)
+				replace `correct' = lower(trim(`correct'))
+				replace `drop' 	  = lower(trim(`drop'))
+				replace `correct' = "yes" if `correct' == "y" //Backward compatibility
+				replace `drop' 	  = "yes" if `drop'    == "y" //Backward compatibility
 
-				*Check that variables are either empty or "yes"
-				gen `inputNotYes' = !((`correct'  == "yes" | `correct' == "") & (`drop'  == "yes" | `drop' == ""))
+				*Check that variables are either empty or correct/drop. (Or "yes" : backward compatibility)
+				gen `inputNotYes' = !( ///
+					(`correct' == "correct" | `correct' == "" | `correct' == "yes") & ///
+					(`drop'    == "drop"    | `drop'    == "" | `drop'    == "yes")   ///
+				)
 
 				*Set local to 1 if error should be outputted
 				cap assert `inputNotYes' == 0
@@ -345,8 +348,8 @@
 					Test that maximum one duplicate per duplicate group is indicated as correct
 				******************/
 
-				*Generate dummy if correct column is set to yes
-				gen `yesCorrect' = (`correct' == "yes")
+				*Generate dummy if correct column is set to "correct" (or "yes" : backward compatibility)
+				gen `yesCorrect' = (`correct' == "correct" | `correct' == "yes") //("yes" : backward compatibility)
 
 				*Count number of duplicates within duplicates where that dummy is 1
 				bys `idvar' : egen `groupNumCorrect' =  total(`yesCorrect')
@@ -381,7 +384,7 @@
 
 					** If option droprest is not used, then all observations in a duplicate
 					*  group where at least one observation has a correction must have a
-					*  correction or have drop set to yes.
+					*  correction or have drop set to "drop" (or "yes" : backward compatibility)
 					cap assert `notDrop' == 0
 
 					*Error will be outputted below
@@ -390,11 +393,11 @@
 				}
 				else {
 
-					** Option -droprest- specified. Drop will be changed to yes
+					** Option -droprest- specified. Drop will be changed to drop
 					*  for any observations without drop or any other correction
 					*  explicitly specified if the observation is in a duplicate
 					*  group with at least one observation has a correction
-					replace `drop' 	= "yes" if `notDrop' == 1
+					replace `drop' 	= "drop" if `notDrop' == 1
 
 				}
 
@@ -427,7 +430,7 @@
 
 						*Error in incorrect string
 						if `local_inputNotYes' == 1 {
-							display as error "{phang}The following observations have an answer in either correct or drop that is neither yes nor y{p_end}"
+							display as error `"{phang}The following observations have an answer in either correct or drop that is not valid. The only valid value in correct is "correct", and in drop is "drop". ("yes" is also allowed for backward compatibility.){p_end}"'
 							list `idvar' `duplistid' `correct' `drop' `uniquevars' if `inputNotYes' == 1
 							di ""
 						}
@@ -576,9 +579,8 @@
 						* Only checking variables in the original data set and not variables in Excel report.
 						local diffvars: list diffvars - excelVars
 
-						*Truncate list when longer than 256 to fit in old Stata string formats.
-						*255-29 (characters for " ||| List truncated, use iecompdup for full list")= 226
-						if strlen("`diffvars'") > 256 local difflist_`nospaceid'  = substr("`r(diffvars)'" ,1 ,207) + " ||| List truncated, use iecompdup for full list"
+						*Truncate list when longer than 250 to look better in report
+						if strlen("`diffvars'") > 250 local difflist_`nospaceid'  = substr("`r(diffvars)'" ,1 ,200) + " ||| List truncated, use iecompdup for full list"
 						else local difflist_`nospaceid' "`diffvars'" //List of diff is short enough to show in its entirety
 					}
 
@@ -682,7 +684,7 @@
 				Drop duplicates listed for drop
 			******************/
 
-			drop if `drop' == "yes"
+			drop if (`drop' == "drop" | `drop' == "yes")
 
 			/******************
 				Section 6.2

@@ -14,13 +14,14 @@ qui {
 	Part I: Set up
 *******************************************************************************/
 
-	* Set folder paths
+	* Set root paths
 	global GitHub		""
 	global AnalyticsDB	""
 
-	* Calculate globals
+	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
 	global form			"${AnalyticsDB}/Data Coordinator/iefieldkit/ietestform"
+	global testouput	"${iefieldkit}/run/output"
 	
 	* Select commands to test
 	local ieduplicates	1
@@ -41,6 +42,10 @@ qui {
 		noi di as error "No commands to test"
 		exit
 	}
+	
+	** Test if output folder exists, if not create it
+	mata : st_numscalar("r(dirExist)", direxists("${testouput}"))
+	if `r(dirExist)' == 0  mkdir "${testouput}"
 }	
 
 /*******************************************************************************

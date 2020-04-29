@@ -15,6 +15,7 @@
 	- [ ] 4.2 - If any of the meta info (title, description, keywords, version or authour/contact) has changed then include those updates in your email.
 - [ ] 5. **Draft release note** - Go to the [release notes](https://github.com/worldbank/iefieldkit/releases) and draft a new release note for the new version. Follow the format from previous releases with links to [issues](https://github.com/worldbank/iefieldkit/issues) solved.
 - [ ] 6. **Wait for publication confirmation** - Do not proceed pass this step until Prof. Baum has confirmed that the new version is uploaded to the servers.
+	- [ ] 6.1 - Update the package from SSC and make sure it's the latest version.
 - [ ] 7. **Merge version branch to *master*** - If step 2 and 3 was done correctly, then there should not be any merge conflicts in this step.
 - [ ] 8. **Rebase *develop* to *master*** - This step brings edits done in 3 and 3.1, as well as version updates done in 3.2 and 3.3 into the *develop* branch. The same result can be accomplished - although by creating a slightly messier history - by merging *master* into *develop*. Regardless if the branches are merged or rebased, if any branches created of *develop* was not included in this version, make sure to rebase them to *develop* afterwards, otherwise there is a big risk for very messy conflicts in the future.
 - [ ] 9. **Publish release note** - Once the new version is up on SSC, publish the release note.
