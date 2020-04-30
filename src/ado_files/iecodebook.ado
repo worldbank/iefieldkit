@@ -494,6 +494,13 @@ qui {
       if "`theName'"   != "" {
         // Drop if requested
         if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == ".") {
+        
+   			  cap confirm variable `theName'
+          if _rc {
+            di as error "Error: variable [`theName'] on line `i' was not found"
+            error 111
+          }
+
           local allDrops "`allDrops' `theName'"
         }
         // Otherwise process requested changes as long as there is something specified
