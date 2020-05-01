@@ -188,6 +188,8 @@ qui {
    // Store current data and apply if/in via [marksample]
      tempfile allData
      save `allData' , emptyok replace
+     keep in 1
+     save `allData1' , emptyok replace
 
      marksample touse
      keep if `touse'
@@ -421,7 +423,7 @@ qui {
 
       // Fill temp dataset with value labels
       foreach var of varlist * {
-        use `var' using `allData' in 1 , clear
+        use `var' using `allData1' , clear
         local theLabel : value label `var'
         if "`theLabel'" != "" {
           cap label save `theLabel' using `theLabels' ,replace
