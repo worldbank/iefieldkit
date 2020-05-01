@@ -186,7 +186,7 @@ qui {
     else local TEMPLATE = 0
 
    // Store current data and apply if/in via [marksample]
-     tempfile allData
+     tempfile allData allData1
      save `allData' , emptyok replace
      keep in 1
      save `allData1' , emptyok replace
