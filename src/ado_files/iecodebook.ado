@@ -295,7 +295,8 @@ qui {
 
   // Write text codebook if requested
   if "`textonly'" != "" noisily {
-    local theTextFile = subinstr(`"`using'"',".dta",".txt",.)
+    local theTextFile = subinstr(`"`using'"',".xls",".txt",.)
+    local theTextFile = subinstr(`"`using'"',".xlsx",".txt",.)
       cap log close hashdata
       log using "`theTextFile'" , nomsg text replace name(hashdata)
       noisily : codebook, compact
