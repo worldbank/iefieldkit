@@ -188,8 +188,10 @@ qui {
    // Store current data and apply if/in via [marksample]
      tempfile allData allData1
      save `allData' , emptyok replace
+     preserve
      keep in 1
      save `allData1' , emptyok replace
+     restore
 
      marksample touse
      keep if `touse'
