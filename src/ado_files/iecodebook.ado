@@ -234,7 +234,7 @@ qui {
     }
 
     // Clean up common characters
-    foreach character in , . < > / ? [ ] | & ! ^ + - : * = ( ) "{" "}" "`" "'" {
+    foreach character in , . < > / [ ] | & ! ^ + - : = ( ) "{" "}" "`" "'" {
       replace v1 = subinstr(v1,"`character'"," ",.)
     }
 
@@ -248,6 +248,14 @@ qui {
       drop i j v1
       drop if `v' == ""
       duplicates drop
+
+    // Make sure there are no hanging *
+      local length = substr("`: type `v''",4,.)
+      local stars = "*"
+      forv i = 1/`length' {
+        replace `v' = "" if `v' == "`stars'"
+        local stars "`stars'*"
+      }
 
     // Cheat to get all the variables in the dataset
     foreach item in `theVarlist' {
