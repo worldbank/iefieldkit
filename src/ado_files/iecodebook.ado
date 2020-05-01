@@ -90,7 +90,7 @@ cap program drop iecodebook
   iecodebook_labclean // Do this first in case export or template syntax
   iecodebook_`subcommand' `anything' using "`using'" , `options'
   iecodebook_labclean // Do this again to clean up after apply or append
-  qui cap compress
+  if inlist("`subcommand'","apply","append") qui cap compress // Clean up after apply or append
 
 end
 
@@ -290,6 +290,7 @@ qui {
       noisily : iecodebook_hashdata using "`hashloc'" , `reset'
     }
     save "`savedta'" , `replace'
+    noi di `"Copy of data saved at {browse "`savedta'":`savedta'}"'
   }
 
   // Write text codebook if requested
@@ -368,28 +369,28 @@ qui {
 
         import excel "`using'", clear first sheet("survey")
 
-      qui lookfor name
-      clonevar name`template' = `: word 2 of `r(varlist)''
-        local theNames = "`r(varlist)'"
-        label var name`template' "name`template_colon'"
+        qui lookfor name
+        clonevar name`template' = `: word 2 of `r(varlist)''
+          local theNames = "`r(varlist)'"
+          label var name`template' "name`template_colon'"
 
-        // Allow matching for more rounds
-        local nNames : list sizeof theNames
-        if `nNames' > 2 {
-          forvalues i = 2/`nNames' {
-            replace name`template' = `: word `i' of `theNames'' if name`template' == ""
+          // Allow matching for more rounds
+          local nNames : list sizeof theNames
+          if `nNames' > 2 {
+            forvalues i = 2/`nNames' {
+              replace name`template' = `: word `i' of `theNames'' if name`template' == ""
+            }
           }
-        }
 
-        tempvar order
-        gen `order' = _n
+          tempvar order
+          gen `order' = _n
 
-      merge m:1 name`template' using `newdata' , nogen
-      replace name`template' = "" if type`template' == ""
+        merge m:1 name`template' using `newdata' , nogen
+        replace name`template' = "" if type`template' == ""
 
-        sort `order'
-        drop `order'
-    }
+          sort `order'
+          drop `order'
+      }
 
       // Export variable information to "survey" sheet
       cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
@@ -401,7 +402,7 @@ qui {
           local rc = _rc
         }
       }
-    }
+
     if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by file syncing the file or having the file open."
     if `rc' != 0 di as err "If the file is not currently open, consider turning file syncing off or using a non-synced location. You may need to delete the file and try again."
     if `rc' != 0 error 603
@@ -462,7 +463,7 @@ qui {
     use "`allData'" , clear
     // Success message
     if "`template'" == "" local template "current"
-    if `c(N)' > 1 di `"Codebook for `template' data created using {browse "`using'": `using'}"'
+    if `c(N)' > 1 noi di `"Codebook for `template' data created using {browse "`using'":`using'}"'
   } // End textonly flag
 } // end qui
 end
