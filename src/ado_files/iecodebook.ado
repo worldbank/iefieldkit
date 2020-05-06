@@ -241,6 +241,10 @@ qui {
     foreach character in , . < > / [ ] | & ! ^ + - : = ( ) "{" "}" "`" "'" {
       replace v1 = subinstr(v1,"`character'"," ",.)
     }
+      replace v1 = subinstr(v1, char(34), "", .) // Remove " sign
+      replace v1 = subinstr(v1, char(96), "", .) // Remove ` sign
+      replace v1 = subinstr(v1, char(36), "", .) // Remove $ sign
+      replace v1 = subinstr(v1, char(10), "", .) // Remove line end
 
     // Reshape one word per line
       split v1
@@ -260,6 +264,8 @@ qui {
         replace `v' = "" if `v' == "`stars'"
         local stars "`stars'*"
       }
+      replace `v' = subinstr(`v',"*"," * ",.) // Fix issues with multiplication
+
 
     // Cheat to get all the variables in the dataset
     foreach item in `theVarlist' {
