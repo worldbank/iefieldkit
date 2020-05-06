@@ -264,8 +264,6 @@ qui {
         replace `v' = "" if `v' == "`stars'"
         local stars "`stars'*"
       }
-      replace `v' = subinstr(`v',"*"," * ",.) // Fix issues with multiplication
-
 
     // Cheat to get all the variables in the dataset
     foreach item in `theVarlist' {
