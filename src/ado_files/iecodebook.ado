@@ -238,7 +238,7 @@ qui {
     }
 
     // Clean up common characters
-    foreach character in , . < > / [ ] | & ! ^ + - : = ( ) "{" "}" "`" "'" {
+    foreach character in , . < > / [ ] | & ! ^ + - : = ( ) # "{" "}" "`" "'" {
       replace v1 = subinstr(v1,"`character'"," ",.)
     }
       replace v1 = subinstr(v1, char(34), "", .) // Remove " sign
