@@ -532,7 +532,9 @@ qui {
 
       // Catch any labels called on choices that are not defined in choice sheet
       levelsof list_name , local(theListedLabels)
+      local period "."
       local leftovers : list theValueLabels - theListedLabels
+      local leftovers : list leftovers - period
       if `"`leftovers'"' != "" {
         di as err "You have specified a value label in [choices] which is not defined in the {it:choices} sheet."
         di as err "{bf:iecodebook} will exit. Define the following value labels and re-run the command to continue:"
