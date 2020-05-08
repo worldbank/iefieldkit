@@ -56,10 +56,13 @@ cap program drop iecodebook
     local using  "`using'.xlsx"
   }
   // Throw an error if user input uses any extension other than the allowed
-  else if !inlist("`r_fileextension'",".xlsx",".xls") {
+  else if !inlist("`r_fileextension'",".xlsx",".xls") & !regexm("`options'","tempfile") {
     di as error "The codebook may only have the file extension [.xslx] or [.xls]. The format [`r_fileextension'] is not allowed."
     error 601
   }
+  local tempopt = "tempfile"
+  local options : list options - tempopt
+
 
   // Throw error on [template] if codebook already exists
   if ("`subcommand'" == "template") & !strpos(`"`options'"',"replace") {
@@ -669,7 +672,7 @@ qui {
         label var `generate' "Data Source (do not edit this row)"
         label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
         label val `generate' yesno
-      iecodebook export using "`codebook'" , `replace'
+      iecodebook export using "`codebook'" , `replace' tempfile
     restore
 
     // Append or merge one codebook per survey
@@ -679,7 +682,7 @@ qui {
       local ++x
       local filepath : word `x' of `anything'
       iecodebook export "`filepath'" using "`codebook'" ///
-        , template(`survey') `matchopt' replace
+        , template(`survey') `matchopt' replace tempfile
     }
 
     // On success copy to final location
