@@ -91,7 +91,10 @@ and optionally produces an export version of the dataset with only variables use
 {synopt:{opt drop}}Requests that {cmdab:iecodebook} drop all variables which have no entry in the "name" column in the codebook.
 The default behavior is to retain all variables. {bf:Alternatively, to drop variables (or remove value labels from variables) one-by-one, write .
 (a single period) in the "name" (or "choices") column of the codebook.}
-Unused value labels will always be dropped by {cmdab:iecodebook}.{p_end}
+Unused value labels will always be removed from the datset by {cmdab:iecodebook},
+but existing value labels will remain attached to variables by default.
+Removing value labels explicitly with . is therefore recommended
+when you wish to remove value label information from the dataset.{p_end}
 {break}
 {synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every coded answer.{p_end}
