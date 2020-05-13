@@ -15,24 +15,29 @@
 	Single data set
 *******************************************************************************/
 	
-	sysuse auto, clear
-	
 /*------------------------------------------------------------------------------
 	Template subcommand
 ------------------------------------------------------------------------------*/
 	
+	sysuse auto, clear
+		
 	* No error
 	cap erase "${codebook}/auto.xlsx"
 	iecodebook template using "${codebook}/auto.xlsx"
 	
-	* Yes error: template already exists
-	cap iecodebook template using "${codebook}/auto.xlsx"
-	assert _rc == 602
-	
 	* No error: template already exists, use replace
 	iecodebook template using "${codebook}/auto.xlsx", replace
 	
-	* Yes error: non-template options
+	
+	********************************************
+	* Incorrect uses : error messages expected *
+	********************************************
+	
+	* Template already exists
+	cap iecodebook template using "${codebook}/auto.xlsx"
+	assert _rc == 602
+	
+	* Non-template options
 	cap iecodebook template using "${codebook}/auto.xlsx", replace match
 	assert _rc == 198															// Maybe add to the error message that 'match' cannot be used with 'template'?
 	
@@ -125,9 +130,23 @@
 	Template subcommand
 ------------------------------------------------------------------------------*/
 	
+	* Simple run
+	
+	* Run with replace
+	
+	* Match
+		
 /*------------------------------------------------------------------------------
-	Apply subcommand
+	Append subcommand
 ------------------------------------------------------------------------------*/
+
+	* Generate
+	
+	* Report
+	
+	* choices_first, choices_second,… sheets - are they reflecting changes we make?
+
+	* keepall
 
 /*******************************************************************************
 	Export final code book
