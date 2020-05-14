@@ -64,17 +64,8 @@ cap program drop iecodebook
   local options : list options - tempopt
 
 
-  // Throw error on [template] if codebook already exists
+  // Throw error on [template] if codebook cannot be created
   if ("`subcommand'" == "template") & !strpos(`"`options'"',"replace") {
-
-    cap confirm file "`using'"
-    if _rc == 0 {
-      di as err "That template already exists. {bf:iecodebook} does not allow you to overwrite an existing template,"
-      di as err " since you may already have set it up. If you are {bf:sure} that you want to delete this template,"
-      di as err `" you need to manually delete the file `using'. {bf:iecodebook} will now exit."'
-      error 602
-    }
-
     cap confirm new file "`using'"
     if _rc {
       di as error "{bf:iecodebook} could not create file `using'. Check that the file path is correctly specified."
