@@ -56,30 +56,16 @@ cap program drop iecodebook
     local using  "`using'.xlsx"
   }
   // Throw an error if user input uses any extension other than the allowed
-  else if !inlist("`r_fileextension'",".xlsx",".xls") {
+  else if !inlist("`r_fileextension'",".xlsx",".xls") & !regexm("`options'","tempfile") {
     di as error "The codebook may only have the file extension [.xslx] or [.xls]. The format [`r_fileextension'] is not allowed."
     error 601
   }
+  local tempopt = "tempfile"
+  local options : list options - tempopt
 
-  // Throw error on [template] if codebook already exists
-  if ("`subcommand'" == "template") & !strpos(`"`options'"',"replace") {
 
-    cap confirm file "`using'"
-    if _rc == 0 {
-      di as err "That template already exists. {bf:iecodebook} does not allow you to overwrite an existing template,"
-      di as err " since you may already have set it up. If you are {bf:sure} that you want to delete this template,"
-      di as err `" you need to manually delete the file `using'. {bf:iecodebook} will now exit."'
-      error 602
-    }
-
-    cap confirm new file "`using'"
-    if _rc {
-      di as error "{bf:iecodebook} could not create file `using'. Check that the file path is correctly specified."
-      error 601
-    }
-  }
-
-  if ("`subcommand'" == "export") & !strpos(`"`options'"',"replace") {
+  // Throw error on [template] if codebook cannot be created
+   if ("`subcommand'" == "export") & !strpos(`"`options'"',"replace") {
 
     cap confirm file "`using'"
     if (_rc == 0) & (!strpos(`"`options'"',"replace")) {
@@ -532,7 +518,9 @@ qui {
 
       // Catch any labels called on choices that are not defined in choice sheet
       levelsof list_name , local(theListedLabels)
+      local period "."
       local leftovers : list theValueLabels - theListedLabels
+      local leftovers : list leftovers - period
       if `"`leftovers'"' != "" {
         di as err "You have specified a value label in [choices] which is not defined in the {it:choices} sheet."
         di as err "{bf:iecodebook} will exit. Define the following value labels and re-run the command to continue:"
@@ -581,7 +569,9 @@ qui {
       }
 
     // Drop leftovers if requested
-    cap drop `allDrops'
+    unab allVars : *
+    local toKeep : list allVars - allDrops
+    keep `toKeep'
       qui des
       if `r(k)' == 0 {
         noi di as err "You are dropping all the variables in a dataset. This is not allowed. {bf:iecodebook} will exit."
@@ -667,7 +657,7 @@ qui {
         label var `generate' "Data Source (do not edit this row)"
         label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
         label val `generate' yesno
-      iecodebook export using "`codebook'" , `replace'
+      iecodebook export using "`codebook'" , `replace' tempfile
     restore
 
     // Append or merge one codebook per survey
@@ -677,7 +667,7 @@ qui {
       local ++x
       local filepath : word `x' of `anything'
       iecodebook export "`filepath'" using "`codebook'" ///
-        , template(`survey') `matchopt' replace
+        , template(`survey') `matchopt' replace tempfile
     }
 
     // On success copy to final location

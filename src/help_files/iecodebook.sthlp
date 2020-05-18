@@ -52,7 +52,7 @@ and optionally produces an export version of the dataset with only variables use
 
 {dlgtab 0:Apply: Setting up and using a codebook to alter current data}
 
-{p 2}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
+{p 2}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"} , [{bf:replace}]{p_end}
 
 {p 2 4 }{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"} {break}
 , [{bf:drop}] [{opt miss:ingvalues(# "label" [# "label" ...])}]{p_end}
@@ -64,7 +64,7 @@ and optionally produces an export version of the dataset with only variables use
 {p 2 4}{cmdab:iecodebook template} {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break}{p_end}
-{p 2 4}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} [{bf:match}] [{opth gen:erate(varname)}]{p_end}
+{p 2 4}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} [{bf:match}] [{opth gen:erate(varname)}] [{bf:replace}]{p_end}
 
 {p 2 4}{cmdab:iecodebook append} {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
@@ -76,7 +76,7 @@ and optionally produces an export version of the dataset with only variables use
 
 {dlgtab 0:Export: Creating a full codebook of the current data}
 
-{p 2 4}{cmdab:iecodebook export} [{help if}] [{help in}] {break}
+{p 2 4}{cmdab:iecodebook export} {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
 {p 2 3}, [{bf:replace}] [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
 
@@ -89,9 +89,14 @@ and optionally produces an export version of the dataset with only variables use
 {synopthdr:Apply Options}
 {synoptline}
 {synopt:{opt drop}}Requests that {cmdab:iecodebook} drop all variables which have no entry in the "name" column in the codebook.
-The default behavior is to retain all variables. {bf:Alternatively, to drop variables (or value labels) one-by-one, write . (a single period) in the "name" (or "choices") column of the codebook.}{p_end}
+The default behavior is to retain all variables. {bf:Alternatively, to drop variables (or remove value labels from variables) one-by-one,} write .
+(a single period) in the "name" (or "choices") column of the codebook.
+Unused value labels will always be removed from the datset by {cmdab:iecodebook},
+but existing value labels will remain attached to variables by default.
+Removing value labels explicitly with . is therefore recommended
+when you wish to remove value label information from the dataset.{p_end}
 {break}
-{synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
+{synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition in the "choices" column.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every coded answer.{p_end}
 {synoptline}
 
@@ -115,7 +120,7 @@ to appear in the same row of the Excel sheet.{p_end}
 {synopt:{opt gen:erate()}}This option names the variable identifying the source of each observation. If left blank, the default is "survey".
 This must be specified during both the template and append steps.{p_end}
 {break}
-{synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
+{synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition in the "choices" column.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every value-labeled answer.{p_end}
 {break}
 {synopt:{opt report}}This option writes a codebook in the standard {bf:export} format describing the appended dataset.

@@ -21,13 +21,14 @@ qui {
 	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
 	global form			"${AnalyticsDB}/Data Coordinator/iefieldkit/ietestform"
+	global codebook		"${AnalyticsDB}/Data Coordinator/iefieldkit/iecodebook"
 	global testouput	"${iefieldkit}/run/output"
 	
 	* Select commands to test
-	local ieduplicates	1
-	local iecompdup		1
-	local ietestform	1
-	local iecodebook	0
+	local ieduplicates	0
+	local iecompdup		0
+	local ietestform	0
+	local iecodebook	1
 	local iefieldkit	0
 	
 /*******************************************************************************
@@ -60,5 +61,8 @@ qui {
 	
 	* Test ietestform
 	if `ietestform' do "${iefieldkit}/run/ietestform.do"	
+	
+	* Test ietestform
+	if `iecodebook' do "${iefieldkit}/run/iecodebook.do"	
 	
 *************************** End of Master Do-File ******************************
