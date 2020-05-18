@@ -577,7 +577,9 @@ qui {
       }
 
     // Drop leftovers if requested
-    cap drop `allDrops'
+    unab allVars : *
+    local toKeep : list allVars - allDrops
+    keep `toKeep'
       qui des
       if `r(k)' == 0 {
         noi di as err "You are dropping all the variables in a dataset. This is not allowed. {bf:iecodebook} will exit."
