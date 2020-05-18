@@ -159,7 +159,7 @@
 	* Replace option
 	iecodebook export using "${codebook}/auto_export.xlsx", replace
 	
-	* Trim option
+	/* Trim option : not working yet
 	iecodebook export using "${codebook}/auto_export.xlsx", ///
 							replace ///
 							trim("${iefieldkit}/run/iecodebook_trim1" ///		// file C:\Users\wb501238\Documents\GitHub/iefieldkit/run/iecodebook_trim1.csv not found
@@ -170,8 +170,3 @@
 							trim("${iefieldkit}/run/iecodebook_trim1.do")
 	
 	
-	* IN 
-	iecodebook export in 1  using "${codebook}/auto_export.xlsx", replace					// "in range not allowed"
-	
-	* IF 
-	iecodebook export if domestic == 1  using "${codebook}/auto_export.xlsx", replace		// "if not allowed"

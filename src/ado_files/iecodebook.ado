@@ -65,15 +65,7 @@ cap program drop iecodebook
 
 
   // Throw error on [template] if codebook cannot be created
-  if ("`subcommand'" == "template") & !strpos(`"`options'"',"replace") {
-    cap confirm new file "`using'"
-    if _rc {
-      di as error "{bf:iecodebook} could not create file `using'. Check that the file path is correctly specified."
-      error 601
-    }
-  }
-
-  if ("`subcommand'" == "export") & !strpos(`"`options'"',"replace") {
+   if ("`subcommand'" == "export") & !strpos(`"`options'"',"replace") {
 
     cap confirm file "`using'"
     if (_rc == 0) & (!strpos(`"`options'"',"replace")) {
