@@ -3,12 +3,27 @@
 cap program drop iecorrect
 	program 	 iecorrect
 		
-	syntax [anything] using/, [GENerate idvar(varlist) NOIsily save(string) replace]
+	syntax [anything] using/, [GENerate idvar(varlist) NOIsily save(string) replace sheet(string)]
 		
 	gettoken subcommand anything : anything
 	
 	if !inlist("`subcommand'","template","apply") {
 		di as err "{bf:iecorrect} requires [template] or [apply] to be specified with a target [using] file. Type {bf:help iecorrect} for details."
+	}
+
+/*==============================================================================
+								PROCESS OPTIONS
+==============================================================================*/
+
+/*******************************************************************************	
+	Sheet option
+*******************************************************************************/
+	
+	if "`sheet'" == "" {
+		local corrSheets	numeric string other drop 
+	}
+	else {
+		local corrSheets	`sheet'
 	}
 	
 /*==============================================================================
@@ -33,7 +48,8 @@ cap program drop iecorrect
 			error 601
 		}
 		
-		foreach type in numeric string other drop {
+		
+		foreach type of local corrSheets {
 		
 			* Check that template was correctly filled
 			checksheets using "`using'", type("`type'")
@@ -88,7 +104,7 @@ cap program drop iecorrect
 			doheader , doname("`doname'") dofile("`dofile'")
 		}
 		* Write the corrections into the do file
-		foreach type in numeric string other drop {
+		foreach type of local corrSheets {
 
 			if ``type'corr' {
 				* Open the data set with the numeric corrections
@@ -243,7 +259,7 @@ cap program drop checksheets
 		local mainvar `r(mainvar)'
 
 		** Check that there are corrections of this type to be made
-		count
+		qui count
 		
 		* If there are
 		if `r(N)' > 0 {
@@ -415,7 +431,7 @@ cap program drop dostring
 	
 	syntax , doname(string) idvar(string) [stringid]
 
-	file write  `doname'		  "** Correct entries in strin variables " _n								// <---- Writing in do file here
+	file write  `doname'		  "** Correct entries in string variables " _n								// <---- Writing in do file here
 
 	* Count the number of lines in the current data set: each line will be one
 	* line in the do-file
@@ -452,7 +468,7 @@ cap program drop dostring
 		}
 		
 		** Write the line to the do file
-		file write `doname'	`"`line'"'																		// <---- Writing in do file here
+		file write `doname'	`"`line'"' _n																		// <---- Writing in do file here
 	}
 
 		
@@ -511,14 +527,14 @@ cap program drop doother
 		
 		local strvalue		 	= strvalue[`row']
 		local strvalue			= `""`strvalue'""'
-		
+
 		local catvar		 	= catvar[`row']
 		local catvalue		 	= catvalue[`row']
 
 		if "`catvar'" != ""	{
 			file write `doname'		`"replace `catvar' = `catvalue' if `strvar' == `strvaluecurrent'"' _n
 		}
-		else if !(regex(`strvalue',`strvaluecurrent') & regex(`strvalue',`strvaluecurrent'))	{
+		if !(`"`strvalue'"' == `"`strvaluecurrent'"') | (`"`strvalue'"' == "")	{
 			file write `doname'		`"replace `strvar' = `strvalue' if `strvar' == `strvaluecurrent'"' _n
 		}
 	}
