@@ -300,7 +300,8 @@ qui {
   // Save data copy if requested
   if "`copydata'" != "" {
     compress
-    local savedta = subinstr(`"`using'"',".xlsx",".dta",.)
+    local savedta = subinstr(`"`using'"',".xls",".dta",.)		
+    local savedta = subinstr(`"`using'"',".dtax",".dta",.)
     local hashloc = subinstr(`"`savedta'"',".dta","-sig.txt",.)
     if "`hash'" != "" {
       noisily : iecodebook_hashdata using "`hashloc'" , `reset'
