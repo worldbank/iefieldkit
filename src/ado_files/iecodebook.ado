@@ -126,15 +126,15 @@ program iecodebook_template
 
 end
 
-// Hashdata subroutine for export --------------------------------------------------------------
+// signdata subroutine for export --------------------------------------------------------------
 
-cap prog drop iecodebook_hashdata
-prog def iecodebook_hashdata
+cap prog drop iecodebook_signdata
+prog def iecodebook_signdata
 
   syntax ///
     using/     /// Location of the desired datafile placement
   , ///
-    [reset]    /// reset dtasig if hash fails
+    [reset]    /// reset dtasig if sign fails
 
 
   // Setup
@@ -143,7 +143,7 @@ prog def iecodebook_hashdata
   // Load target data
   if `"`anything'"' != `""' use `anything' , clear
 
-  // Check existing hash, if any
+  // Check existing sign, if any
   cap datasignature confirm  using "`using'" , strict
     // If not found OR altered and no reset
     if ("`reset'" == "") {
@@ -163,7 +163,7 @@ cap program drop iecodebook_export
 
   syntax [anything] [using/] [if] [in]  ///
     , [replace] [COPYdata] [trim(string asis)]     /// User-specified options
-      [hash] [reset] [TEXTonly]         /// Hashdata options
+      [SIGNature] [reset] [TEXTonly]         /// signdata options
       [match] [template(string asis)]   // Programming options
 
 qui {
@@ -300,11 +300,11 @@ qui {
   // Save data copy if requested
   if "`copydata'" != "" {
     compress
-    local savedta = subinstr(`"`using'"',".xls",".dta",.)		
+    local savedta = subinstr(`"`using'"',".xls",".dta",.)
     local savedta = subinstr(`"`using'"',".dtax",".dta",.)
-    local hashloc = subinstr(`"`savedta'"',".dta","-sig.txt",.)
-    if "`hash'" != "" {
-      noisily : iecodebook_hashdata using "`hashloc'" , `reset'
+    local signloc = subinstr(`"`savedta'"',".dta","-sig.txt",.)
+    if "`signature'" != "" {
+      noisily : iecodebook_signdata using "`signloc'" , `reset'
     }
     save "`savedta'" , `replace'
     noi di `"Copy of data saved at {browse "`savedta'":`savedta'}"'
@@ -314,10 +314,10 @@ qui {
   if "`textonly'" != "" noisily {
     local theTextFile = subinstr(`"`using'"',".xls",".txt",.)
     local theTextFile = subinstr(`"`using'"',".xlsx",".txt",.)
-      cap log close hashdata
-      log using "`theTextFile'" , nomsg text replace name(hashdata)
+      cap log close signdata
+      log using "`theTextFile'" , nomsg text replace name(signdata)
       noisily : codebook, compact
-      log close hashdata
+      log close signdata
   }
 
   // Create XLSX file with all current/remaining variable names and labels

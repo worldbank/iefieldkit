@@ -41,8 +41,9 @@ renames, recodes, variable labels, and value labels, and applies them to the cur
 {p 2 4}{cmdab:iecodebook append}{break} reads an Excel codebook that specifies how variables should be harmonized across
 two or more datasets - rename, recode, variable labels, and value labels - applies the harmonization, and appends the datasets.{p_end}
 {break}
-{p 2 4}{cmdab:iecodebook export}{break} creates an Excel codebook that describes the current dataset,
-and optionally produces an export version of the dataset with only variables used in specified dofiles.{p_end}
+{p 2 4}{cmdab:iecodebook export}{break} creates an Excel or plaintext codebook that describes the current dataset,
+optionally creates or verifies a datasignature for record-keeping, optionally re-saves the dataset in the specified location,
+and optionally reduces the dataset to only the variables used in a set of specified dofiles.{p_end}
 
 {title:Syntax}
 
@@ -78,7 +79,7 @@ and optionally produces an export version of the dataset with only variables use
 
 {p 2 4}{cmdab:iecodebook export} ["/path/to/data"] {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
-{p 2 4}, [{bf:replace}] [{opt text:only}] [{opt copy:data}] [{opt hash}] [{opt reset}] {break}
+{p 2 4}, [{bf:replace}] [{opt text:only}] [{opt copy:data}] [{opt sign:ature}] [{opt reset}] {break}
     [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
 
 {hline}
@@ -147,10 +148,13 @@ For example, appending a same-named string variable to a numeric variable may ca
 {break}
 {synopt:{opt copy:data}}This option requests that a copy of the data be placed at the same location as the codebook, with the same name.{p_end}
 {break}
-{synopt:{opt hash}}This option requests that a {help datasignature} be placed at the same location as the codebook,
-and will return an error if a datasignature file is already there and is different.{p_end}
+{synopt:{opt sign:ature}}This option requests that a {help datasignature} be verified
+in the same destination folder as the codebook and/or data copy are placed,
+and will return an error if a datasignature file is not found or is different.{p_end}
 {break}
-{synopt:{opt reset}}This option allows {cmdab:iecodebook export} to overwrite an existing datasignature.{p_end}
+{synopt:{opt reset}}Specified with {opt sign:ature},
+this option allows {cmdab:iecodebook export} to place a new datasignature
+or overwrite an existing datasignature.{p_end}
 {break}
 {synopt:{opt trim()}}This option takes one or more dofiles as inputs, and trims the current dataset to only include variables used in those dofiles,
 before executing any of the other {bf: export} tasks requested.{p_end}
