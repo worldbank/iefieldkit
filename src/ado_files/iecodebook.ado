@@ -134,20 +134,13 @@ prog def iecodebook_signdata
   , ///
     [reset]    /// reset dtasig if sign fails
 
-
-  // Setup
-  preserve // Respect current data
-
-  // Load target data
-  if `"`anything'"' != `""' use `anything' , clear
-
   // Check existing sign, if any
   cap datasignature confirm  using "`using'" , strict
     // If not found OR altered and no reset
     if ("`reset'" == "") {
       datasignature confirm using "`using'" , strict
     }
-    // If altered OR missing AND reset ordered
+    // If altered OR missing
     else {
       datasignature set , saving("`using'" , replace) reset
     }
@@ -274,15 +267,20 @@ qui {
       keep `theKeepList' // Keep only variables mentioned in the dofiles
   } // End [trim] option
 
+  // Prepare to save and sign
+  compress
+    local savedta = subinstr(`"`using'"',".xls",".dta",.)
+    local savedta = subinstr(`"`savedta'"',".dtax",".dta",.)
+    local signloc = subinstr(`"`savedta'"',".dta","-sig.txt",.)
+
+  // Check signature if requested
+  if "`signature'" != "" {
+    noisily : iecodebook_signdata using "`signloc'" , `reset'
+    noi di `"Data signature can be found at at {browse "`signloc'":`signloc'}"'
+  }
+
   // Save data copy if requested
   if "`copydata'" != "" {
-    compress
-    local savedta = subinstr(`"`using'"',".xls",".dta",.)
-    local savedta = subinstr(`"`using'"',".dtax",".dta",.)
-    local signloc = subinstr(`"`savedta'"',".dta","-sig.txt",.)
-    if "`signature'" != "" {
-      noisily : iecodebook_signdata using "`signloc'" , `reset'
-    }
     save "`savedta'" , `replace'
     noi di `"Copy of data saved at {browse "`savedta'":`savedta'}"'
   }

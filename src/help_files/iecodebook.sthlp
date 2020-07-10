@@ -65,14 +65,15 @@ and optionally reduces the dataset to only the variables used in a set of specif
 {p 2 4}{cmdab:iecodebook template} {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break}{p_end}
-{p 2 4}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} [{bf:match}] [{opth gen:erate(varname)}] [{bf:replace}]{p_end}
+{p 2 3}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}
+{break} [{bf:match}] [{opth gen:erate(varname)}] [{bf:replace}]{p_end}
 
 {p 2 4}{cmdab:iecodebook append} {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
 {p 2 3}, {bf:clear} {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} {break}
 [{opth gen:erate(varname)} {opt miss:ingvalues(# "label" [# "label" ...])}]{break}
-[{bf:report replace keepall}] {p_end}
+[{bf:report}] [{bf:replace}] [{bf:keepall}] {p_end}
 
 
 {dlgtab 0:Export: Creating codebooks and signatures for datasets}
@@ -145,17 +146,20 @@ For example, appending a same-named string variable to a numeric variable may ca
 {synoptline}
 {synopt:{opt replace}}This option allows {cmdab:iecodebook export} to overwrite an existing codebook or dataset.{p_end}
 {break}
-{synopt:{opt copy:data}}This option requests that a copy of the data be placed at the same location as the codebook, with the same name.{p_end}
+{synopt:{opt copy:data}}This option requests that a copy of the data be placed at the same location as the codebook,
+with the same name as the codebook.{p_end}
 {break}
 {synopt:{opt verify}}This option orders {cmdab:iecodebook export} to confirm that the current data precisely matches an existing codebook.
-It will break with an error and describe all changes if there are any differences between the two.{p_end}
+It will break with an error and describe all changes if there are any differences between the two.
+A new codebook will not be written in this case.{p_end}
 {break}
 {synopt:{opt text:only}}This option requests that the codebook be created as a plaintext file.
 This cannot be combined with {bf:verify}.{p_end}
 {break}
 {synopt:{opt sign:ature}}This option requests that a {help datasignature} be verified
 in the same destination folder as the codebook and/or data copy are placed,
-and will return an error if a datasignature file is not found or is different.{p_end}
+and will return an error if a datasignature file is not found or is different,
+guaranteeing data has not changed since the last {bf:reset} of the signature.{p_end}
 {break}
 {synopt:{opt reset}}Specified with {opt sign:ature},
 this option allows {cmdab:iecodebook export} to place a new datasignature
