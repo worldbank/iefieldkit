@@ -60,16 +60,14 @@ cap program drop iecodebook
     di as error "The codebook may only have the file extension [.xslx] or [.xls]. The format [`r_fileextension'] is not allowed."
     error 601
   }
-  local tempopt = "tempfile"
-  local options : list options - tempopt
 
 
   // Throw error on [template] if codebook cannot be created
-   if ("`subcommand'" == "export") & !strpos(`"`options'"',"replace") {
+   if inlist("`subcommand'","template","export") & !strpos(`"`options'"',"replace") {
 
     cap confirm file "`using'"
     if (_rc == 0) & (!strpos(`"`options'"',"replace")) {
-      di as err "That codebook already exists. {bf:iecodebook export} will only overwrite it if you specify the [replace] option."
+      di as err "That codebook already exists. {bf:iecodebook} will only overwrite it if you specify the [replace] option."
       error 602
     }
 
@@ -117,11 +115,11 @@ program iecodebook_template
   // Select the right syntax and pass through to templating options
   if `"`anything'"' == `""' {
     // [apply] template if no arguments
-    iecodebook apply using "`using'" , `options' template
+    noi iecodebook apply using "`using'" , `options' template
   }
   else {
     // [append] template if arguments
-    iecodebook append `anything' using "`using'" , `options' template
+    noi iecodebook append `anything' using "`using'" , `options' template
   }
 
 end
@@ -164,7 +162,7 @@ cap program drop iecodebook_export
   syntax [anything] [using/] [if] [in]  ///
     , [replace] [COPYdata] [trim(string asis)]     /// User-specified options
       [SIGNature] [reset] [TEXTonly]         /// signdata options
-      [match] [template(string asis)]   // Programming options
+      [match] [template(string asis)] [tempfile]   // Programming options
 
 qui {
 
@@ -425,7 +423,7 @@ qui {
     uselabel _all, clear
       ren lname list_name
       drop trunc
-      tostring value , replace 
+      tostring value , replace
     count
     if `r(N)' == 0 {
       set obs 1
@@ -445,13 +443,17 @@ qui {
       if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
       if `rc' != 0 error 603
 
-    // Reload original data
-    use "`allData'" , clear
-    // Success message
-    if "`template'" == "" local template "current"
-    if `c(N)' > 1 noi di `"Codebook for `template' data created using {browse "`using'":`using'}"'
+  // Reload original data
+  use "`allData'" , clear
+  // Success message
+
+  if `c(N)' > 1 & "`tempfile'" == "" {
+    noi di `"Codebook for data created using {browse "`using'":`using'}
+  }
   } // End textonly flag
+
 } // end qui
+
 end
 
 // Apply subroutine ----------------------------------------------------------------------------
@@ -460,7 +462,7 @@ cap program drop iecodebook_apply
   program    iecodebook_apply
 
   syntax [anything] [using/] , [template] [replace] [drop] ///
-    [survey(string asis)] [MISSingvalues(string asis)]
+    [survey(string asis)] [MISSingvalues(string asis)] [tempfile]
 
 qui {
   // Setups
@@ -477,12 +479,12 @@ qui {
         label var _template "(Ignore this placeholder, but do not delete it. Thanks!)"
         label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
         label val _template yesno
-      iecodebook export using "`using'" , `replace'
+      noi iecodebook export using "`using'" , `replace'
     restore
     // Append the codebook for the current dataset to the placeholder codebook
     tempfile current
     save `current' , replace
-    iecodebook export `current' using "`using'" , template(`survey') replace
+    noi iecodebook export `current' using "`using'" , template(`survey') replace
   exit
   }
 
@@ -700,7 +702,7 @@ qui {
         label var `generate' "Data Source (do not edit this row)"
         label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
         label val `generate' yesno
-      iecodebook export using "`codebook'" , `replace' tempfile
+      noi iecodebook export using "`codebook'" , `replace' tempfile
     restore
 
     // Append or merge one codebook per survey
@@ -709,12 +711,13 @@ qui {
       if `x' == 1 local matchopt "`match'"
       local ++x
       local filepath : word `x' of `anything'
-      iecodebook export "`filepath'" using "`codebook'" ///
+      noi iecodebook export "`filepath'" using "`codebook'" ///
         , template(`survey') `matchopt' replace tempfile
     }
 
     // On success copy to final location
     copy "`codebook'" `"`using'"' , `replace'
+    noi di `"Codebook for data created using {browse "`using'":`using'}"'
 
   use `raw_data' , clear
   exit
