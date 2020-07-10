@@ -421,40 +421,15 @@ qui {
 
     // Create value labels sheet
 
-      // Fill temp dataset with value labels
-      foreach var of varlist * {
-        use `var' using `allData1' , clear
-        local theLabel : value label `var'
-        if "`theLabel'" != "" {
-          cap label save `theLabel' using `theLabels' ,replace
-          if _rc==0 {
-            import delimited using `theLabels' , clear delimit(", modify", asstring)
-            append using `theCommands'
-              save `theCommands' , replace emptyok
-          }
-        }
-      }
-
-      // Clean up value labels for export - use SurveyCTO syntax for sheet names and column names
-      use `theCommands' , clear
-      count
-      if `r(N)' > 0 {
-        duplicates drop
-        drop v2
-        replace v1 = trim(subinstr(v1,"label define","",.))
-        split v1 , parse(`"""')
-        split v11 , parse(`" "')
-        keep v111 v112 v12
-        order v111 v112 v12
-
-        rename (v111 v112 v12)(list_name value label)
-      }
-      else {
-        set obs 1
-        gen list_name = ""
-        gen value = ""
-        gen label = ""
-      }
+    // Clean up value labels for export - use SurveyCTO syntax for sheet names and column names
+    uselabel _all, clear
+      ren lname list_name
+      drop trunc
+      tostring value , replace 
+    count
+    if `r(N)' == 0 {
+      set obs 1
+    }
 
       // Export value labels to "choices" sheet
       cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
