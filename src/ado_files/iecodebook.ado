@@ -395,7 +395,14 @@ qui {
         restore
         }
       }
+
+    if `QUITFLAG' == 1 {
+      di as err ""
+      di as err "Differences were encountered between the existing data and the codebook."
+      di as err "{bf:iecodebook} will now exit."
+      error 7
     }
+    } // end VERIFY option
 
     // Write to new dataset
 
