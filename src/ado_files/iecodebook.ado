@@ -288,13 +288,6 @@ qui {
         error 198
       }
       keep `theKeepList' // Keep only variables mentioned in the dofiles
-      compress
-      local savedta = subinstr(`"`using'"',".xls",".dta",.)
-      local savedta = subinstr(`"`using'"',".dtax",".dta",.)
-      if "`hash'" != "" {
-        noisily : iecodebook_hashdata using "`savedta'" , `textonly' `reset'
-      }
-      save "`savedta'" , replace
   } // End [trim] option
 
   // Save data copy if requested
