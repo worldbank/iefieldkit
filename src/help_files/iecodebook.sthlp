@@ -79,7 +79,7 @@ and optionally reduces the dataset to only the variables used in a set of specif
 
 {p 2 4}{cmdab:iecodebook export} ["/path/to/data"] {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
-{p 2 4}, [{bf:replace}] [{opt text:only}] [{opt copy:data}] [{opt sign:ature}] [{opt reset}] {break}
+{p 2 4}, [{bf:replace}] [{bf:verify}] [{opt text:only}] [{opt copy:data}] [{opt sign:ature}] [{opt reset}] {break}
     [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
 
 {hline}
@@ -143,6 +143,9 @@ For example, appending a same-named string variable to a numeric variable may ca
 {synopthdr:Export Options}
 {synoptline}
 {synopt:{opt replace}}This option allows {cmdab:iecodebook export} to overwrite an existing codebook or dataset.{p_end}
+{break}
+{synopt:{opt verify}}This option orders {cmdab:iecodebook export} to confirm that the current data precisely matches an existing codebook.
+It will break with an error and describe all changes if there are any differences between the two.{p_end}
 {break}
 {synopt:{opt text:only}}This option requests that the codebook be created as a plaintext file.{p_end}
 {break}
