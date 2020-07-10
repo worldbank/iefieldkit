@@ -335,12 +335,10 @@ qui {
     // Get existing codebook if VERIFY option and check variable lists
     if "`verify'" != "" {
     local QUITFLAG = 0
-      preserve
       import excel "`using'", clear first sheet("survey")
         tempfile theCodebook
         save `theCodebook' , replace
       levelsof name , local(oldVars) clean
-      restore
       local both : list allVariables & oldVars
 
       // Check excess variables in data
@@ -360,6 +358,41 @@ qui {
         noi di as err "The following variables are in the codebook but not the data:"
         foreach item in `missing' {
           noi di "  `item'"
+        }
+      }
+
+      // Check attributes of all overlapping variables
+      local theN : word count `allVariables'
+      forvalues i = 1/`theN' {
+        local theVariable : word `i' of `allVariables'
+        local theLabel    : word `i' of `allLabels'
+        local theChoices  : word `i' of `allChoices'
+        local theType     : word `i' of `allTypes'
+
+        // Proceed to all checks if variable is in both locations
+        if strpos("`both'"," `theVariable' ") {
+        preserve
+          keep if name == "`theVariable'"
+
+          local theOldType = type[1]
+          if "`theOldType'" != "`theType'" {
+            local QUITFLAG = 1
+            di as err "The type of {bf:`theVariable'} has changed:"
+            di as err `"  it was `theOldType' and is now `theType'."'
+          }
+          local theOldLabel = label[1]
+          if "`theOldLabel'" != "`theLabel'" {
+            local QUITFLAG = 1
+            di as err "The label of {bf:`theVariable'} has changed:"
+            di as err `"  it was `theOldLabel' and is now `theLabel'."'
+          }
+          local theOldChoices = choices[1]
+          if "`theOldChoices'" != "`theChoices'" {
+            local QUITFLAG = 1
+            di as err "The value label of {bf:`theVariable'} has changed:"
+            di as err `"  it was `theOldChoices' and is now `theChoices'."'
+          }
+        restore
         }
       }
     }
