@@ -63,7 +63,7 @@ cap program drop iecodebook
 
 
   // Throw error on [template] if codebook cannot be created
-   if inlist("`subcommand'","template","export") & !strpos(`"`options'"',"replace") {
+   if inlist("`subcommand'","template","export") & !inlist(`"`options'"',"replace","verify") {
 
     cap confirm file "`using'"
     if (_rc == 0) & (!strpos(`"`options'"',"replace")) {
@@ -161,8 +161,8 @@ cap program drop iecodebook_export
 
   syntax [anything] [using/] [if] [in]  ///
     , [replace] [COPYdata] [trim(string asis)]     /// User-specified options
-      [SIGNature] [reset] [TEXTonly]         /// signdata options
-      [match] [template(string asis)] [tempfile]   // Programming options
+      [SIGNature] [reset] [TEXTonly] [verify]      /// Signature and verify options
+      [match] [template(string asis)] [tempfile]    // Programming options
 
 qui {
 
@@ -313,7 +313,6 @@ qui {
 
   // Create XLSX file with all current/remaining variable names and labels
   if "`textonly'" == "" {
-    preserve
 
       // Record dataset info
 
@@ -327,13 +326,45 @@ qui {
           local theChoices  : val label `var'
           local theType     : type `var'
 
-          local allVariables   `"`allVariables'   "`theVariable'" "'
-          local allLabels      `"`allLabels'      "`theLabel'"    "'
-          local allChoices     `"`allChoices'     "`theChoices'"  "'
-          local allTypes       `"`allTypes'       "`theType'"     "'
-        }
+        local allVariables   `"`allVariables'   `theVariable'   "'
+        local allLabels      `"`allLabels'      "`theLabel'"    "'
+        local allChoices     `"`allChoices'     "`theChoices'"  "'
+        local allTypes       `"`allTypes'       "`theType'"     "'
+      }
 
-      // Write to new dataset
+    // Get existing codebook if VERIFY option and check variable lists
+    if "`verify'" != "" {
+    local QUITFLAG = 0
+      preserve
+      import excel "`using'", clear first sheet("survey")
+        tempfile theCodebook
+        save `theCodebook' , replace
+      levelsof name , local(oldVars) clean
+      restore
+      local both : list allVariables & oldVars
+
+      // Check excess variables in data
+      local extra : list allVariables - oldVars
+      if "`extra'" != "" {
+        local QUITFLAG = 1
+        noi di as err "The following variables are in this data but not the codebook:"
+        foreach item in `extra' {
+          noi di "  `item'"
+        }
+      }
+
+      // Check excess variables in codebook
+      local missing : list oldVars - allVariables
+      if "`missing'" != "" {
+        local QUITFLAG = 1
+        noi di as err "The following variables are in the codebook but not the data:"
+        foreach item in `missing' {
+          noi di "  `item'"
+        }
+      }
+    }
+
+    // Write to new dataset
 
         clear
 
@@ -415,7 +446,7 @@ qui {
     if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by file syncing the file or having the file open."
     if `rc' != 0 di as err "If the file is not currently open, consider turning file syncing off or using a non-synced location. You may need to delete the file and try again."
     if `rc' != 0 error 603
-  restore
+  use `thisData' , clear
 
     // Create value labels sheet
 
