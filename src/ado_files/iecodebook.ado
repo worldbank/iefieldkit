@@ -63,7 +63,7 @@ cap program drop iecodebook
 
 
   // Throw error on [template] if codebook cannot be created
-   if inlist("`subcommand'","template","export") & !inlist(`"`options'"',"replace","verify") {
+   if inlist("`subcommand'","template","export") & !regexm(`"`options'"',"replace") & !regexm(`"`options'"',"verify") {
 
     cap confirm file "`using'"
     if (_rc == 0) & (!strpos(`"`options'"',"replace")) {
@@ -287,30 +287,31 @@ qui {
     noi di `"Copy of data saved at {browse "`savedta'":`savedta'}"'
   }
 
-  // Write text codebook if requested
+  // Write text codebook ONLY if requested
   if "`textonly'" != "" noisily {
+    if "`verify'" != "" di as err "The [textonly] and [verify] options cannot be combined."
+    if "`verify'" != "" err 184
     local theTextFile = subinstr(`"`using'"',".xls",".txt",.)
     local theTextFile = subinstr(`"`using'"',".xlsx",".txt",.)
       cap log close signdata
       log using "`theTextFile'" , nomsg text replace name(signdata)
       noisily : codebook, compact
       log close signdata
+    exit
   }
 
-  // Create XLSX file with all current/remaining variable names and labels
-  if "`textonly'" == "" {
+  // Otherwise, write XLSX file and VERIFY if requested
+    // Record dataset info
 
-      // Record dataset info
+      local allVariables
+      local allLabels
+      local allChoices
 
-        local allVariables
-        local allLabels
-        local allChoices
-
-        foreach var of varlist * {
-          local theVariable = "`var'"
-          local theLabel    : var label `var'
-          local theChoices  : val label `var'
-          local theType     : type `var'
+      foreach var of varlist * {
+        local theVariable = "`var'"
+        local theLabel    : var label `var'
+        local theChoices  : val label `var'
+        local theType     : type `var'
 
         local allVariables   `"`allVariables'   `theVariable'   "'
         local allLabels      `"`allLabels'      "`theLabel'"    "'
@@ -328,147 +329,148 @@ qui {
       if `r(N)' == 0 {
         set obs 1
       }
+
       tempfile theVallabs
         save `theVallabs' , replace
 
-  // Get existing codebook if VERIFY option and check variable lists
-  if "`verify'" != "" {
-  local QUITFLAG = 0
-    import excel "`using'", clear first sheet("survey")
-    levelsof name , local(oldVars) clean
-    local both : list allVariables & oldVars
-
-    // Check excess variables in data
-    local extra : list allVariables - oldVars
-    if "`extra'" != "" {
-      local QUITFLAG = 1
-      noi di as err "The following variables are in this data but not the codebook:"
-      foreach item in `extra' {
-        noi di "  `item'"
-      }
-    }
-
-    // Check excess variables in codebook
-    local missing : list oldVars - allVariables
-    if "`missing'" != "" {
-      local QUITFLAG = 1
-      noi di as err "The following variables are in the codebook but not the data:"
-      foreach item in `missing' {
-        noi di "  `item'"
-      }
-    }
-
-    // Check attributes of all overlapping variables
-    local theN : word count `allVariables'
-    forvalues i = 1/`theN' {
-      local theVariable : word `i' of `allVariables'
-      local theLabel    : word `i' of `allLabels'
-      local theChoices  : word `i' of `allChoices'
-      local theType     : word `i' of `allTypes'
-
-      // Proceed to all checks if variable is in both locations
-      if strpos("`both'"," `theVariable' ") {
-      preserve
-        keep if name == "`theVariable'"
-
-        local theOldType = type[1]
-        if "`theOldType'" != "`theType'" {
-          local QUITFLAG = 1
-          di as err "The type of {bf:`theVariable'} has changed:"
-          di as err `"  it was `theOldType' and is now `theType'."'
-        }
-        local theOldLabel = label[1]
-        if "`theOldLabel'" != "`theLabel'" {
-          local QUITFLAG = 1
-          di as err "The label of {bf:`theVariable'} has changed:"
-          di as err `"  it was `theOldLabel' and is now `theLabel'."'
-        }
-        local theOldChoices = choices[1]
-        if "`theOldChoices'" != "`theChoices'" {
-          local QUITFLAG = 1
-          di as err "The value label of {bf:`theVariable'} has changed:"
-          di as err `"  it was `theOldChoices' and is now `theChoices'."'
-        }
-      restore
-      }
-    }
-
-    // Check all value labels
-    import excel "`using'", clear first sheet("choices")
-      ren label label_old
-      merge 1:1 list_name value using `theVallabs'
-
-      qui count
-      forv i = 1/`r(N)' {
-        local list = list_name[`i']
-        local value = value[`i']
-        local oldlab = label_old[`i']
-        local lab = label[`i']
-        local merge = _merge[`i']
-
-        if `merge' == 1 {
-        local QUITFLAG = 1
-          di as err `"Choice list `list' = `value' (`oldlab') was found in the existing codebook but not the data."'
-        }
-        else if `merge' == 2 {
-        local QUITFLAG = 1
-          di as err `"Choice list `list' = `value' (`lab') was found in the data but not the existing codebook."'
-        }
-        else if `"`oldlab'"' != `"`lab'"' {
-        local QUITFLAG = 1
-          di as err `"Choice list `list' = `value' is (`oldlab') in the codebook but (`lab') in the data."'
-        }
-      }
-
-    // Throw error if any differences found
-    if `QUITFLAG' == 1 {
-      di as err ""
-      di as err "Differences were encountered between the existing data and the codebook."
-      di as err "{bf:iecodebook} will now exit."
-      error 7
-    }
-  } // end VERIFY option for variable characteristics
-
-  // Create XLSX file with all current/remaining variable names and labels
-  clear
-
-    local theN : word count `allVariables'
-
-    local templateN ""
-    if `TEMPLATE' & "`match'" == "" {
+    // Get existing codebook if VERIFY option and check variable lists
+    if "`verify'" != "" {
+    local QUITFLAG = 0
       import excel "`using'", clear first sheet("survey")
+      levelsof name , local(oldVars) clean
+      local both : list allVariables & oldVars
 
-      count
-      local templateN "+ `r(N)'"
-    }
+      // Check excess variables in data
+      local extra : list allVariables - oldVars
+      if "`extra'" != "" {
+        local QUITFLAG = 1
+        noi di as err "The following variables are in this data but not the codebook:"
+        foreach item in `extra' {
+          noi di "  `item'"
+        }
+      }
 
-    set obs `=`theN' `templateN''
+      // Check excess variables in codebook
+      local missing : list oldVars - allVariables
+      if "`missing'" != "" {
+        local QUITFLAG = 1
+        noi di as err "The following variables are in the codebook but not the data:"
+        foreach item in `missing' {
+          noi di "  `item'"
+        }
+      }
 
-    gen name`template' = ""
-      label var name`template' "name`template_colon'"
-    gen label`template' = ""
-      label var label`template' "label`template_colon'"
-    gen type`template' = ""
-      label var type`template' "type`template_colon'"
-    gen choices`template' = ""
-      label var choices`template' "choices`template_colon'"
-    if `TEMPLATE' gen recode`template' = ""
-      if `TEMPLATE' label var recode`template' "recode`template_colon'"
+      // Check attributes of all overlapping variables
+      local theN : word count `allVariables'
+      forvalues i = 1/`theN' {
+        local theVariable : word `i' of `allVariables'
+        local theLabel    : word `i' of `allLabels'
+        local theChoices  : word `i' of `allChoices'
+        local theType     : word `i' of `allTypes'
 
-    forvalues i = 1/`theN' {
-      local theVariable : word `i' of `allVariables'
-      local theLabel    : word `i' of `allLabels'
-      local theChoices  : word `i' of `allChoices'
-      local theType     : word `i' of `allTypes'
+        // Proceed to all checks if variable is in both locations
+        if strpos("`both'"," `theVariable' ") {
+        preserve
+          keep if name == "`theVariable'"
 
-      replace name`template'    = `"`theVariable'"'  in `=`i'`templateN''
-      replace label`template'   = `"`theLabel'"'     in `=`i'`templateN''
-      replace type`template'    = `"`theType'"'      in `=`i'`templateN''
-      replace choices`template' = `"`theChoices'"'   in `=`i'`templateN''
-    }
+          local theOldType = type[1]
+          if "`theOldType'" != "`theType'" {
+            local QUITFLAG = 1
+            di as err "The type of {bf:`theVariable'} has changed:"
+            di as err `"  it was `theOldType' and is now `theType'."'
+          }
+          local theOldLabel = label[1]
+          if "`theOldLabel'" != "`theLabel'" {
+            local QUITFLAG = 1
+            di as err "The label of {bf:`theVariable'} has changed:"
+            di as err `"  it was `theOldLabel' and is now `theLabel'."'
+          }
+          local theOldChoices = choices[1]
+          if "`theOldChoices'" != "`theChoices'" {
+            local QUITFLAG = 1
+            di as err "The value label of {bf:`theVariable'} has changed:"
+            di as err `"  it was `theOldChoices' and is now `theChoices'."'
+          }
+        restore
+        }
+      }
 
-    if `TEMPLATE' & "`match'" != "" {
-      tempfile newdata
+      // Check all value labels
+      import excel "`using'", clear first sheet("choices")
+        ren label label_old
+        merge 1:1 list_name value using `theVallabs'
+
+        qui count
+        forv i = 1/`r(N)' {
+          local list = list_name[`i']
+          local value = value[`i']
+          local oldlab = label_old[`i']
+          local lab = label[`i']
+          local merge = _merge[`i']
+
+          if `merge' == 1 {
+          local QUITFLAG = 1
+            di as err `"Choice list `list' = `value' (`oldlab') was found in the existing codebook but not the data."'
+          }
+          else if `merge' == 2 {
+          local QUITFLAG = 1
+            di as err `"Choice list `list' = `value' (`lab') was found in the data but not the existing codebook."'
+          }
+          else if `"`oldlab'"' != `"`lab'"' {
+          local QUITFLAG = 1
+            di as err `"Choice list `list' = `value' is (`oldlab') in the codebook but (`lab') in the data."'
+          }
+        }
+
+      // Throw error if any differences found
+      if `QUITFLAG' == 1 {
+        di as err ""
+        di as err "Differences were encountered between the existing data and the codebook."
+        di as err "{bf:iecodebook} will now exit."
+        error 7
+      }
+    } // end VERIFY option for variable characteristics
+
+    // Create XLSX file with all current/remaining variable names and labels
+    clear
+
+      local theN : word count `allVariables'
+
+      local templateN ""
+      if `TEMPLATE' & "`match'" == "" {
+        import excel "`using'", clear first sheet("survey")
+
+        count
+        local templateN "+ `r(N)'"
+      }
+
+      set obs `=`theN' `templateN''
+
+      gen name`template' = ""
+        label var name`template' "name`template_colon'"
+      gen label`template' = ""
+        label var label`template' "label`template_colon'"
+      gen type`template' = ""
+        label var type`template' "type`template_colon'"
+      gen choices`template' = ""
+        label var choices`template' "choices`template_colon'"
+      if `TEMPLATE' gen recode`template' = ""
+        if `TEMPLATE' label var recode`template' "recode`template_colon'"
+
+      forvalues i = 1/`theN' {
+        local theVariable : word `i' of `allVariables'
+        local theLabel    : word `i' of `allLabels'
+        local theChoices  : word `i' of `allChoices'
+        local theType     : word `i' of `allTypes'
+
+        replace name`template'    = `"`theVariable'"'  in `=`i'`templateN''
+        replace label`template'   = `"`theLabel'"'     in `=`i'`templateN''
+        replace type`template'    = `"`theType'"'      in `=`i'`templateN''
+        replace choices`template' = `"`theChoices'"'   in `=`i'`templateN''
+      }
+
+      if `TEMPLATE' & "`match'" != "" {
+        tempfile newdata
         save `newdata' , replace
 
         import excel "`using'", clear first sheet("survey")
@@ -478,64 +480,65 @@ qui {
           local theNames = "`r(varlist)'"
           label var name`template' "name`template_colon'"
 
-          // Allow matching for more rounds
-          local nNames : list sizeof theNames
-          if `nNames' > 2 {
-            forvalues i = 2/`nNames' {
-              replace name`template' = `: word `i' of `theNames'' if name`template' == ""
-            }
+        // Allow matching for more rounds
+        local nNames : list sizeof theNames
+        if `nNames' > 2 {
+          forvalues i = 2/`nNames' {
+            replace name`template' = `: word `i' of `theNames'' if name`template' == ""
           }
+        }
 
-          tempvar order
-          gen `order' = _n
+        tempvar order
+        gen `order' = _n
 
         merge m:1 name`template' using `newdata' , nogen
         replace name`template' = "" if type`template' == ""
 
-          sort `order'
-          drop `order'
+        sort `order'
+        drop `order'
       }
 
       // Export variable information to "survey" sheet
-      cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
-      local rc = _rc
-      forvalues i = 1/10 {
-        if `rc' != 0 {
-          sleep `i'000
-          cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
+      if "`verify'" == "" {
+        cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
+        local rc = _rc
+        forvalues i = 1/10 {
+          if `rc' != 0 {
+            sleep `i'000
+            cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
+            local rc = _rc
+          }
+        }
+        if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by file syncing the file or having the file open."
+        if `rc' != 0 di as err "If the file is not currently open, consider turning file syncing off or using a non-synced location. You may need to delete the file and try again."
+        if `rc' != 0 error 603
+
+        // Export value labels to "choices" sheet
+        use `theVallabs' , clear
+          cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
           local rc = _rc
+          forvalues i = 1/10 {
+            if `rc' != 0 {
+              sleep `i'000
+              cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
+              local rc = _rc
+            }
+          }
+          if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
+          if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
+          if `rc' != 0 error 603
+
+        // Reload original data
+        use "`allData'" , clear
+
+        // Success message
+        if `c(N)' > 1 & "`tempfile'" == "" {
+          noi di `"Codebook for data created using {browse "`using'":`using'}
         }
       }
-
-    if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by file syncing the file or having the file open."
-    if `rc' != 0 di as err "If the file is not currently open, consider turning file syncing off or using a non-synced location. You may need to delete the file and try again."
-    if `rc' != 0 error 603
-
-    // Create value labels sheet
-
-    // Export value labels to "choices" sheet
-    use `theVallabs' , clear
-    cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
-    local rc = _rc
-    forvalues i = 1/10 {
-      if `rc' != 0 {
-        sleep `i'000
-        cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
-        local rc = _rc
+      else {
+        noi di "Existing codebook and data structure verified to match."
       }
-      if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
-      if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
-      if `rc' != 0 error 603
-
-  // Reload original data
-  use "`allData'" , clear
-  // Success message
-
-  if `c(N)' > 1 & "`tempfile'" == "" {
-    noi di `"Codebook for data created using {browse "`using'":`using'}
-  }
-  } // End textonly flag
-
 } // end qui
 
 end
