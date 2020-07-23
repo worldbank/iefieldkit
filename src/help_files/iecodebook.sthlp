@@ -80,7 +80,7 @@ and optionally reduces the dataset to only the variables used in a set of specif
 
 {p 2 4}{cmdab:iecodebook export} ["/path/to/data"] {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
-{p 2 4}, [{bf:replace}] [{opt copy:data}] [{bf:verify}] [{opt text:only}] {break}
+{p 2 4}, [{bf:replace}] [{opt save}] [{bf:verify}] [{opt text:only}] {break}
     [{opt sign:ature}] [{opt reset}] {break}
     [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
 
@@ -146,7 +146,7 @@ For example, appending a same-named string variable to a numeric variable may ca
 {synoptline}
 {synopt:{opt replace}}This option allows {cmdab:iecodebook export} to overwrite an existing codebook or dataset.{p_end}
 {break}
-{synopt:{opt copy:data}}This option requests that a copy of the data be placed at the same location as the codebook,
+{synopt:{opt save}}This option requests that a the data be saved at the same location as the codebook,
 with the same name as the codebook.{p_end}
 {break}
 {synopt:{opt verify}}This option orders {cmdab:iecodebook export} to confirm that the current data precisely matches an existing codebook.
@@ -157,7 +157,7 @@ A new codebook will not be written in this case.{p_end}
 This cannot be combined with {bf:verify}.{p_end}
 {break}
 {synopt:{opt sign:ature}}This option requests that a {help datasignature} be verified
-in the same destination folder as the codebook and/or data copy are placed,
+in the same destination folder as the codebook and/or data are saved,
 and will return an error if a datasignature file is not found or is different,
 guaranteeing data has not changed since the last {bf:reset} of the signature.{p_end}
 {break}

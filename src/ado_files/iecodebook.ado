@@ -153,7 +153,7 @@ cap program drop iecodebook_export
   program    iecodebook_export
 
   syntax [anything] [using/]  ///
-    , [replace] [COPYdata] [trim(string asis)]     /// User-specified options
+    , [replace] [save] [trim(string asis)]     /// User-specified options
       [SIGNature] [reset] [TEXTonly] [verify]      /// Signature and verify options
       [match] [template(string asis)] [tempfile]    // Programming options
 
@@ -276,7 +276,7 @@ qui {
   }
 
   // Save data copy if requested
-  if "`copydata'" != "" {
+  if "`save'" != "" {
     save "`savedta'" , `replace'
     noi di `"Copy of data saved at {browse "`savedta'":`savedta'}"'
   }
