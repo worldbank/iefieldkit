@@ -319,6 +319,14 @@ qui {
 
     // Get all value labels for export
     uselabel _all, clear
+      // Handle if no labels in dataset
+      if c(k) == 0 {
+        gen trunc = ""
+        gen lname = ""
+        gen value = ""
+        gen label = ""
+      }
+
       ren lname list_name
       drop trunc
       tostring value , replace
