@@ -152,7 +152,7 @@ end
 cap program drop iecodebook_export
   program    iecodebook_export
 
-  syntax [anything] [using/] [if] [in]  ///
+  syntax [anything] [using/]  ///
     , [replace] [COPYdata] [trim(string asis)]     /// User-specified options
       [SIGNature] [reset] [TEXTonly] [verify]      /// Signature and verify options
       [match] [template(string asis)] [tempfile]    // Programming options
@@ -179,10 +179,6 @@ qui {
   // Store current data and apply if/in via [marksample]
   tempfile allData
     save `allData' , emptyok replace
-
-    marksample touse
-    keep if `touse'
-     drop `touse'
 
   // Option to [trim] variable set to variables specified in selected dofiles
   if `"`trim'"' != `""' {
@@ -546,6 +542,7 @@ qui {
       else {
         noi di "Existing codebook and data structure verified to match."
       }
+  use `allData' , clear
 } // end qui
 
 end
