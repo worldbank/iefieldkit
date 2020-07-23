@@ -384,6 +384,7 @@ qui {
             di as err `"  it was `theOldLabel' and is now `theLabel'."'
           }
           local theOldChoices = choices[1]
+          if "`theOldChoices'" == "." local theOldChoices ""
           if "`theOldChoices'" != "`theChoices'" {
             local QUITFLAG = 1
             di as err "The value label of {bf:`theVariable'} has changed:"
