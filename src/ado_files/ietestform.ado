@@ -7,7 +7,7 @@ qui {
 
 	version 13
 
-	//preserve
+	preserve
 
 	syntax [using/] ,  Reportsave(string) [Surveyform(string) STATAlanguage(string) date replace]
 
@@ -179,7 +179,7 @@ qui {
 	*Write the file to disk
 	noi report_file write, report_tempfile("`report_tempfile'") filepath("`reportsave'") `replace'
 
-	//restore
+	restore
 
 }
 end
