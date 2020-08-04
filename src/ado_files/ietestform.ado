@@ -226,6 +226,7 @@ capture program drop importchoicesheet
 qui {
 
 	syntax , form(string) [statalanguage(string) report_tempfile(string)]
+	
 
 	/***********************************************
 		Load choices sheet from form
@@ -234,6 +235,21 @@ qui {
 	*Import the choices sheet
 	import excel "`form'", sheet("choices") clear first
 
+	*Test that the choices sheet exists 
+	
+	if _rc == 601 {
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error occurs when your form is missing either the survey or the choices sheet. If the file {p_end}"
+		error 601
+	}
+	if _rc == 603 {
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an earlier version of Excel.{p_end}"
+		error 603
+	}
+	else if _rc != 0 {
+		*Run the command without cap and display error message for any other error
+		import excel "`form'", sheet("settings") clear first
+	}
+	
 
 	/***********************************************
 		Get info from columns/variables and
@@ -536,13 +552,24 @@ qui {
 	tempvar countmissing
 
 	/***********************************************
-		Load choices sheet from file and
+		Load survey sheet from file and
 		delete empty row
 	***********************************************/
 
 	*Import the choices sheet
 	import excel "`form'", sheet("survey") clear first
 
+	*Test that the survey sheet exists 
+	
+	if _rc == 601 {
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error occurs when your form is missing either the survey or the choices sheet. If the file {p_end}"
+		error 601
+	}
+	if _rc == 603 {
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an earlier version of Excel.{p_end}"
+		error 603
+	}
+	
 	*Gen row number that corresponds to the row number in the excel file
 	gen row = _n + 1 //Plus 1 as column name is the first row in the Excel file
 	order row
