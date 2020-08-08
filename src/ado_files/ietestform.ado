@@ -31,7 +31,7 @@ qui {
 	local surveyform `"`using'`surveyform'"'
 
 
-	* Test for form file is xls or xsls
+	* Test for form file is xls or xlsx
 	local surveyformtype = substr(`"`surveyform'"',strlen(`"`surveyform'"')-strpos(strreverse(`"`surveyform'"'),".")+1,.)
 	if !(`"`surveyformtype'"' == ".xls" | `"`surveyformtype'"' == ".xlsx") {
 		noi di as error `"{phang}The survey form file [`surveyform'] must have file extension .xls or .xlsx specified in the option.{p_end}"'
@@ -103,18 +103,17 @@ qui {
 	***********************************************/
 
 	*Get meta data on the form from the form setting sheet
-	importsettingsheet, form("`surveyform'")
+	noi importsettingsheet, form("`surveyform'") report_tempfile("`report_tempfile'")
 
 	*Load returned values in locals
 	local meta_v		= "`r(version)'"
     local meta_id		= "`r(form_id)'"
     local meta_title	= "`r(form_title)'"
 
-	*Setup the report tempfile where all results from all tests will be written
-	noi report_file setup , report_tempfile("`report_tempfile'") ///
-		metav("`meta_v'") metaid("`meta_id'") metatitle("`meta_title'") metafile("`surveyform'")
 
-
+	
+	
+	
 	/***********************************************
 		Test the choice sheet independently
 	***********************************************/
@@ -190,7 +189,12 @@ capture program drop importsettingsheet
 
 qui {
 
-	syntax , form(string)
+		syntax , form(string) report_tempfile(string)
+		
+		*Setup the report tempfile where all results from all tests will be written
+	report_file setup , report_tempfile("`report_tempfile'") ///
+		metav("`meta_v'") metaid("`meta_id'") metatitle("`meta_title'") metafile("`surveyform'")
+
 
 	*Import the settings sheet - This is the first time the file is imported so add one layer of custom test
 	cap import excel "`form'", sheet("settings") clear first
@@ -210,11 +214,32 @@ qui {
 		confirm variable form_title form_id version
 	}
 
+	*converting to string
+	tostring public_key, replace
+	
 	*Return the settings in return locals
 	return local form_title = form_title[1]
 	return local form_id 	= form_id[1]
 	return local version 	= version[1]
+	*return local public_key = public_key[1]
+	local public_key = public_key[1]
+	/***********************************************
+		TEST - Encryption key not included/errors
+	***********************************************/
 
+	
+	*Missing public key
+	*local public_key = "`r(public_key)''"
+
+	cap assert !missing(`public_key')
+	noi di "cap assert !missing(`public_key')"
+	if _rc {
+	    local error_msg "The survey form is not encrypted. It is best practice to encrypt your survey form as it adds a layer of security."
+
+			noi report_file add , report_tempfile("`report_tempfile'") testname("ENCRYPTION MISSING") message("`error_msg'") wikifragment("Encryption")
+	}
+	
+	
 }
 end
 
@@ -247,7 +272,7 @@ qui {
 	}
 	else if _rc != 0 {
 		*Run the command without cap and display error message for any other error
-		import excel "`form'", sheet("settings") clear first
+		import excel "`form'", sheet("choices") clear first
 	}
 	
 
@@ -286,7 +311,7 @@ qui {
 	*After the row number has been created to be identical to form file, then drop empty rows
 	drop if countmissing == 0
 
-	*Get a list with all the list names
+	*Get a list with all the 	list names
 	levelsof `listnamevar', clean local("all_list_names")
 
 	*Create a list of the variables with labels (multiple in case of multiple languages)
