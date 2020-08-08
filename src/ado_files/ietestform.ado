@@ -105,15 +105,6 @@ qui {
 	*Get meta data on the form from the form setting sheet
 	noi importsettingsheet, form("`surveyform'") report_tempfile("`report_tempfile'")
 
-	*Load returned values in locals
-	local meta_v		= "`r(version)'"
-    local meta_id		= "`r(form_id)'"
-    local meta_title	= "`r(form_title)'"
-
-
-	
-	
-	
 	/***********************************************
 		Test the choice sheet independently
 	***********************************************/
@@ -190,10 +181,13 @@ capture program drop importsettingsheet
 qui {
 
 		syntax , form(string) report_tempfile(string)
-		
+
 		*Setup the report tempfile where all results from all tests will be written
-	report_file setup , report_tempfile("`report_tempfile'") ///
-		metav("`meta_v'") metaid("`meta_id'") metatitle("`meta_title'") metafile("`surveyform'")
+	  report_file setup , report_tempfile("`report_tempfile'") ///
+				metav("`meta_v'") ///
+				metaid("`meta_id'") ///
+				metatitle("`meta_title'") ///
+				metafile("`surveyform'")
 
 
 	*Import the settings sheet - This is the first time the file is imported so add one layer of custom test
@@ -214,22 +208,14 @@ qui {
 		confirm variable form_title form_id version
 	}
 
-	*converting to string
-	tostring public_key, replace
-	
-	*Return the settings in return locals
-	return local form_title = form_title[1]
-	return local form_id 	= form_id[1]
-	return local version 	= version[1]
-	*return local public_key = public_key[1]
-	local public_key = public_key[1]
+
 	/***********************************************
 		TEST - Encryption key not included/errors
 	***********************************************/
 
-	
-	*Missing public key
-	*local public_key = "`r(public_key)''"
+	*converting to string
+	tostring public_key, replace
+	local public_key = public_key[1]
 
 	cap assert !missing(`public_key')
 	noi di "cap assert !missing(`public_key')"
@@ -237,9 +223,9 @@ qui {
 	    local error_msg "The survey form is not encrypted. It is best practice to encrypt your survey form as it adds a layer of security."
 
 			noi report_file add , report_tempfile("`report_tempfile'") testname("ENCRYPTION MISSING") message("`error_msg'") wikifragment("Encryption")
+			noi di `"noi report_file add , report_tempfile("`report_tempfile'") testname("ENCRYPTION MISSING") message("`error_msg'") wikifragment("Encryption")"'
 	}
-	
-	
+
 }
 end
 
@@ -251,7 +237,7 @@ capture program drop importchoicesheet
 qui {
 
 	syntax , form(string) [statalanguage(string) report_tempfile(string)]
-	
+
 
 	/***********************************************
 		Load choices sheet from form
@@ -260,8 +246,8 @@ qui {
 	*Import the choices sheet
 	import excel "`form'", sheet("choices") clear first
 
-	*Test that the choices sheet exists 
-	
+	*Test that the choices sheet exists
+
 	if _rc == 601 {
 		noi di as error  "{phang}The file [`form'] cannot be opened. This error occurs when your form is missing either the survey or the choices sheet. If the file {p_end}"
 		error 601
@@ -274,7 +260,7 @@ qui {
 		*Run the command without cap and display error message for any other error
 		import excel "`form'", sheet("choices") clear first
 	}
-	
+
 
 	/***********************************************
 		Get info from columns/variables and
@@ -584,8 +570,8 @@ qui {
 	*Import the choices sheet
 	import excel "`form'", sheet("survey") clear first
 
-	*Test that the survey sheet exists 
-	
+	*Test that the survey sheet exists
+
 	if _rc == 601 {
 		noi di as error  "{phang}The file [`form'] cannot be opened. This error occurs when your form is missing either the survey or the choices sheet. If the file {p_end}"
 		error 601
@@ -594,7 +580,7 @@ qui {
 		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an earlier version of Excel.{p_end}"
 		error 603
 	}
-	
+
 	*Gen row number that corresponds to the row number in the excel file
 	gen row = _n + 1 //Plus 1 as column name is the first row in the Excel file
 	order row
