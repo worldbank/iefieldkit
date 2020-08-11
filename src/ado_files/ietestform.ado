@@ -245,52 +245,8 @@ qui {
 			message("`error_msg'") ///
 			wikifragment("Encryption")
 		
-		/*
-	* TESTING - TO REMOVE BEFORE ONCE THE COMMAND RUNS WELL
-		noi di `"noi report_file add , report_tempfile("`report_tempfile'") testname("ENCRYPTION MISSING") message("`error_msg'") wikifragment("Encryption")"'
-		*/	
 	}
 	
-	else {
-	    
-		
-		* Testing if there are leading or trailing spaces 
-		
-		cap assert ("`public_key'" == trim("`public_key'"))
-		if _rc {	
-			 local error_msg "The encryption key has leading or trailing spaces. The encryption key pair will not work if the public key has extra characters."
-		
-			noi report_file add , ///
-				report_tempfile("`report_tempfile'") ///
-				testname("ENCRYPTION KEY ERROR") ///
-				message("`error_msg'") ///
-				wikifragment("Encryption")
-		* TESTING - TO REMOVE BEFORE ONCE THE COMMAND RUNS WELL
-		noi di `"noi report_file add , report_tempfile("`report_tempfile'") testname("ENCRYPTION MISSING") message("`error_msg'") wikifragment("Encryption")"'
-		}	
-		
-		/*
-		else {
-
-		    * Testing if the public key is of the required length
-			replace `public_key' = trim(public_key)
-			cap assert   strlen(`public_key') == 392 
-			* TEST (TO REMOVE)
-			noi display strlen(`public_key')
-			
-			if _rc {
-				 local error_msg "The encryption key is not of the correct length. The encryption key pair will not work if the public key is not the exact length of 392 characters."
-			
-				noi report_file add , ///
-					report_tempfile("`report_tempfile'") ///
-					testname("ENCRYPTION KEY ERROR") ///
-					message("`error_msg'") ///
-					wikifragment("Encryption")
-			}
-			
-		}
-	*/		
-	}
 
 }
 end
