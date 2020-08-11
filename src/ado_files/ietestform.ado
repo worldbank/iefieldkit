@@ -105,10 +105,7 @@ qui {
 	*Get meta data on the form from the form setting sheet
 	noi importsettingsheet, form("`surveyform'") report_tempfile("`report_tempfile'")
 	
-	*Load returned values in locals
-	local meta_v		= "`r(version)'"
-    local meta_id		= "`r(form_id)'"
-    local meta_title	= "`r(form_title)'"
+
 
 	/***********************************************
 		Test the choice sheet independently
@@ -186,15 +183,8 @@ capture program drop importsettingsheet
 qui {
 
 		syntax , form(string) report_tempfile(string)
-
-		*Setup the report tempfile where all results from all tests will be written
-	  report_file setup , ///
-				report_tempfile("`report_tempfile'") ///
-				metav("`meta_v'") ///
-				metaid("`meta_id'") ///
-				metatitle("`meta_title'") ///
-				metafile("`surveyform'")
-
+		
+	
 	*Import the settings sheet - This is the first time the file is imported so add one layer of custom test
 	cap import excel "`form'", sheet("settings") clear first
 	if _rc == 603 {
@@ -213,10 +203,28 @@ qui {
 		confirm variable form_title form_id version
 	}
 
-	*Return the settings in return locals
-	return local form_title = form_title[1]
-	return local form_id 	= form_id[1]
-	return local version 	= version[1]
+
+	
+	/***********************************************
+		Write header for report
+	***********************************************/
+	
+	*Get meta data from settings sheet
+	local form_title = form_title[1]
+	local form_id 	= form_id[1]
+	local version 	= version[1]
+	
+
+	*Setup the report tempfile where all results from all tests will be written
+	  report_file setup , ///
+				report_tempfile("`report_tempfile'") ///
+				metav("`version'") ///
+				metaid("`form_id'") ///
+				metatitle("`form_title'") ///
+				metafile("`form'")
+				
+
+	
 
 	/***********************************************
 		TEST - Encryption key not included/errors
@@ -226,14 +234,14 @@ qui {
 	tostring public_key, replace
 	local public_key = public_key[1]
 
-	assert !missing(`public_key')
-	
+	cap assert !missing("`public_key'")
+	pause
 	if _rc {
 	    local error_msg "The survey form is not encrypted. It is best practice to encrypt your survey form as it adds a layer of security."
 	
 		noi report_file add , ///
 			report_tempfile("`report_tempfile'") ///
-			testname("ENCRYPTION MISSING") ///
+			testname("ENCRYPTION KEY MISSING") ///
 			message("`error_msg'") ///
 			wikifragment("Encryption")
 		
@@ -243,14 +251,13 @@ qui {
 		*/	
 	}
 	
-	if _rc == 0 {
+	else {
 	    
 		
 		* Testing if there are leading or trailing spaces 
-		gen trim_`public_key' = (`public_key'!= trim(`public_key'))
-		noi di ("trim_`public_key'")
-		cap assert trim_`public_key' == 0
-		if _rc{	
+		
+		cap assert ("`public_key'" == trim("`public_key'"))
+		if _rc {	
 			 local error_msg "The encryption key has leading or trailing spaces. The encryption key pair will not work if the public key has extra characters."
 		
 			noi report_file add , ///
@@ -262,7 +269,8 @@ qui {
 		noi di `"noi report_file add , report_tempfile("`report_tempfile'") testname("ENCRYPTION MISSING") message("`error_msg'") wikifragment("Encryption")"'
 		}	
 		
-		if _rc == 0 {
+		/*
+		else {
 
 		    * Testing if the public key is of the required length
 			replace `public_key' = trim(public_key)
@@ -281,7 +289,7 @@ qui {
 			}
 			
 		}
-			
+	*/		
 	}
 
 }
