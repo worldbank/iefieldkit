@@ -235,7 +235,7 @@ qui {
 	local public_key = public_key[1]
 
 	cap assert !missing("`public_key'")
-	pause
+	
 	if _rc {
 	    local error_msg "The survey form is not encrypted. It is best practice to encrypt your survey form as it adds a layer of security."
 	
@@ -630,7 +630,7 @@ qui {
 	local name_vars 		"name"
 	local cmd_vars  		"type required appearance" // Include as needed eventually. "readonly"
 	local msg_vars  		"`labelvars'"
-	local code_vars 		"" // Include as needed eventually. " constraint  relevance  calculation repeat_count choice_filter"
+	local code_vars 		" constraint  relevance  calculation repeat_count choice_filter"
 
 	local surveysheetvars_required "`name_vars' `cmd_vars' `msg_vars' `code_vars'"
 
@@ -670,6 +670,15 @@ qui {
 		replace `var' = "" if `var' == "."
 	}
 
+	*make code vars strings that sometimes are not used and then loaded as numeric
+	foreach var of local code_vars  {
+
+		tostring `var', replace
+		replace `var' = lower(itrim(trim(`var')))
+		replace `var' = "" if `var' == "."
+	}
+	
+	
 	/***********************************************
 		Test that variables that mustn't contain special
 		charcters, like UTF-8 chars, do not contain them
@@ -722,6 +731,44 @@ qui {
 	*If any cases were found, then write link to close this section
 	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Leading_and_Trailing_Spaces")
 
+	
+	
+	/***********************************************
+		TEST - List names with outdated syntax
+	***********************************************/
+	pause
+	*The type and name variables should not be written with leading or trailing spaces
+	local outdatedsyntaxvars relevance constraint calculation repeat_count choice_filter
+
+	*Keep track if any cases are found
+	local cases_found 0
+
+	foreach outdatedsyntaxvar of local outdatedsyntaxvars {
+		*Test that the list name does not have outdated syntax
+		gen out_`outdatedsyntaxvar' = 1 if regexm(`outdatedsyntaxvar', "position|jr:choice-name")
+		replace out_`outdatedsyntaxvar' = 0 if missing(out_`outdatedsyntaxvar')
+		*Add item to report for any row with missing label in the label vars
+		count if out_`outdatedsyntaxvar' != 0
+		if `r(N)' > 0 {
+
+			*Write header if this is the first case found
+			if `cases_found' == 0 noi report_title , report_tempfile("`report_tempfile'") testname("OUTDATED SYNTAX")
+
+			*Prepare message and write it
+			local error_msg "The values in [`outdatedsyntaxvar'] column is using outdated syntax. It is recommended to update the syntax to the new syntax. These fields were found to have outdated syntax:"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `outdatedsyntaxvar' if out_`outdatedsyntaxvar' != 0")
+
+			*Indicate that a case have been found
+			local cases_found 1
+		}
+
+	}
+
+	pause 
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Outdated_Syntax")
+	
+	
 	/***********************************************
 		TEST - Type column
 		Test for not matching begin/end group/repeat
