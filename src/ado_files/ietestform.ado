@@ -736,7 +736,6 @@ qui {
 	/***********************************************
 		TEST - List names with outdated syntax
 	***********************************************/
-	pause
 	*The type and name variables should not be written with leading or trailing spaces
 	local outdatedsyntaxvars relevance constraint calculation repeat_count choice_filter
 
