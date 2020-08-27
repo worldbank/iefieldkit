@@ -763,7 +763,6 @@ qui {
 
 	}
 
-	pause 
 	*If any cases were found, then write link to close this section
 	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Outdated_Syntax")
 	
