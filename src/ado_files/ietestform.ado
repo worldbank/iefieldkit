@@ -266,7 +266,7 @@ qui {
 	***********************************************/
 
 	*Import the choices sheet
-	import excel "`form'", sheet("choices") clear first
+	cap import excel "`form'", sheet("choices") clear first
 
 	*Test that the choices sheet exists
 
