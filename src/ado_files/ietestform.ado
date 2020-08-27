@@ -365,7 +365,7 @@ qui {
 		gen trim_`nospacevar' = (`nospacevar' != trim(`nospacevar'))
 
 		*Add item to report for any row with missing label in the label vars
-		count if trim_`nospacevar' != 0
+		count if trim_`nospacevar' == 1
 		if `r(N)' > 0 {
 
 			*Write header if this is the first case found
@@ -373,7 +373,7 @@ qui {
 
 			*Prepare message and write it
 			local error_msg "The string values in [`nospacevar'] column in the choice sheet are imported as strings and has leading or trailing spaces in the Excel file in the following cases:"
-			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `nospacevar' if trim_`nospacevar' != 0")
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `nospacevar' if trim_`nospacevar' == 1")
 
 			*Indicate that a case have been found
 			local cases_found 1
@@ -710,7 +710,7 @@ qui {
 		gen trim_`nospacevar' = (`nospacevar' != trim(`nospacevar'))
 
 		*Add item to report for any row with missing label in the label vars
-		count if trim_`nospacevar' != 0
+		count if trim_`nospacevar' == 1
 		if `r(N)' > 0 {
 
 			*Write header if this is the first case found
@@ -718,7 +718,7 @@ qui {
 
 			*Prepare message and write it
 			local error_msg "The string values in [`nospacevar'] column in the survey sheet are imported as strings and has leading or trailing spaces in the Excel file"
-			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `nospacevar' if trim_`nospacevar' != 0")
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `nospacevar' if trim_`nospacevar' == 1")
 
 			*Indicate that a case have been found
 			local cases_found 1
@@ -736,26 +736,26 @@ qui {
 	/***********************************************
 		TEST - List names with outdated syntax
 	***********************************************/
-	*The type and name variables should not be written with leading or trailing spaces
+	*The type and name variables should not be using outdated syntax
 	local outdatedsyntaxvars relevance constraint calculation repeat_count choice_filter
 
 	*Keep track if any cases are found
 	local cases_found 0
 
-	foreach outdatedsyntaxvar of local outdatedsyntaxvars {
+	foreach od_var of local outdatedsyntaxvars {
 		*Test that the list name does not have outdated syntax
-		gen out_`outdatedsyntaxvar' = 1 if regexm(`outdatedsyntaxvar', "position|jr:choice-name")
-		replace out_`outdatedsyntaxvar' = 0 if missing(out_`outdatedsyntaxvar')
+		gen out_`od_var' = 1 if regexm(`od_var', "position|jr:choice-name")
+		replace out_`od_var' = 0 if missing(out_`od_var')
 		*Add item to report for any row with missing label in the label vars
-		count if out_`outdatedsyntaxvar' != 0
+		count if out_`od_var' != 0
 		if `r(N)' > 0 {
 
 			*Write header if this is the first case found
 			if `cases_found' == 0 noi report_title , report_tempfile("`report_tempfile'") testname("OUTDATED SYNTAX")
 
 			*Prepare message and write it
-			local error_msg "The values in [`outdatedsyntaxvar'] column is using outdated syntax. It is recommended to update the syntax to the new syntax. See wiki page linked to below. These fields were found to have outdated syntax:"
-			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `outdatedsyntaxvar' if out_`outdatedsyntaxvar' != 0")
+			local error_msg "The values in [`od_var'] column is using outdated syntax. It is recommended to update the syntax to the new syntax. See wiki page linked to below. These fields were found to have outdated syntax:"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `od_var' if out_`od_var' == 1")
 
 			*Indicate that a case have been found
 			local cases_found 1
