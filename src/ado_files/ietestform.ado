@@ -274,7 +274,7 @@ qui {
 		noi di as error  "{phang}The file [`form'] cannot be opened. This error occurs when your form is missing either the survey or the choices sheet. If the file {p_end}"
 		error 601
 	}
-	if _rc == 603 {
+	else if _rc == 603 {
 		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an earlier version of Excel.{p_end}"
 		error 603
 	}
