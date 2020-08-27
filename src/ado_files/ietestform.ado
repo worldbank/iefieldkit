@@ -754,7 +754,7 @@ qui {
 			if `cases_found' == 0 noi report_title , report_tempfile("`report_tempfile'") testname("OUTDATED SYNTAX")
 
 			*Prepare message and write it
-			local error_msg "The values in [`outdatedsyntaxvar'] column is using outdated syntax. It is recommended to update the syntax to the new syntax. These fields were found to have outdated syntax:"
+			local error_msg "The values in [`outdatedsyntaxvar'] column is using outdated syntax. It is recommended to update the syntax to the new syntax. See wiki page linked to below. These fields were found to have outdated syntax:"
 			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `outdatedsyntaxvar' if out_`outdatedsyntaxvar' != 0")
 
 			*Indicate that a case have been found
