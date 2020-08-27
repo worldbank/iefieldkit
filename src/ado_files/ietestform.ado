@@ -590,7 +590,7 @@ qui {
 	***********************************************/
 
 	*Import the choices sheet
-	import excel "`form'", sheet("survey") clear first
+	cap import excel "`form'", sheet("survey") clear first
 
 	*Test that the survey sheet exists
 
