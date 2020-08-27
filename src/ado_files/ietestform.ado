@@ -319,7 +319,7 @@ qui {
 	*After the row number has been created to be identical to form file, then drop empty rows
 	drop if countmissing == 0
 
-	*Get a list with all the 	list names
+	*Get a list with all the list names
 	levelsof `listnamevar', clean local("all_list_names")
 
 	*Create a list of the variables with labels (multiple in case of multiple languages)
