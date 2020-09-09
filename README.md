@@ -1,5 +1,6 @@
 # **iefieldkit - Stata Commands for Primary Data Collection**
 
+[Pre-print of Stata Journal article](https://github.com/worldbank/iefieldkit/blob/master/iefieldkit.pdf)
 
 ## **Installation**
 
