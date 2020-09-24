@@ -559,7 +559,8 @@
 				*Add list of variables that are different between the two duplicated id value in excel report in 'listofdiffs' variable
 				levelsof `idvar', local(list_dup_ids)
 				foreach id of local list_dup_ids {
-				
+					
+					*reset list of differing vars between each loop
 					local difflist ""
 
 					*Count differently if string or numeric var
