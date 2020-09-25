@@ -24,6 +24,10 @@ qui {
 	global codebook		"${AnalyticsDB}/Data Coordinator/iefieldkit/iecodebook"
 	global testouput	"${iefieldkit}/run/output"
 	
+	** Test if output folder exists, if not create it
+	mata : st_numscalar("r(dirExist)", direxists("${testouput}"))
+	if `r(dirExist)' == 0  mkdir "${testouput}"
+	
 	* Select commands to test
 	local ieduplicates	0
 	local iecompdup		0
