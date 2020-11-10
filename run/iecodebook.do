@@ -168,5 +168,53 @@
 	iecodebook export using "${codebook}/auto_export_trim.xlsx", ///			// not running
 							replace ///
 							trim("${iefieldkit}/run/iecodebook_trim1.do")
+	*/
+	
+	* Signature option
+	cap iecodebook export using "${codebook}/auto_export.xlsx", replace signature
+	assert _rc == 601
+	
+	* textonly option
+	iecodebook export using "${codebook}/auto_export.xlsx", txt(detailed) 	replace txtonly
+	iecodebook export using "${codebook}/auto_export.xlsx", txt(compact) 	replace
+	iecodebook export using "${codebook}/auto_export.xlsx", txt(detailed) 	replace
+cap iecodebook export using "${codebook}/auto_export.xlsx", txt(dalk) 		replace
+	assert _rc == 198
+	
+	* Verify option
+	iecodebook export using "${codebook}/auto_export.xlsx", replace verify
+	iecodebook export using "${codebook}/auto_export.xlsx", verify
+	
+	preserve
+	
+		drop mpg
+		iecodebook export using "${codebook}/auto_export.xlsx", verify
+		
+	restore
+	
+	iecodebook export using "${codebook}/auto_export.xlsx", txt(detailed) replace verify
+	
+	* Use option
+	sysuse auto, clear
+	tempfile auto
+	save 	`auto'
+	
+	clear
+	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace
+	
+	clear
+	iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", replace
+	
+	clear
+	cap iecodebook export "auto" using "${codebook}/auto_export.xlsx", replace
+	assert _rc == 601
+	
+	* Save option
+	iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", replace save
+	
+	cap erase "${codebook}/auto_export.xlsx"
+	cap iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", save
+	assert _rc == 602
+	
 	
 	
