@@ -154,7 +154,7 @@ cap program drop iecodebook_export
 
   syntax [anything] [using/]  ///
     , [replace] [save] [trim(string asis)]     /// User-specified options
-      [SIGNature] [reset] [TEXTonly] [verify]      /// Signature and verify options
+      [SIGNature] [reset] [txt(string)] [txtonly] [verify]      /// Signature and verify options
       [match] [template(string asis)] [tempfile]    // Programming options
 
 qui {
@@ -281,18 +281,45 @@ qui {
     noi di `"Copy of data saved at {browse "`savedta'":`savedta'}"'
   }
 
+	if !missing("`verify'") & !missing("`txtonly'") { 
+		di as err "The [txt] and [verify] options cannot be combined."
+		err 184
+	}
+	
   // Write text codebook ONLY if requested
-  if "`textonly'" != "" noisily {
-    if "`verify'" != "" di as err "The [textonly] and [verify] options cannot be combined."
-    if "`verify'" != "" err 184
-    local theTextFile = subinstr(`"`using'"',".xls",".txt",.)
-    local theTextFile = subinstr(`"`using'"',".xlsx",".txt",.)
-      cap log close signdata
-      log using "`theTextFile'" , nomsg text replace name(signdata)
-      noisily : codebook, compact
-      log close signdata
-    exit
+  if !missing("`txt'"){
+
+	noisily {
+
+		if "`txt'" == "compact" { 
+			local compact 	 , compact
+		}
+		else if "`txt'" == "detailed" {
+		}
+		else {
+			di as err "Option txt was incorrectly specified. Please select one of the following formats: [compact] or [detailed]."
+			err 198
+		}
+		
+		local theTextFile = subinstr(`"`using'"',".xls",".txt",.)
+		local theTextFile = subinstr(`"`using'"',".xlsx",".txt",.)	
+				
+		local old_linesize `c(linesize)'
+		set linesize 75
+		
+		cap log close signdata
+			log using "`theTextFile'" , nomsg text `replace' name(signdata)
+			noisily : codebook `compact'
+		log close signdata
+		
+		set linesize `old_linesize'
+		noi di `"Codebook in txt created using {browse "`theTextFile'":`theTextFile'}
+		
+		if !missing("`txtonly'") exit
+	}
   }
+ 
+
 
   // Otherwise, write XLSX file and VERIFY if requested
     // Record dataset info
