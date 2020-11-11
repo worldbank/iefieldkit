@@ -196,6 +196,15 @@ qui {
 
     // Stack up all the lines of code from all the dofiles in a dataset
     foreach dofile in `trim' {
+      
+      // Check for dofile
+      if (`"`=substr(`"`trim'"',-3,.)'"' != ".do") {
+        di as err "The specified file does not include a .do extension." ///
+          "Make sure it is a Stata .do-file and you include the file extension."
+        error 610
+      }
+      
+      // Load dofile contents as data
       import delimited "`dofile'" , clear varnames(nonames)
 
       unab allv : *
