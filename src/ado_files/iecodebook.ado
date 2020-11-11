@@ -56,7 +56,7 @@ cap program drop iecodebook
     local using  "`using'.xlsx"
   }
   // Throw an error if user input uses any extension other than the allowed
-  else if !inlist("`r_fileextension'",".xlsx",".xls") & !regexm("`options'","tempfile") {
+  else if !inlist("`r_fileextension'",".xlsx",".xls") & !regexm(`"`options'"',"tempfile") {
     di as error "The codebook may only have the file extension [.xslx] or [.xls]. The format [`r_fileextension'] is not allowed."
     error 601
   }
