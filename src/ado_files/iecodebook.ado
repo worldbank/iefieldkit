@@ -154,7 +154,7 @@ cap program drop iecodebook_export
 
   syntax [anything] [using/]  ///
     , [replace] [save] [trim(string asis)]     /// User-specified options
-      [SIGNature] [reset] [TEXTonly] [verify]      /// Signature and verify options
+      [SIGNature] [reset] [PLAINtext(string)] [noexcel] [verify]      /// Signature and verify options
       [match] [template(string asis)] [tempfile]    // Programming options
 
 qui {
@@ -281,18 +281,51 @@ qui {
     noi di `"Copy of data saved at {browse "`savedta'":`savedta'}"'
   }
 
+	if !missing("`verify'") & !missing("`excel'") { 
+		di as err "The [noexcel] and [verify] options cannot be combined."
+		err 184
+	}
+	
   // Write text codebook ONLY if requested
-  if "`textonly'" != "" noisily {
-    if "`verify'" != "" di as err "The [textonly] and [verify] options cannot be combined."
-    if "`verify'" != "" err 184
-    local theTextFile = subinstr(`"`using'"',".xls",".txt",.)
-    local theTextFile = subinstr(`"`using'"',".xlsx",".txt",.)
-      cap log close signdata
-      log using "`theTextFile'" , nomsg text replace name(signdata)
-      noisily : codebook, compact
-      log close signdata
-    exit
+  if !missing("`plaintext'") {
+
+	noisily {
+
+		if "`plaintext'" == "compact" { 
+			local compact 	 , compact
+		}
+		else if "`plaintext'" == "detailed" {
+		}
+		else {
+			di as err "Option [plaintext] was incorrectly specified. Please select one of the following formats: [compact] or [detailed]."
+			err 198
+		}
+		
+		local theTextFile = subinstr(`"`using'"',".xls",".txt",.)
+		local theTextFile = subinstr(`"`using'"',".xlsx",".txt",.)	
+				
+		local old_linesize `c(linesize)'
+		set linesize 75
+		
+		cap log close signdata
+			log using "`theTextFile'" , nomsg text `replace' name(signdata)
+			noisily : codebook `compact'
+		log close signdata
+		
+		set linesize `old_linesize'
+		noi di `"Codebook in plaintext created using {browse "`theTextFile'":`theTextFile'}
+		
+		if !missing("`excel'") exit
+	}
   }
+  else {
+	if !missing("`excel'") {
+		noi di as err "Option [noexcel] can only be used in combination with option [plaintext()]."
+		noi error 198
+	}
+  }
+ 
+
 
   // Otherwise, write XLSX file and VERIFY if requested
     // Record dataset info
