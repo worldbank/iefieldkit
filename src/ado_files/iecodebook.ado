@@ -138,6 +138,10 @@ prog def iecodebook_signdata
   cap datasignature confirm  using "`using'" , strict
     // If not found OR altered and no reset
     if ("`reset'" == "") {
+      if _rc == 601 {
+        di as err "There is no datasignature created yet." ///
+          " Specify the [reset] option to initialize one."
+      }
       datasignature confirm using "`using'" , strict
     }
     // If altered OR missing
