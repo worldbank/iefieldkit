@@ -154,7 +154,7 @@ cap program drop iecodebook_export
 
   syntax [anything] [using/]  ///
     , [replace] [save] [trim(string asis)]     /// User-specified options
-      [SIGNature] [reset] [txt(string)] [txtonly] [verify]      /// Signature and verify options
+      [SIGNature] [reset] [PLAINtext(string)] [noexcel] [verify]      /// Signature and verify options
       [match] [template(string asis)] [tempfile]    // Programming options
 
 qui {
@@ -281,23 +281,23 @@ qui {
     noi di `"Copy of data saved at {browse "`savedta'":`savedta'}"'
   }
 
-	if !missing("`verify'") & !missing("`txtonly'") { 
-		di as err "The [txtonly] and [verify] options cannot be combined."
+	if !missing("`verify'") & !missing("`excel'") { 
+		di as err "The [noexcel] and [verify] options cannot be combined."
 		err 184
 	}
 	
   // Write text codebook ONLY if requested
-  if !missing("`txt'") {
+  if !missing("`plaintext'") {
 
 	noisily {
 
-		if "`txt'" == "compact" { 
+		if "`plaintext'" == "compact" { 
 			local compact 	 , compact
 		}
-		else if "`txt'" == "detailed" {
+		else if "`plaintext'" == "detailed" {
 		}
 		else {
-			di as err "Option txt was incorrectly specified. Please select one of the following formats: [compact] or [detailed]."
+			di as err "Option [plaintext] was incorrectly specified. Please select one of the following formats: [compact] or [detailed]."
 			err 198
 		}
 		
@@ -313,14 +313,14 @@ qui {
 		log close signdata
 		
 		set linesize `old_linesize'
-		noi di `"Codebook in txt created using {browse "`theTextFile'":`theTextFile'}
+		noi di `"Codebook in plaintext created using {browse "`theTextFile'":`theTextFile'}
 		
-		if !missing("`txtonly'") exit
+		if !missing("`excel'") exit
 	}
   }
   else {
-	if !missing("`txtonly'") {
-		noi di as err "Option [txtonly] can only be used in combination with option [txt()]."
+	if !missing("`excel'") {
+		noi di as err "Option [noexcel] can only be used in combination with option [plaintext()]."
 		noi error 198
 	}
   }

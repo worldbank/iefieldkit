@@ -154,12 +154,12 @@ with the same name as the codebook.{p_end}
 It will break with an error and describe all changes if there are any differences between the two.
 A new codebook will not be written in this case.{p_end}
 {break}
-{synopt:{opt txt({it:compact} | {it:detailed})}}This option requests that the codebook be created as a plaintext file.
+{synopt:{opt plain:text({it:compact} | {it:detailed})}}This option requests that the codebook be created as a plaintext file.
 This file contains the default output of {help codebook} if argument {it:detailed}} is used, 
 and the compact output of {help codebook} if argument {it:compact} is used.
 Only one of the arguments can be used}.{p_end}
-{synopt:{opt txt:only}}This option requests that the codebook be created as a plaintext file.
-It can only be used alongside option {opt txt()} and cannot be combined with {bf:verify}.{p_end}
+{synopt:{opt noexcel}}This option requests that the codebook be created as a plaintext file.
+It can only be used alongside option {opt plain:text()} and cannot be combined with {bf:verify}.{p_end}
 {break}
 {synopt:{opt sign:ature}}This option requests that a {help datasignature} be verified
 in the same destination folder as the codebook and/or data are saved,
