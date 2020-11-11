@@ -166,6 +166,10 @@ qui {
   // Return a warning if there are lots of variables
   if `c(k)' >= 1000 noi di "This dataset has `c(k)' variables. This may take a long time! Consider subsetting your variables first."
 
+  // Store current data
+  tempfile allData
+    save `allData' , emptyok replace
+      
   // Template Setup
     // Load dataset if argument
     if `"`anything'"' != "" {
@@ -179,10 +183,6 @@ qui {
       local TEMPLATE = 1                  // flag for template functions
     }
     else local TEMPLATE = 0
-
-  // Store current data and apply if/in via [marksample]
-  tempfile allData
-    save `allData' , emptyok replace
 
   // Option to [trim] variable set to variables specified in selected dofiles
   if `"`trim'"' != `""' {
