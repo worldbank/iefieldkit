@@ -159,11 +159,11 @@
 	* Replace option
 	iecodebook export using "${codebook}/auto_export.xlsx", replace
 	
-	/* Trim option : not working yet
+	* Trim option : not working yet
 	iecodebook export using "${codebook}/auto_export.xlsx", ///
 							replace ///
-							trim("${iefieldkit}/run/iecodebook_trim1" ///		// file C:\Users\wb501238\Documents\GitHub/iefieldkit/run/iecodebook_trim1.csv not found
-								 "${iefieldkit}/run/iecodebook_trim2")
+							trim("${iefieldkit}\run\iecodebook_trim1.do" ///
+								 "${iefieldkit}\run\iecodebook_trim2.do")
 	
 	iecodebook export using "${codebook}/auto_export_trim.xlsx", ///			// not running
 							replace ///
@@ -176,6 +176,8 @@
 	
 	* textonly option
 	iecodebook export using "${codebook}/auto_export.xlsx", txt(detailed) 	replace txtonly
+cap iecodebook export using "${codebook}/auto_export.xlsx", 				replace txtonly	
+	assert _rc == 198
 	iecodebook export using "${codebook}/auto_export.xlsx", txt(compact) 	replace
 	iecodebook export using "${codebook}/auto_export.xlsx", txt(detailed) 	replace
 cap iecodebook export using "${codebook}/auto_export.xlsx", txt(dalk) 		replace
@@ -188,11 +190,27 @@ cap iecodebook export using "${codebook}/auto_export.xlsx", txt(dalk) 		replace
 	preserve
 	
 		drop mpg
-		iecodebook export using "${codebook}/auto_export.xlsx", verify
+		cap iecodebook export using "${codebook}/auto_export.xlsx", verify
+		assert _rc == 7
 		
 	restore
 	
-	iecodebook export using "${codebook}/auto_export.xlsx", txt(detailed) replace verify
+	preserve
+	
+		drop mpg
+		cap iecodebook export using "${codebook}/auto_export.xlsx", verify replace
+		assert _rc == 7
+			
+	restore
+	
+	preserve
+	
+		label drop origin
+		cap iecodebook export using "${codebook}/auto_export.xlsx", verify replace
+		assert _rc == 7
+		
+	restore
+	
 	
 	* Use option
 	sysuse auto, clear
@@ -216,5 +234,9 @@ cap iecodebook export using "${codebook}/auto_export.xlsx", txt(dalk) 		replace
 	cap iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", save
 	assert _rc == 602
 	
+	* Special characters
+	lab var make 	"É"
+	lab def origin  0 "ã & @", replace
+	iecodebook export using "${codebook}/auto_export.xlsx", replace
 	
 	

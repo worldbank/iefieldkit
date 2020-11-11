@@ -15,8 +15,8 @@ qui {
 *******************************************************************************/
 
 	* Set root paths
-	global GitHub		"C:\Users\wb501238\Documents\GitHub"
-	global AnalyticsDB	"C:\Users\wb501238\Dropbox\WB\Analytics\DIME Analytics"
+	global GitHub		"C:/Users/wb501238/Documents/GitHub"
+	global AnalyticsDB	"C:/Users/wb501238/Dropbox/WB/Analytics/DIME Analytics"
 
 	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
