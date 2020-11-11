@@ -150,6 +150,9 @@ For example, appending a same-named string variable to a numeric variable may ca
 {synopt:{opt save}}This option requests that a the data be saved at the same location as the codebook,
 with the same name as the codebook.{p_end}
 {break}
+{synopt:{opt saveas()}}This option requests that a the data be saved at the specified location,
+overwriting the codebook name.{p_end}
+{break}
 {synopt:{opt verify}}This option orders {cmdab:iecodebook export} to confirm that the current data precisely matches an existing codebook.
 It will break with an error and describe all changes if there are any differences between the two.
 A new codebook will not be written in this case.{p_end}

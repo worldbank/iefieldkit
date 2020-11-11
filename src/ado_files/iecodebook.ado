@@ -157,7 +157,7 @@ cap program drop iecodebook_export
   program    iecodebook_export
 
   syntax [anything] [using/]  ///
-    , [replace] [save] [trim(string asis)]     /// User-specified options
+    , [replace] [save] [saveas(string asis)] [trim(string asis)]     /// User-specified options
       [SIGNature] [reset] [PLAINtext(string)] [noexcel] [verify]      /// Signature and verify options
       [match] [template(string asis)] [tempfile]    // Programming options
 
@@ -284,14 +284,17 @@ qui {
 
   // Check signature if requested
   if "`signature'" != "" {
-    noisily : iecodebook_signdata using "`signloc'" , `reset'
-    noi di `"Data signature can be found at at {browse "`signloc'":`signloc'}"'
+    noisily : iecodebook_signdata using `"`signloc'"' , `reset'
+    noi di `"Data signature can be found at at {browse `"`signloc'"':`signloc'}"'
   }
 
   // Save data copy if requested
   if "`save'" != "" {
-    save "`savedta'" , `replace'
-    noi di `"Copy of data saved at {browse "`savedta'":`savedta'}"'
+    if `"`saveas'"' != "" {
+      local savedta = `saveas'
+    }
+    save `savedta' , `replace'
+    noi di `"Copy of data saved at {browse `"`savedta'"':`savedta'}"'
   }
 
 	if !missing("`verify'") & !missing("`excel'") { 
