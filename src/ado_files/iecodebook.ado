@@ -282,12 +282,12 @@ qui {
   }
 
 	if !missing("`verify'") & !missing("`txtonly'") { 
-		di as err "The [txt] and [verify] options cannot be combined."
+		di as err "The [txtonly] and [verify] options cannot be combined."
 		err 184
 	}
 	
   // Write text codebook ONLY if requested
-  if !missing("`txt'"){
+  if !missing("`txt'") {
 
 	noisily {
 
@@ -316,6 +316,12 @@ qui {
 		noi di `"Codebook in txt created using {browse "`theTextFile'":`theTextFile'}
 		
 		if !missing("`txtonly'") exit
+	}
+  }
+  else {
+	if !missing("`txtonly'") {
+		noi di as err "Option [txtonly] can only be used in combination with option [txt()]."
+		noi error 198
 	}
   }
  
