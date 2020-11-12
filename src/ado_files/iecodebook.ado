@@ -583,7 +583,21 @@ qui {
         use `theVallabs' , clear
           cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
           local rc = _rc
-          forvalues i = 1/10 {
+          if `rc' == 9901 {
+            di as err "There are invalid labels in your data. Correct the following:"
+            tempfile test
+            forv i = 1/`c(N)' {
+              preserve
+              keep in `i'
+              local faultLab  = label[1]
+              local faultName = lname[1]
+              
+              cap export excel label using `test'  , replace
+                if _rc != 0 di as err `"  `faultName' {tab} [`faultLab']"'
+              restore
+            }
+          } 
+          else forvalues i = 1/10 {
             if `rc' != 0 {
               sleep `i'000
               cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
