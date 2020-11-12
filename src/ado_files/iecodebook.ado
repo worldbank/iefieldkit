@@ -555,7 +555,7 @@ qui {
         cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
         local rc = _rc
         if `rc' == 9901 {
-          di as err "There are invalid labels in your data. Correct the following:"
+          di as err "There are invalid variable labels in your data. Correct the following:"
           tempfile test
           forv i = 1/`c(N)' {
             preserve
@@ -584,7 +584,7 @@ qui {
           cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
           local rc = _rc
           if `rc' == 9901 {
-            di as err "There are invalid labels in your data. Correct the following:"
+            di as err "There are invalid value labels in your data. Correct the following:"
             tempfile test
             forv i = 1/`c(N)' {
               preserve
