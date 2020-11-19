@@ -115,7 +115,8 @@ qui {
 
 	*Get all choice lists actaually used
 	local all_list_names 	`r(all_list_names)'
-
+	* Convert to lower case
+	local l_all_list_names = lower(`all_list_names')
 	*Names used in choice sheet, used if outputting unused choice lists
 	local choice_listnamevar		`r(listnamevar)'
 	local choice_valuevar			`r(valuevar)'
@@ -133,7 +134,8 @@ qui {
 
 	*Get all choice lists actaually used
 	local all_lists_used `r(all_lists_used)'
-
+	* Convert to lowercase
+	local l_all_lists_used=lower(`all_lists_used')
 	/***********************************************
 		Tests based on info from multiple sheets
 	***********************************************/
@@ -143,7 +145,7 @@ qui {
 		Test that all lists in the choice sheet were
 		actually used in the survey sheet
 	***********************************************/
-	local unused_lists : list all_list_names - all_lists_used
+	local unused_lists : list l_all_list_names - l_all_lists_used
 	if "`unused_lists'" != "" {
 
 		*Reload the data to be able to show the unsused lists
@@ -318,7 +320,7 @@ qui {
 
 	*After the row number has been created to be identical to form file, then drop empty rows
 	drop if countmissing == 0
-
+	
 	*Get a list with all the list names
 	levelsof `listnamevar', clean local("all_list_names")
 
