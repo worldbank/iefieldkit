@@ -104,7 +104,7 @@ qui {
 
 	*Get meta data on the form from the form setting sheet
 	noi importsettingsheet, form("`surveyform'") report_tempfile("`report_tempfile'")
-	
+
 
 
 	/***********************************************
@@ -185,8 +185,8 @@ capture program drop importsettingsheet
 qui {
 
 		syntax , form(string) report_tempfile(string)
-		
-	
+
+
 	*Import the settings sheet - This is the first time the file is imported so add one layer of custom test
 	cap import excel "`form'", sheet("settings") clear first
 	if _rc == 603 {
@@ -206,16 +206,16 @@ qui {
 	}
 
 
-	
+
 	/***********************************************
 		Write header for report
 	***********************************************/
-	
+
 	*Get meta data from settings sheet
 	local form_title = form_title[1]
 	local form_id 	= form_id[1]
 	local version 	= version[1]
-	
+
 
 	*Setup the report tempfile where all results from all tests will be written
 	  report_file setup , ///
@@ -224,9 +224,9 @@ qui {
 				metaid("`form_id'") ///
 				metatitle("`form_title'") ///
 				metafile("`form'")
-				
 
-	
+
+
 
 	/***********************************************
 		TEST - Encryption key not included/errors
@@ -237,18 +237,18 @@ qui {
 	local public_key = public_key[1]
 
 	cap assert !missing("`public_key'")
-	
+
 	if _rc {
 	    local error_msg "The survey form is not encrypted. It is best practice to encrypt your survey form as it adds a layer of security."
-	
+
 		noi report_file add , ///
 			report_tempfile("`report_tempfile'") ///
 			testname("ENCRYPTION KEY MISSING") ///
 			message("`error_msg'") ///
 			wikifragment("Encryption")
-		
+
 	}
-	
+
 
 }
 end
@@ -320,7 +320,7 @@ qui {
 
 	*After the row number has been created to be identical to form file, then drop empty rows
 	drop if countmissing == 0
-	
+
 	*Get a list with all the list names
 	levelsof `listnamevar', clean local("all_list_names")
 
@@ -679,8 +679,8 @@ qui {
 		replace `var' = lower(itrim(trim(`var')))
 		replace `var' = "" if `var' == "."
 	}
-	
-	
+
+
 	/***********************************************
 		Test that variables that mustn't contain special
 		charcters, like UTF-8 chars, do not contain them
@@ -733,8 +733,8 @@ qui {
 	*If any cases were found, then write link to close this section
 	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Leading_and_Trailing_Spaces")
 
-	
-	
+
+
 	/***********************************************
 		TEST - List names with outdated syntax
 	***********************************************/
@@ -767,8 +767,8 @@ qui {
 
 	*If any cases were found, then write link to close this section
 	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Outdated_Syntax")
-	
-	
+
+
 	/***********************************************
 		TEST - Type column
 		Test for not matching begin/end group/repeat
