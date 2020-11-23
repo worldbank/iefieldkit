@@ -116,7 +116,7 @@ qui {
 	*Get all choice lists actaually used
 	local all_list_names 	`r(all_list_names)'
 	* Convert to lower case
-	local l_all_list_names = lower(`all_list_names')
+	local l_all_list_names = lower("`all_list_names'")
 	*Names used in choice sheet, used if outputting unused choice lists
 	local choice_listnamevar		`r(listnamevar)'
 	local choice_valuevar			`r(valuevar)'
@@ -135,7 +135,7 @@ qui {
 	*Get all choice lists actaually used
 	local all_lists_used `r(all_lists_used)'
 	* Convert to lowercase
-	local l_all_lists_used=lower(`all_lists_used')
+	local l_all_lists_used=lower("`all_lists_used'")
 	/***********************************************
 		Tests based on info from multiple sheets
 	***********************************************/
