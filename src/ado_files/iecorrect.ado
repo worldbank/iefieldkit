@@ -63,16 +63,14 @@ cap program drop iecorrect
 			}	
 		}
 		
-		/*test that variables exist in the original data set
-		*check that the variables have the same format in the original data set
-		
-		 Test if variables exist
-			foreach varType in strvar catvar numvar idvar {
-				foreach var of local `varType'List {
+		* Test if variables exist
+			foreach type in strvar catvar numvar idvar {
+				foreach var of local `type'vars {
 					cap confirm variable `var'
 					if _rc {
 						if "`generate'" != "" {
-							gen `var' = .
+							if "`type'" == "string" 	local genstring 	"`genstring' `var'"
+							else						local gennumeric	"`gennumeric' `var'"
 						}
 						else {
 							noi di as error "There is no variable called `var'. To create this variable, use the generate option."
@@ -81,7 +79,6 @@ cap program drop iecorrect
 					}
 				}
 			}
-		*/
 		
 		* Test type of idvar
 		cap confirm string variable `idvar'
@@ -103,6 +100,21 @@ cap program drop iecorrect
 		if "`save'" != "" {
 			doheader , doname("`doname'") dofile("`dofile'")
 		}
+		
+		* Create new variables
+		if !missing("`genstring'") | !missing("`gennumeric'") {
+			cap	file close 	`doname'
+				file open  	`doname' using 	"`dofile'", text write append
+				
+				forech var of local genstring {
+			cap	file write  `doname'		`"cap gen `var' = """' _n _n														// <---- Writing in do file here
+				}
+				forech var of local gennumeric {
+			cap	file write  `doname'		`"cap gen `var' = ."' _n _n														// <---- Writing in do file here
+				}
+				file close  `doname'	
+		}
+		
 		* Write the corrections into the do file
 		foreach type of local corrSheets {
 
