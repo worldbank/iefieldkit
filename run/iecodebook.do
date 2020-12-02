@@ -170,9 +170,27 @@
 							trim("${iefieldkit}/run/iecodebook_trim1.do")
 	*/
 	
-	* Signature option
+* Signature option -------------------------------------------------------------
+
+	* Should not work if there's no file and [reset] was not specified
+	cap erase  "${codebook}/auto_export-sig.txt"
 	cap iecodebook export using "${codebook}/auto_export.xlsx", replace signature
 	assert _rc == 601
+	
+	* Create it 
+	iecodebook export using "${codebook}/auto_export.xlsx", replace signature reset
+	
+	* Compare when no changes
+	iecodebook export using "${codebook}/auto_export.xlsx", replace signature
+	
+	* Compare when changes
+	preserve
+		
+		drop in 1
+		cap iecodebook export using "${codebook}/auto_export.xlsx", replace signature
+		assert _rc == 9
+		
+	restore
 	
 	* textonly option
 	iecodebook export using "${codebook}/auto_export.xlsx", txt(detailed) 	replace txtonly
