@@ -198,7 +198,7 @@ qui {
     foreach dofile in `trim' {
       
       // Check for dofile
-      if (`"`=substr(`"`trim'"',-3,.)'"' != ".do") {
+      if (`"`=substr("`dofile'",-3,.)'"' != ".do") {
         di as err "The specified file does not include a .do extension." ///
           "Make sure it is a Stata .do-file and you include the file extension."
         error 610

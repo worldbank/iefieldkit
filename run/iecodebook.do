@@ -157,10 +157,15 @@
 	iecodebook export using "${codebook}/auto_export.xlsx"						// Not sure how to test content
 	
 	* Replace option
+* Replace option ---------------------------------------------------------------
+
 	iecodebook export using "${codebook}/auto_export.xlsx", replace
 	
 	* Trim option : not working yet
 	iecodebook export using "${codebook}/auto_export.xlsx", ///
+* Trim option ------------------------------------------------------------------
+
+	iecodebook export using "${codebook}\auto_export_trim.xlsx", ///
 							replace ///
 							trim("${iefieldkit}\run\iecodebook_trim1.do" ///
 								 "${iefieldkit}\run\iecodebook_trim2.do")
@@ -168,7 +173,7 @@
 	iecodebook export using "${codebook}/auto_export_trim.xlsx", ///			// not running
 							replace ///
 							trim("${iefieldkit}/run/iecodebook_trim1.do")
-	*/
+
 	
 * Signature option -------------------------------------------------------------
 
@@ -192,7 +197,8 @@
 		
 	restore
 	
-	* textonly option
+* Textonly option --------------------------------------------------------------
+
 	iecodebook export using "${codebook}/auto_export.xlsx", txt(detailed) 	replace txtonly
 cap iecodebook export using "${codebook}/auto_export.xlsx", 				replace txtonly	
 	assert _rc == 198
@@ -201,7 +207,8 @@ cap iecodebook export using "${codebook}/auto_export.xlsx", 				replace txtonly
 cap iecodebook export using "${codebook}/auto_export.xlsx", txt(dalk) 		replace
 	assert _rc == 198
 	
-	* Verify option
+* Verify option ----------------------------------------------------------------
+
 	iecodebook export using "${codebook}/auto_export.xlsx", replace verify
 	iecodebook export using "${codebook}/auto_export.xlsx", verify
 	
@@ -229,8 +236,8 @@ cap iecodebook export using "${codebook}/auto_export.xlsx", txt(dalk) 		replace
 		
 	restore
 	
-	
-	* Use option
+* Use option -------------------------------------------------------------------
+
 	sysuse auto, clear
 	tempfile auto
 	save 	`auto'
@@ -254,15 +261,10 @@ cap iecodebook export using "${codebook}/auto_export.xlsx", txt(dalk) 		replace
 	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace save
 	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace saveas("auto")
 	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace saveas("${codebook}/auto")
-	
-	
-	
+		
 	cap erase "${codebook}/auto_export.xlsx"
 	cap iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", save
 	assert _rc == 602
-	
-	iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", replace saveas("auto_export")
-	iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", replace saveas("auto_export2.dta")
 	
 * Special characters -----------------------------------------------------------
 
@@ -270,4 +272,4 @@ cap iecodebook export using "${codebook}/auto_export.xlsx", txt(dalk) 		replace
 	lab def origin  0 "ã & @", replace
 	iecodebook export using "${codebook}/auto_export.xlsx", replace
 	
-	
+***************************************************************** End of do-file
