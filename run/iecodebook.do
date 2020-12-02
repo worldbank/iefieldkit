@@ -131,10 +131,28 @@
 ------------------------------------------------------------------------------*/
 	
 	* Simple run
+	tempfile auto1
+	save `auto1'
 	
+	sysuse auto
+	rename make model
+	tempfile auto2
+	
+	* Simple run
+	cap erase "${codebook}/template_apply1.xlsx"
+	iecodebook template `auto1' `auto2'  using "${codebook}/template_apply1.xlsx", ///
 	* Run with replace
+	iecodebook template `auto1' `auto2'  using "${codebook}/template_apply3.xlsx", ///
+		surveys(one two) replace
 	
 	* Match
+	iecodebook template `auto1' `auto2'  using "${codebook}/template_apply2.xlsx", ///
+		surveys(one two) replace match
+		
+	* Gen
+	iecodebook template `auto1' `auto2'  using "${codebook}/template_apply4.xlsx", ///
+		surveys(one two) replace gen(oi)
+
 		
 /*------------------------------------------------------------------------------
 	Append subcommand
@@ -149,20 +167,17 @@
 	* keepall
 
 /*******************************************************************************
-	Export final code book
+	Export final codebook
 *******************************************************************************/
 
 	sysuse auto, clear
 	cap erase "${codebook}/auto_export.xlsx"
 	iecodebook export using "${codebook}/auto_export.xlsx"						// Not sure how to test content
 	
-	* Replace option
 * Replace option ---------------------------------------------------------------
 
 	iecodebook export using "${codebook}/auto_export.xlsx", replace
 	
-	* Trim option : not working yet
-	iecodebook export using "${codebook}/auto_export.xlsx", ///
 * Trim option ------------------------------------------------------------------
 
 	iecodebook export using "${codebook}\auto_export_trim.xlsx", ///
@@ -199,12 +214,12 @@
 	
 * Textonly option --------------------------------------------------------------
 
-	iecodebook export using "${codebook}/auto_export.xlsx", txt(detailed) 	replace txtonly
-cap iecodebook export using "${codebook}/auto_export.xlsx", 				replace txtonly	
+	iecodebook export using "${codebook}/auto_export.xlsx", plain(detailed) replace noexcel
+cap iecodebook export using "${codebook}/auto_export.xlsx", 				replace noexcel	
 	assert _rc == 198
-	iecodebook export using "${codebook}/auto_export.xlsx", txt(compact) 	replace
-	iecodebook export using "${codebook}/auto_export.xlsx", txt(detailed) 	replace
-cap iecodebook export using "${codebook}/auto_export.xlsx", txt(dalk) 		replace
+	iecodebook export using "${codebook}/auto_export.xlsx", plain(compact) 	replace
+	iecodebook export using "${codebook}/auto_export.xlsx", plain(detailed) replace
+cap iecodebook export using "${codebook}/auto_export.xlsx", plain(dalk) 	replace
 	assert _rc == 198
 	
 * Verify option ----------------------------------------------------------------
