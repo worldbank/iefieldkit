@@ -130,17 +130,20 @@
 	Template subcommand
 ------------------------------------------------------------------------------*/
 	
-	* Simple run
+	sysuse auto
 	tempfile auto1
 	save `auto1'
 	
 	sysuse auto
 	rename make model
 	tempfile auto2
+	save `auto2'
 	
 	* Simple run
 	cap erase "${codebook}/template_apply1.xlsx"
 	iecodebook template `auto1' `auto2'  using "${codebook}/template_apply1.xlsx", ///
+		surveys(one two)
+
 	* Run with replace
 	iecodebook template `auto1' `auto2'  using "${codebook}/template_apply3.xlsx", ///
 		surveys(one two) replace
