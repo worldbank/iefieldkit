@@ -289,11 +289,10 @@ qui {
   }
 
   // Save data copy if requested
-  if "`save'" != "" {
-    if `"`saveas'"' != "" {
-      local savedta = `saveas'
-    }
-    save `savedta' , `replace'
+  if ("`save'" != "") | (`"`saveas'"' != "") {
+	if `"`saveas'"' != ""  local savedta = `saveas'
+  
+    save "`savedta'", `replace'
     noi di `"Copy of data saved at {browse `"`savedta'"':`savedta'}"'
   }
 

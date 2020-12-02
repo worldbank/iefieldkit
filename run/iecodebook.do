@@ -245,14 +245,27 @@ cap iecodebook export using "${codebook}/auto_export.xlsx", txt(dalk) 		replace
 	cap iecodebook export "auto" using "${codebook}/auto_export.xlsx", replace
 	assert _rc == 601
 	
-	* Save option
-	iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", replace save
+* Save option ------------------------------------------------------------------
+
+	sysuse auto, clear
+	tempfile auto
+	save 	`auto'
+	
+	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace save
+	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace saveas("auto")
+	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace saveas("${codebook}/auto")
+	
+	
 	
 	cap erase "${codebook}/auto_export.xlsx"
 	cap iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", save
 	assert _rc == 602
 	
-	* Special characters
+	iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", replace saveas("auto_export")
+	iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", replace saveas("auto_export2.dta")
+	
+* Special characters -----------------------------------------------------------
+
 	lab var make 	"É"
 	lab def origin  0 "ã & @", replace
 	iecodebook export using "${codebook}/auto_export.xlsx", replace
