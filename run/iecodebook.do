@@ -130,11 +130,32 @@
 	Template subcommand
 ------------------------------------------------------------------------------*/
 	
-	* Simple run
+	sysuse auto
+	tempfile auto1
+	save `auto1'
 	
+	sysuse auto
+	rename make model
+	tempfile auto2
+	save `auto2'
+	
+	* Simple run
+	cap erase "${codebook}/template_apply1.xlsx"
+	iecodebook template `auto1' `auto2'  using "${codebook}/template_apply1.xlsx", ///
+		surveys(one two)
+
 	* Run with replace
+	iecodebook template `auto1' `auto2'  using "${codebook}/template_apply3.xlsx", ///
+		surveys(one two) replace
 	
 	* Match
+	iecodebook template `auto1' `auto2'  using "${codebook}/template_apply2.xlsx", ///
+		surveys(one two) replace match
+		
+	* Gen
+	iecodebook template `auto1' `auto2'  using "${codebook}/template_apply4.xlsx", ///
+		surveys(one two) replace gen(oi)
+
 		
 /*------------------------------------------------------------------------------
 	Append subcommand
@@ -149,24 +170,124 @@
 	* keepall
 
 /*******************************************************************************
-	Export final code book
+	Export final codebook
 *******************************************************************************/
 
 	sysuse auto, clear
 	cap erase "${codebook}/auto_export.xlsx"
 	iecodebook export using "${codebook}/auto_export.xlsx"						// Not sure how to test content
 	
-	* Replace option
+* Replace option ---------------------------------------------------------------
+
 	iecodebook export using "${codebook}/auto_export.xlsx", replace
 	
-	/* Trim option : not working yet
-	iecodebook export using "${codebook}/auto_export.xlsx", ///
+* Trim option ------------------------------------------------------------------
+
+	iecodebook export using "${codebook}\auto_export_trim.xlsx", ///
 							replace ///
-							trim("${iefieldkit}/run/iecodebook_trim1" ///		// file C:\Users\wb501238\Documents\GitHub/iefieldkit/run/iecodebook_trim1.csv not found
-								 "${iefieldkit}/run/iecodebook_trim2")
+							trim("${iefieldkit}\run\iecodebook_trim1.do" ///
+								 "${iefieldkit}\run\iecodebook_trim2.do")
 	
 	iecodebook export using "${codebook}/auto_export_trim.xlsx", ///			// not running
 							replace ///
 							trim("${iefieldkit}/run/iecodebook_trim1.do")
+
 	
+* Signature option -------------------------------------------------------------
+
+	* Should not work if there's no file and [reset] was not specified
+	cap erase  "${codebook}/auto_export-sig.txt"
+	cap iecodebook export using "${codebook}/auto_export.xlsx", replace signature
+	assert _rc == 601
 	
+	* Create it 
+	iecodebook export using "${codebook}/auto_export.xlsx", replace signature reset
+	
+	* Compare when no changes
+	iecodebook export using "${codebook}/auto_export.xlsx", replace signature
+	
+	* Compare when changes
+	preserve
+		
+		drop in 1
+		cap iecodebook export using "${codebook}/auto_export.xlsx", replace signature
+		assert _rc == 9
+		
+	restore
+	
+* Textonly option --------------------------------------------------------------
+
+	iecodebook export using "${codebook}/auto_export.xlsx", plain(detailed) replace noexcel
+cap iecodebook export using "${codebook}/auto_export.xlsx", 				replace noexcel	
+	assert _rc == 198
+	iecodebook export using "${codebook}/auto_export.xlsx", plain(compact) 	replace
+	iecodebook export using "${codebook}/auto_export.xlsx", plain(detailed) replace
+cap iecodebook export using "${codebook}/auto_export.xlsx", plain(dalk) 	replace
+	assert _rc == 198
+	
+* Verify option ----------------------------------------------------------------
+
+	iecodebook export using "${codebook}/auto_export.xlsx", replace verify
+	iecodebook export using "${codebook}/auto_export.xlsx", verify
+	
+	preserve
+	
+		drop mpg
+		cap iecodebook export using "${codebook}/auto_export.xlsx", verify
+		assert _rc == 7
+		
+	restore
+	
+	preserve
+	
+		drop mpg
+		cap iecodebook export using "${codebook}/auto_export.xlsx", verify replace
+		assert _rc == 7
+			
+	restore
+	
+	preserve
+	
+		label drop origin
+		cap iecodebook export using "${codebook}/auto_export.xlsx", verify replace
+		assert _rc == 7
+		
+	restore
+	
+* Use option -------------------------------------------------------------------
+
+	sysuse auto, clear
+	tempfile auto
+	save 	`auto'
+	
+	clear
+	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace
+	
+	clear
+	iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", replace
+	
+	clear
+	cap iecodebook export "auto" using "${codebook}/auto_export.xlsx", replace
+	assert _rc == 601
+	
+* Save option ------------------------------------------------------------------
+
+	sysuse auto, clear
+	tempfile auto
+	save 	`auto'
+	
+	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace save
+	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace saveas("auto")
+	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace saveas("${codebook}/auto")
+		
+	cap erase "${codebook}/auto_export.xlsx"
+	cap iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", save
+	assert _rc == 602
+	
+* Special characters -----------------------------------------------------------
+
+	lab var make 	"É"
+	lab def origin  0 "ã & @", replace
+	iecodebook export using "${codebook}/auto_export.xlsx", replace
+	
+***************************************************************** End of do-file
