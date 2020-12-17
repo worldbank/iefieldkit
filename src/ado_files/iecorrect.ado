@@ -121,7 +121,7 @@ cap program drop iecorrect
 
 // If the do file will be saved for later reference, add a header --------------
 		if "`save'" != "" {
-			doheader , doname("`doname'") dofile("`dofile'")
+			qui doheader , doname("`doname'") dofile("`dofile'")
 		}
 // Write new variables to be created -------------------------------------------
 
@@ -171,15 +171,12 @@ cap program drop iecorrect
 /*******************************************************************************	
 	Save the do file containing the corrections if "save" was selected
 *******************************************************************************/
-
 		if "`save'" != "" {
 			
 			* Check that folder exists
 			qui copy "`dofile'" `"`save'"', `replace'
-			
 			noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} {p_end}"'
 		}					
-
 /*******************************************************************************	
 	Run the do file containing the corrections
 *******************************************************************************/
@@ -535,7 +532,7 @@ cap program drop doheader
 	program 	 doheader
 	
 	syntax , doname(string) dofile(string)
-	
+		
 		cap	file close 	`doname'
 			file open  	`doname' using 	"`dofile'", text write replace
 			file write  `doname'		"* Write header here" _n _n					// <---- Writing in do file here
