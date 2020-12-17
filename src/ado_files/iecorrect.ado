@@ -13,7 +13,7 @@ cap program drop iecorrect
 
 	preserve
 	
-	noi di as result "{phang} {p_end}"
+	noi di _n
 	
 /*==============================================================================
 								PROCESS OPTIONS
@@ -48,8 +48,7 @@ cap program drop iecorrect
 		}
 		
 		// Create the template -----------------------------------------------------
-		noi di "line 45"
-			templateworkbook using "`using'"
+		templateworkbook using "`using'"
 			
 		if !missing("`debug'") noi di "Exiting template subcommand"
 	}																			// End of template subcommand
@@ -69,8 +68,12 @@ cap program drop iecorrect
 		tempfile 	 data
 		qui save	`data'
 	
-		* Check that folder exists
+// Crete a list of variables in the data ---------------------------------------
+
 	
+	qui ds
+	local original_vars `" `r(varlist)' "'
+
 // Check ID format -------------------------------------------------------------
 
 		cap confirm string variable `idvar'
@@ -121,19 +124,35 @@ cap program drop iecorrect
 		if "`save'" != "" {
 			qui doheader , doname("`doname'") dofile("`dofile'")
 		}
+		
 // Write new variables to be created -------------------------------------------
-
 	
-/*	foreach var in `stringvars' {
+	foreach var in `stringvars' {
 	
-		cap	file close 	`doname'
-			file open  	`doname' using 	"`dofile'", text write append
-			file write  `doname'		`"gen `var' = "" "' _n			// <---- Writing in do file here
-			file close  `doname'	
-	
+		cap assert regex("`original_vars'", "`var'")
+		if _rc {
+			qui {
+				cap	file close 	`doname'
+					file open  	`doname' using 	"`dofile'", text write append
+					file write  `doname'		`"gen `var' = "" "' _n			// <---- Writing in do file here
+					file close  `doname'	
+			}	
+		}
 	}
-*/	
-	
+
+	foreach var in `numericvars' `categoricalvars' {
+
+		cap assert regex("`original_vars'", "`var'")	
+		if _rc {
+			qui {
+				cap	file close 	`doname'
+					file open  	`doname' using 	"`dofile'", text write append
+					file write  `doname'		"gen `var' = . " _n			// <---- Writing in do file here
+					file close  `doname'
+			}
+		}
+	}
+
 // Read correction sheet -------------------------------------------------------
 
 		foreach type of local corrSheets {
@@ -175,21 +194,20 @@ cap program drop iecorrect
 			qui copy "`dofile'" `"`save'"', `replace'
 			noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} {p_end}"'
 		}			
-		
-		noi di as result "{phang} {p_end}"
-		
+				
 /*******************************************************************************	
 	Run the do file containing the corrections
 *******************************************************************************/
 	
+		restore
+		noi di _n 
+		
 		dorun , doname("`doname'") dofile("`dofile'") data("`data'") `debug' `noisily' 
 		
 	
 		if !missing("`debug'") noi di as result "Exiting template subcommand"
 	
-}																				// End of apply subcommand
-	
-	restore 
+	}																				// End of apply subcommand 
 	
 end
 	
@@ -300,11 +318,11 @@ cap program drop checksheets
 			local	`type'corr	1 
 						
 			* List the variables that will need corrections of this type
-			qui levelsof `mainvar', local(`type'vars)
+			qui levelsof `mainvar', local(`type'vars) clean
 			
 			* List categorical variables used in 'other' corrections
 			if "`type'" == "other" {
-				qui levelsof catvar, local(categoricalvars)
+				qui levelsof catvar, local(categoricalvars) clean
 			}
 			
 			if inlist("`type'", "string", "numeric", "other") {
@@ -318,7 +336,7 @@ cap program drop checksheets
 		* If there are no corrections to be made, save that information and move forward
 		else if `r(N)' == 0 {
 			local	`type'corr	0
-			noi di as result `"{phang}No `type' variables to correct.{p_end}"'
+			noi di as result `"{phang}No observations to be dropped.{p_end}"'
 		}
 		
 		** Save the information
@@ -747,8 +765,6 @@ cap program drop dorun
 	
 								local display qui
 	if !missing("`noisily'")	local display noi
-	
-	qui use  `data', clear
 	
 	file open `doname' using "`dofile'", read
 	file read `doname' line

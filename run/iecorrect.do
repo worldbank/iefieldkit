@@ -31,3 +31,7 @@
 	
 	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) noisily
 	
+	
+	use 	`tocorrect', clear
+	
+	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-gen.xlsx", idvar(id)
