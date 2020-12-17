@@ -13,7 +13,7 @@ cap program drop iecorrect
 
 	preserve
 	
-	noi di as result ""
+	noi di as result "{phang} {p_end}"
 	
 /*==============================================================================
 								PROCESS OPTIONS
@@ -107,8 +107,6 @@ cap program drop iecorrect
 				}
 			}	
 		}
-
-		noi di as result ""
 		
 /*******************************************************************************	
 	Create a do file containing the corrections
@@ -176,15 +174,18 @@ cap program drop iecorrect
 			* Check that folder exists
 			qui copy "`dofile'" `"`save'"', `replace'
 			noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} {p_end}"'
-		}					
+		}			
+		
+		noi di as result "{phang} {p_end}"
+		
 /*******************************************************************************	
 	Run the do file containing the corrections
 *******************************************************************************/
-		
-		dorun , doname("`doname'") dofile("`dofile'") data("`data'") `noisily' `debug'
+	
+		dorun , doname("`doname'") dofile("`dofile'") data("`data'") `debug' `noisily' 
 		
 	
-	if !missing("`debug'") noi di as result "Exiting template subcommand"
+		if !missing("`debug'") noi di as result "Exiting template subcommand"
 	
 }																				// End of apply subcommand
 	
@@ -740,12 +741,12 @@ cap program drop dofooter
 cap program drop dorun
 	program		 dorun
 	
-	syntax , doname(string) dofile(string) data(string) [noisily debug]
+	syntax , doname(string) dofile(string) data(string) [NOIsily debug]
 	
 	if !missing("`debug'") 		noi di as result "Entering dorun subcommand"
 	
+								local display qui
 	if !missing("`noisily'")	local display noi
-	else						local display qui
 	
 	qui use  `data', clear
 	

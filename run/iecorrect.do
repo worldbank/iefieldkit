@@ -17,10 +17,17 @@
 	
 	encode 	make,	gen(id)
 	
-	preserve
-		iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id)
-	restore
-
-	preserve
-		iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) save("${testouput}/iecorrect-simple-num-id.do") replace
-	restore
+	tempfile tocorrect
+	save 	`tocorrect'
+	
+	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id)
+	
+	use 	`tocorrect', clear
+	
+	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) save("${testouput}/iecorrect-simple-num-id.do") replace
+	
+	
+	use 	`tocorrect', clear
+	
+	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) noisily
+	
