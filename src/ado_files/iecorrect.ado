@@ -244,10 +244,9 @@ cap program drop prepdata
 		}
 		
 		** Specify the main column for each type of correction -- this column
-		** indicates the name of the variable to be corrected		
-		if `stringid' {
-			qui destring valuecurrent value, replace
-			
+		** indicates the name of the variable to be corrected
+		if !`stringid' & "`anything'" != "other" {
+			qui destring idvalue, replace
 			qui count if !missing(idvalue)
 			if r(N) > 0 {
 				cap confirm string var idvalue

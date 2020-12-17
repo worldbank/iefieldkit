@@ -35,3 +35,7 @@
 	use 	`tocorrect', clear
 	
 	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-gen.xlsx", idvar(id)
+	
+	use 	`tocorrect', clear
+	
+	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-str-id.xlsx", idvar(make)
