@@ -15,9 +15,11 @@ qui {
 *******************************************************************************/
 
 	* Set root paths
-	global GitHub		""
-	global AnalyticsDB	""
-
+	if inlist(c(username), "WB501238", "wb50123") {
+		global GitHub		"C:\Users\wb501238\Documents\GitHub"
+		global AnalyticsDB	"C:\Users\wb501238\Dropbox\WB\Analytics\DIME Analytics"
+	}
+	
 	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
 	global form			"${AnalyticsDB}/Data Coordinator/iefieldkit/ietestform"
