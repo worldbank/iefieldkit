@@ -9,7 +9,8 @@ help for {hi:iecorrect}
 {phang2}{cmdab:iecorrect} {hline 2} Modify data points in a dataset and
 create accompanying documentation to clarify why the changes were made.
 
-{phang2}For a more descriptive discussion on the intended usage and work flow of this
+{phang2} {cmdab:iecorrect} creates a workflow to make changes (corrections) to individual data points in a dataset,
+while documenting who and why changes were madeFor a more descriptive discussion on the intended usage and workflow of this
 command please see the {browse "https://dimewiki.worldbank.org/wiki/Iecorrect":DIME Wiki}.
 
 {title:Functions}
@@ -25,8 +26,9 @@ which changes should be made to the dataset and applies them to the current data
 
 {phang2}
 {cmdab:iecorrect}
-{help using} {it:"/path/to/corrections/file.xlsx"}
-[, {cmdab:idvar(}{it:varlist}{cmd:)}
+{help using} {it:"/path/to/corrections/file.xlsx"},
+[
+{cmdab:idvar(}{it:varlist}{cmd:)}
 {cmdab:gen:erate} 
 {cmdab:replace}
 {cmdab:save(}{it:string}{cmd:)} 
@@ -37,91 +39,115 @@ which changes should be made to the dataset and applies them to the current data
 {synoptset 28}{...}
 {synopthdr:options}
 {synoptline}
-{synopt :{cmdab:idvar(}{it:varlist}{cmd:)}}variable that uniquely identifies the dataset. Used to select specific observations to be changed. {p_end}
-{synopt :{cmdab:gen:erate}} {p_end}
-{synopt :{cmdab:replace}} {p_end}
+{synopt :{cmdab:idvar(}{it:varlist}{cmd:)}}variable that uniquely identifies the dataset. Used to select specific observations to be changed. Required when using the {bf:apply} subcommand. {p_end}
+{synopt :{cmdab:sheet(}{it:string}{cmd:)}}select which types of corrections will be made.{p_end}
+{synopt :{cmdab:gen:erate}}used to create new categorical variables encoding open-ended questions. See corrections to categorical variables below. {p_end}
 {synopt :{cmdab:save(}{it:string}{cmd:)}}save the do-file that makes modifications to the dataset.{p_end}
-{synopt :{cmdab:noi:sily}}print the code and messages for the modifications. {p_end}
-{synopt :{cmdab:sheet(}{it:string}{cmd:)}}{p_end}
+{synopt :{cmdab:replace}}overwrite the do-file that makes modifications to the dataset if it already exists.{p_end}
+{synopt :{cmdab:noi:sily}}print the code and messages for the modifications as they run.{p_end}
 {synoptline}
 
-{title:Description}
+{title:Intended workflow}
 
-{dlgtab:In more detail:}
-{pstd}{cmd:iecorrect} {p_end}
+{pstd}When starting the data correction process for any dataset, first run {cmd:iecorrect template} to create an empty Excel form. This form should only be created once, and then filled to indicate the changes that will be made to the data. Once the form is filled, run {cmd:iecorrect apply} to apply the changed indicated in the form to the dataset that is currently in memory.{p_end}
 
-{pstd}The Excel report includes sheets columns called {it:categorical}, {it:string},
-{it:numeric}, and {it:drop}.
+{pstd}The Excel report includes four sheets, called {it:categorical}, {it:string}, {it:numeric}, and {it:drop}. Each of these sheets indicates one type of correction. Each type of correction requires slightly different input from the user, discussed below. Do not delete the information included in the template form, or the command will not run properly. {p_end}
 
-{space 4}{hline}
+{dlgtab:Columns for documentation:}
 
-{title:Options}
+{pstd}The columns {it:initials} and {it:notes} are included in all tabs, and should be used to document the changes made to the code.{p_end}
 
-{phang}{help cmdab:using} specifies the file path where the Excel file
-that documents modifications will be saved. This file with be created by the
-{bf:template} subcommand, filled by the user to indicate the modifications
-desired, and read by the {bf:apply} subcommand to modify the dataset.{p_end}
+{phang2}{it:initials} allows the team working with this data to keep track of {bf:who}
+decided on corrections.{p_end}
 
-{phang}{cmdab:idvar(}{it:varlist}{cmd:)}}variable that uniquely identifies the dataset.
-Used to select specific observations to be changed. This option is required so
-the "idvalue" column in the Excel file can be used.{p_end}
+{phang2}{it:notes} allows the team working with this data to document {bf:how} the 
+issue and the correct value were identified.{p_end}
 
-{phang}{cmdab:gen:erate}} {p_end}
+{dlgtab:Corrections to string variables:}
 
-{phang}{cmdab:replace}} {p_end}
+{pstd} These correction can be made through the {bf:string} tab of the Excel spreadsheet. It contains the following columns:
 
-{phang}{cmdab:save(}{it:string}{cmd:)}}save the do-file that makes modifications to the dataset.{p_end}
+{phang2}{it:strvar}, which should be filled with the {bf:name of the string variable to be corrected}. 
+Filling this column is {bf:required} for this type of correction to run properly.{p_end}
 
-{phang}{cmdab:noi:sily}}print the code and messages for the modifications. {p_end}
+{phang2}{it:idvalue}, which should be filled with the value of the ID variable in the observation 
+o be corrected. Filling this column is not required for this type of correction 
+to run properly, but {bf:either this column or the {it:valuecurrent} column must be filled}.
+{p_end}
 
-{phang}{cmdab:sheet(}{it:string}{cmd:)}}{p_end}
+{phang2}{it:valuecurrent}, which should be filled with the current, {bf:incorrect value}
+of the string variable in
+the observation to be corrected. Filling this column is not required for this 
+type of correction to run properly, but either this column or the {it:idvalue}
+column must be filled.{p_end}
 
-{title:The Excel Report}
+{phang2}{it:value}, which should be filled with the {bf:correct value} of the variable.
+This value will replace the current value once {cmd:iecorrect apply} is run. 
+Filling this column is {bf:required} for this type of correction to run properly.{p_end}
 
-{pstd}This file with be created by the
-{bf:template} subcommand, filled by the user to indicate the modifications
-desired, and read by the {bf:apply} subcommand to modify the dataset.{p_end}
+{dlgtab:Corrections to numeric variables:}
 
-{dlgtab:Columns in Excel Report filled in automatically:}
+{pstd} These correction can be made through the {bf:numeric} tab of the Excel spreadsheet. It contains the following columns:{p_end}
 
-{phang}{it:duplistid} stores an auto incremented duplicate list ID that is used
-to maintain the sort order in the Excel Report regardless of how the data in memory
-is sorted at the time {cmd:ieduplicates} is executed.
+{phang2}{it:numvar}, which should be filled with the {bf:name of the numeric 
+variable to be corrected}. Filling this column is {bf:required} for this type of 
+correction to run properly.{p_end}
 
-{phang}{it:datelisted} stores the date the duplicate was first identified.
+{phang2}{it:idvalue}, which should be filled with the value of the ID variable 
+in the observation to be corrected. Filling this column is not required for 
+this type of correction to run properly, 
+{bf:but either this column or the {it:valuecurrent} column must be filled}.
+{p_end}
 
-{phang}{it:datefixed} stores the date a valid correction was imported the first
-time for that duplicate.
+{phang2}{it:valuecurrent}, which should be filled with the current, 
+{bf:incorrect value} of the numeric variable in the observation to be corrected. 
+Filling this column is not required for this type of correction to run properly, 
+but either this column or the {it:valuecurrent} column must be filled.{p_end}
 
-{phang}{it:listofdiffs} stores a list with the names of the variables that are
-different in two different observations. This list is truncated at 250 characters
-and is only stores when there are exactly two duplicates. For full list or cases
-where there are more then two duplicates, {help:iecompdup} should be used.
+{phang2}{it:value}, which should be filled with the {bf:correct value} of the variable.
+This value will replace the current value once {cmd:iecorrect apply} is run. 
+Filling this column is {bf:required} for this type of correction to run properly.{p_end}
 
-{dlgtab:Columns in Excel Report to be filled in manually by a user:}
+{dlgtab:Corrections to categorical variables:}
 
-{phang}{it:correct} is used to indicate that the duplicate should be kept. The only
-valid value is "correct" to reduce the risk of unintended entries ("yes" is also
-allowed for backward compatibility). The values are not sensitive to case. If {it:correct}
-is indicated then both {it:drop} and {it:newid} must be left empty.
+{pstd} These correction can be made through the {bf:other} tab of the Excel 
+spreadsheet. 
+The tab is called "other" because it is meant to enable the addition new categories 
+based on the string values on "Other: specify" fields. 
+It can also be used to encode open-ended fields and create a categorical 
+variable to represent them.It contains the following columns:{p_end}
 
-{phang}{it:drop} is used to indicate that the duplicate should be deleted. The only
-valid value is "drop" to reduce the risk of unintended entries ("yes" is also
-allowed for backward compatibility). The values are not sensitive to case. If {it:drop}
-is indicated then both {it:correct} and {it:newid} must be left empty.
+{phang2}{it:strvar}, which should be filled with the name of the string variable 
+where the "other" category was entered. 
+Filling this column is {bf:required} for this type of correction to run properly.{p_end}
 
-{phang}{it:newid} is used to assign a new ID values to a duplicate. If {it:ID_varname}
-is a string then all values are valid for {it:newid}. If {it:ID_varname} is numeric then
-only digits are valid, unless the option {cmdab:tostringok} is specified.
-If {cmdab:tostringok} is specified and {it:newid} is non-numeric, then {it:ID_varname}
-is recasted to a string variable. If {it:newid} is indicated then both {it:correct} and {it:drop} must be
-left empty.
+{phang2}{it:strvaluecurrent}, which should be filled with the value of the 
+string variable in the observation to be corrected. 
+Filling this column is {bf:required} for this type of correction to run properly.{p_end}
 
-{phang}{it:initials} allows the team working with this data to keep track on who
-decided on corrections.
+{phang2}{it:strvalue}, which should be filled with the value you want to replace 
+the string variable with, in case you also want to correct it. 
+Filling this column is not required for this type of correction to run properly.{p_end}
 
-{phang}{it:notes} allows the team working with this data to document the reason
-for the duplicates and the why one type of correction was chosen over the others.
+{phang2}{it:catvar}, which should be filled with the {bf:name of the categorical variable
+to be corrected}. 
+Filling this column is {bf:required} for this type of correction to run properly.
+If this variable does not yet exist, the option {cmdab:gen:erate} can be used to create it. {p_end}
+
+{phang2}{it:catvalue}, which should be filled with the {bf:correct value} of the categorical variable.
+This value will replace the replace the current value of the categorical variable
+once {cmd:iecorrect apply} is run. 
+Filling this column is not required for this type of correction to run properly.{p_end}
+
+{pstd}{p_end}
+
+{dlgtab:Dropping observations:}
+
+{pstd}Corrections made by {it:dropping} observations are implemented through the 
+{it:drop} tab of the Excel spreadsheet. This tab only has one {bf:require} column:{p_end}
+
+{phang2}{it:idvalue}, which should be filled with the value of the ID variable in the observations to be dropped.{p_end}
+
 
 {space 4}{hline}
 
@@ -132,19 +158,20 @@ for the duplicates and the why one type of correction was chosen over the others
 
 {phang2}{inp:iecorrect template using "C:\myImpactEvaluation\baseline\documentation\Corrections.xlsx"}{p_end}
 
-{pmore}Specified like this {cmdab:iecorrect} start by looking for the file
-"C:\myImpactEvaluation\baseline\data\DuplicatesReport.xls". If there is a report
-with corrections, those corrections are applied to the data set. Then the command looks for
-unresolved duplicates in HHID and exports a new report if any duplicates were found. The data
-set is returned without any of the unresolved duplicates. The variable KEY is used to separate
-observations that are duplication in the ID var.
+{pmore}Specified like this, {cmdab:iecorrect} will create a template Excel spreadsheet at
+"C:\myImpactEvaluation\baseline\documentation\Corrections.xlsx".
+This template will be empty, and 
+each tab in this template must be filled by the user following the instructions above
+before running the {bf:apply subcommand} to implement the corrections.{p_end}
 
 {phang}
 {hi:Example 2: apply subcommand}
 
 {phang2}{inp:iecorrect apply "C:\myImpactEvaluation\baseline\documentation\Corrections.xlsx", idvar(key)}{p_end}
 
-{pmore}Similar to the example above, b
+{pmore}Specified like this, {cmdab:iecorrect} starts by looking for the file
+"C:\myImpactEvaluation\baseline\documentation\Corrections.xlsx". If there is a report
+with corrections, those corrections are applied to the data set.{p_end}
 
 {title:Acknowledgements}
 

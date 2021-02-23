@@ -19,6 +19,14 @@
 	
 	tempfile tocorrect
 	save 	`tocorrect'
+
+	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-noid.xlsx", idvar(id) sheet(numeric)
+	
+	use 	`tocorrect', clear
+
+	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-noid.xlsx", idvar(id) sheet(numeric other)
+	
+	use 	`tocorrect', clear
 	
 	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id)
 	

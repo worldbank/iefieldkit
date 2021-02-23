@@ -335,7 +335,12 @@ cap program drop checksheets
 		* If there are no corrections to be made, save that information and move forward
 		else if `r(N)' == 0 {
 			local	`type'corr	0
-			noi di as result `"{phang}No observations to be dropped.{p_end}"'
+			if inlist("`type'", "string", "numeric", "other") {
+				noi di as result `"{phang}No corrections of type `type'.{p_end}"'
+			}
+			else {
+				noi di as result `"{phang}No observations to be dropped.{p_end}"'
+			}
 		}
 		
 		** Save the information
