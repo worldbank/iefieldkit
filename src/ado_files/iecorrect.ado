@@ -690,7 +690,7 @@ cap program drop dodrop
 			*Confirmed that ID var is the same type as idvaue
 
 			** Write the line to the do file
-			if `stringid'	local idvalue = `""idvalue""'
+			if `stringid'	local idvalue = `""`idvalue'""'
 			
 			file write `doname'	`"drop if `idvar' == `idvalue' "' _n							// <---- Writing in do file here
 			

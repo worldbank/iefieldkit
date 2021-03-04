@@ -28,7 +28,9 @@
 	
 	use 	`tocorrect', clear
 	
+	assert _N == 74
 	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id)
+	assert _N == 73
 	
 	use 	`tocorrect', clear
 	
@@ -39,11 +41,12 @@
 	
 	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) noisily
 	
-	
 	use 	`tocorrect', clear
 	
 	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-gen.xlsx", idvar(id)
 	
 	use 	`tocorrect', clear
 	
+	assert _N == 74	
 	iecorrect apply using "${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect/iecorrect-simple-str-id.xlsx", idvar(make)
+	assert _N == 73
