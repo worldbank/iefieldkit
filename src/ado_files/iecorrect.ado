@@ -596,8 +596,8 @@ cap program drop donumeric
 
 		* If it's an ID variables, write that in the line
 		if `"`idvalue'"' != "" {
-			if `stringid'	local idvalue = `""idvalue""'
-			local line	`"`line' `idvar' == `idvalue'"'											
+			if `stringid'	local idvalue = `" "`idvalue'" "'
+			local line	`" `line' `idvar' == `idvalue' "'											
 
 			* If it's both, add an "and"
 			if "`valuecurrent'" != "" {
