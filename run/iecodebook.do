@@ -1,6 +1,6 @@
 	global GitHub  "C:\Users\Inspiron\Desktop\GitHub"
 	global iefieldkit "${GitHub}/iefieldkit"
-	global codebook "${iefieldkit}/run/codebooks"
+	global codebook "..codebooks"
 
 	do "${GitHub}/iefieldkit/src/ado_files/iecodebook.ado"
 
@@ -330,7 +330,7 @@
 	assert _rc == 601
 	
 	* Create it 
-	iecodebook export using "${codebook}/auto_export.xlsx", replace signature reset
+	iecodebook export using "${codebook}/auto_export.xlsx", replace signature reset       // Check txt signature output (characters)
 	
 	* Compare when no changes
 	iecodebook export using "${codebook}/auto_export.xlsx", replace signature
@@ -339,16 +339,28 @@
 	preserve
 		
 		drop in 1
-		cap iecodebook export using "${codebook}/auto_export.xlsx", replace signature
+		cap iecodebook export using "${codebook}/auto_export.xlsx", replace signature   // Is ok that the expected value be an error?
 		assert _rc == 9
 		
 	restore
+	
+	* Compare when add variables
+	preserve
+		
+		gen new= make
+		*cap 
+		iecodebook export using "${codebook}/auto_export.xlsx", replace signature   // Is ok that the expected value be an error?
+		assert _rc == 9
+		
+	restore
+	
+	
 	
 * Textonly option --------------------------------------------------------------
 
 	iecodebook export using "${codebook}/auto_export.xlsx", plain(detailed) replace noexcel
 
-	iecodebook export using "${codebook}/auto_export.xlsx", plain(compact) 	replace
+	iecodebook export using "${codebook}/auto_export.xlsx", plain(compact) 	replace                                                                         // check values foreign variable
 	iecodebook export using "${codebook}/auto_export.xlsx", plain(detailed) replace
 	*Expected error
 cap iecodebook export using "${codebook}/auto_export.xlsx", 				replace noexcel	
@@ -393,10 +405,7 @@ cap iecodebook export using "${codebook}/auto_export.xlsx", plain(dalk) 	replace
 	
 	clear
 	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace
-	
-	clear
-	iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", replace
-	
+		
 	clear
 	cap iecodebook export "auto" using "${codebook}/auto_export.xlsx", replace
 	assert _rc == 601
@@ -419,6 +428,7 @@ cap iecodebook export using "${codebook}/auto_export.xlsx", plain(dalk) 	replace
 
 	lab var make 	"É"
 	lab def origin  0 "ã & @", replace
-	iecodebook export using "${codebook}/auto_export.xlsx", replace             // Should origin 1 be kept with the same label?
+	iecodebook export using "${codebook}/auto_export.xlsx", replace             // Check origin 1 
+	
 	
 ***************************************************************** End of do-file
