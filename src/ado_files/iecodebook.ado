@@ -478,6 +478,7 @@ qui {
         di as err ""
         di as err "Differences were encountered between the existing data and the codebook."
         di as err "{bf:iecodebook} will now exit."
+        use `allData', clear
         error 7
       }
     } // end VERIFY option for variable characteristics
