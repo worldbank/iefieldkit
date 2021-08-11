@@ -689,7 +689,11 @@ qui {
     count
     local QUITFLAG = 0
     forvalues i = 2/`r(N)' {
-      local theName    = name`survey'[`i']
+      cap local theName    = name`survey'[`i']
+        if _rc {
+          di as err "The name `survey' does not appear in the codebook."
+          error 198
+        }
         local theRename   = name[`i']
         local theRename = trim("`theRename'")
         if strtoname("`theRename'") != "`theRename'" & "`theRename'" != "." {
