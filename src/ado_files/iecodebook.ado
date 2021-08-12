@@ -660,6 +660,14 @@ qui {
   preserve
   import excel "`using'" , clear first sheet(survey) allstring
 
+	// Confirm variable exists 
+  cap confirm variable name`survey'
+  	 if _rc {
+          di as err "The name `survey' does not appear in the codebook."
+          error 111
+        }
+  
+  
     // Check for broken things, namely quotation marks
     foreach var of varlist name`survey' name label choices recode`survey' {
       cap confirm string variable `var'
