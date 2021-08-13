@@ -478,6 +478,7 @@ qui {
         di as err ""
         di as err "Differences were encountered between the existing data and the codebook."
         di as err "{bf:iecodebook} will now exit."
+        use `allData', clear
         error 7
       }
     } // end VERIFY option for variable characteristics
@@ -659,6 +660,13 @@ qui {
   preserve
   import excel "`using'" , clear first sheet(survey) allstring
 
+  // Confirm survey names match codebook 
+  cap confirm variable name`survey'
+    if _rc {
+      di as err "The survey name `survey' does not appear in the codebook."
+      error 111
+    }
+  
     // Check for broken things, namely quotation marks
     foreach var of varlist name`survey' name label choices recode`survey' {
       cap confirm string variable `var'
