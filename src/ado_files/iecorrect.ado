@@ -189,12 +189,37 @@ cap program drop iecorrect
 	Save the do file containing the corrections if "save" was selected
 *******************************************************************************/
 		if "`save'" != "" {
+			* Standardize do file path
+			local save= subinstr(`"`save'"',"\","/",.)
+         
+			* Get the file extension 			
+			local save_fileext = substr(`"`save'"',strlen(`"`save'"')-strpos(strreverse(`"`save'"'),".")+1,.)
 			
-			* Check that folder exists
-			qui copy "`dofile'" `"`save'"', `replace'
+			* If no file extension was used, then add .do to "`save'"
+			if "`save_fileext'" == "" {
+				local save  "`save'.do"
+			}		
+						
+			else if !(`"`save_fileext'"' == ".do" ){
+				noi di as error `"{phang}The do file must include the file extension [.do].{p_end}"'
+				error 601
+			}			
+			
+			* Check that folder exists and save the do file
+			cap qui copy "`dofile'" `"`save'"', `replace'
+			if _rc == 603 {
+				noi di as error `"{phang}The folder path [`save'] does not exist.{p_end}"'
+				error 603		
+			}
+			
+			else if _rc == 602 {
+				noi di as error `"{phang}The file [`save'] already exists. Use [replace] option if yo want to overwrite it. {p_end}"'
+				error 602			    
+			}
+			
 			noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} {p_end}"'
-		}			
-				
+		}	
+		
 /*******************************************************************************	
 	Run the do file containing the corrections
 *******************************************************************************/
