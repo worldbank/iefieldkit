@@ -87,11 +87,21 @@ cap program drop iecorrect
 
 		cap confirm file "`using'"
 		if _rc {
+			* Standardize do file path
+			local using = subinstr(`"`using'"',"\","/",.)
+         
+			* Get the file extension and check if it is the correct			
+			local fileext = substr(`"`using'"',strlen(`"`using'"')-strpos(strreverse(`"`using'"'),".")+1,.)
+					
+			if !inlist("`fileext'",".xlsx",".xls")   {
+				noi di as error `"{phang}The file must include the extension [.xlsx] or [.xls].{p_end}"'
+				error 601
+			}				
 			noi di as error `"{phang}File "`using'" could not be found.{p_end}"'
-			error 601
+			error 601 
 		}
 		
-
+		
 // Check which types of corrections need to be made ----------------------------
 
 		foreach type of local corrSheets {
