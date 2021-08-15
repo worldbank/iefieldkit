@@ -38,7 +38,9 @@ cap program drop iecorrect
 		
 		* Check that folder exists
 			
-			
+		// Standardize template file path
+		local using = subinstr(`"`using'"',"\","/",.)
+		
 		// Check that file doesn't already exist -----------------------------------		
 		cap confirm file "`using'"
 		if !_rc {
@@ -48,6 +50,13 @@ cap program drop iecorrect
 			}
 		}
 		         
+		// Get the file extension and check if it is the correct			
+		local fileext = substr(`"`using'"',strlen(`"`using'"')-strpos(strreverse(`"`using'"'),".")+1,.)
+					
+		if !inlist("`fileext'",".xlsx",".xls") {
+				noi di as error `"{phang}The file must include the extension [.xlsx] or [.xls].{p_end}"'
+				error 601
+		}	
 		
 		// Create the template -----------------------------------------------------
 		templateworkbook using "`using'" , `replace'
