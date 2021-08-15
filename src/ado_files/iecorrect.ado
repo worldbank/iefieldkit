@@ -816,21 +816,22 @@ cap program drop dorun
 								local display qui
 	if !missing("`noisily'")	local display noi
 	
-	file open `doname' using "`dofile'", read
-	file read `doname' line
-	
-	while r(eof)==0 {
-		if !missing("`noisily'") display `"`line'"'
-		`display' `line'
+	if ("`doname'" != "__000000") { 
+		file open `doname' using "`dofile'", read
 		file read `doname' line
-	}
+		
+		while r(eof)==0 {
+			if !missing("`noisily'") display `"`line'"'
+			`display' `line'
+			file read `doname' line
+		}
 
-	file close `doname'
+		file close `doname'
 
-	qui save `data', replace
+		qui save `data', replace
 
-	if !missing("`debug'") noi di as result "Exiting dorun subcommand"
-	
+		if !missing("`debug'") noi di as result "Exiting dorun subcommand"
+	}	
 end
 
 /*******************************************************************************	
