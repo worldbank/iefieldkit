@@ -816,8 +816,9 @@ cap program drop dorun
 								local display qui
 	if !missing("`noisily'")	local display noi
 	
-	if ("`doname'" != "__000000") { 
-		file open `doname' using "`dofile'", read
+	cap file open `doname' using "`dofile'", read
+		
+	if !_rc { 
 		file read `doname' line
 		
 		while r(eof)==0 {
