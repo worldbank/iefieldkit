@@ -890,7 +890,12 @@ cap program drop templatesheet
 				lab var `current'current "`current':current"
 			}
 			
-			export excel using "`using'", sheet("`sheetname'", `replace') firstrow(varlabels)
+			cap export excel using "`using'", sheet("`sheetname'", `replace') firstrow(varlabels)
+
+			if _rc == 603 {
+				noi di as error `"{phang}The folder path [`using'] does not exist.{p_end}"'
+				error 603
+			}			
 
 		}		
 	end
