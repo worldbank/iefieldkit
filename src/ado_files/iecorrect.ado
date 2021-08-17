@@ -105,8 +105,8 @@ cap program drop iecorrect
 			local fileext = substr(`"`using'"',strlen(`"`using'"')-strpos(strreverse(`"`using'"'),".")+1,.)
 					
 			if !inlist("`fileext'",".xlsx",".xls")   {
-				noi di as error `"{phang}The file must include the extension [.xlsx] or [.xls].{p_end}"'
-				error 601
+				noi di as error `"{phang}The file extension used in the option using is not valid. It must include the extension [.xlsx] or [.xls].{p_end}"'
+				error 198
 			}				
 			noi di as error `"{phang}File "`using'" could not be found.{p_end}"'
 			error 601 
@@ -222,8 +222,8 @@ cap program drop iecorrect
 			}		
 						
 			else if !(`"`save_fileext'"' == ".do" ){
-				noi di as error `"{phang}The do file must include the file extension [.do].{p_end}"'
-				error 601
+				noi di as error `"{phang}The file extension used in the option save is not valid. The do-file must include the file extension [.do].{p_end}"'
+				error 198
 			}			
 			
 			* Check that folder exists and save the do file
