@@ -44,10 +44,8 @@ cap program drop iecorrect
 		// Check that file doesn't already exist -----------------------------------		
 		cap confirm file "`using'"
 		if !_rc {
-			if "`replace'" != "replace"{
-				noi di as error `"{phang}File "`using'" already exists. Template was not created.{p_end}"'
-			error 602
-			}
+		    noi di as error `"{phang}File "`using'" already exists. Template was not created.{p_end}"'
+			error 602	
 		}
 		         
 		// Get the file extension and check if it is the correct			
@@ -59,7 +57,7 @@ cap program drop iecorrect
 		}	
 		
 		// Create the template -----------------------------------------------------
-		templateworkbook using "`using'" , `replace'
+		templateworkbook using "`using'" 
 			
 		if !missing("`debug'") noi di "Exiting template subcommand"
 	}																			// End of template subcommand
@@ -842,7 +840,7 @@ end
 cap program drop templateworkbook
 	program		 templateworkbook
 	
-	syntax using/ , [replace]
+	syntax using/
 	
 	preserve
 	
@@ -850,24 +848,24 @@ cap program drop templateworkbook
 		templatesheet using "`using'", ///
 			varlist("strvar idvalue valuecurrent value initials notes") ///
 			sheetname("string") ///
-			current("value") `replace'
+			current("value")
 					
 		* Numeric variables
 		templatesheet using "`using'", ///
 			varlist("numvar idvalue valuecurrent value initials notes") ///
 			sheetname("numeric") ///
-			current("value") `replace'
+			current("value")
 
 		* Other variables
 		templatesheet using "`using'", ///
 			varlist("strvar strvaluecurrent strvalue catvar catvalue initials notes") ///
 			sheetname("other") ///
-			current("strvalue") `replace'
+			current("strvalue")
 
 		* Drop observations
 		templatesheet using "`using'", ///
 			varlist("idvalue initials notes") ///
-			sheetname("drop") `replace'
+			sheetname("drop")
 
 		noi di as result `"{phang}Template spreadsheet saved to: {browse "`using'":`using'}{p_end}"'
 			
@@ -878,7 +876,7 @@ end
 cap program drop templatesheet
 	program		 templatesheet
 	
-	syntax using/, varlist(string) sheetname(string) [current(string)] [replace]
+	syntax using/, varlist(string) sheetname(string) [current(string)]
 	
 	qui {
 			clear
@@ -892,7 +890,7 @@ cap program drop templatesheet
 				lab var `current'current "`current':current"
 			}
 			
-			cap export excel using "`using'", sheet("`sheetname'", `replace') firstrow(varlabels)
+			cap export excel using "`using'", sheet("`sheetname'") firstrow(varlabels)
 
 			if _rc == 603 {
 				noi di as error `"{phang}The folder path [`using'] does not exist.{p_end}"'
