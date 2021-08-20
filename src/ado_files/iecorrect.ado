@@ -25,6 +25,35 @@ cap program drop iecorrect
 	else {
 		local corrSheets	`sheet'
 	}
+
+/*==============================================================================
+								Test File
+==============================================================================*/
+	// Standardize file path
+	local using = subinstr(`"`using'"',"\","/",.)	
+	
+	// Get the file extension 			
+		local fileext = substr(`"`using'"',strlen(`"`using'"')-strpos(strreverse(`"`using'"'),".")+1,.)
+
+	// If no fileextension was used, then add .xslx to "`using'"
+	if "`fileext'" == "" {
+	    
+		local using  "`using'.xlsx"
+	}
+
+	// Check if the file extension is the correct  
+	else if !inlist("`fileext'",".xlsx",".xls") {
+				noi di as error `"{phang}The file must include the extension [.xlsx] or [.xls] The format [`fileext'] is not allowed.{p_end}"'
+				error 198
+		}	
+				
+	// 	Confirm the file path is correct
+	cap confirm new file `using'
+	if (_rc == 603) {
+		noi di as error `"{phang} The file path used [`using'] does not exist.{p_end}"'
+      error 601	
+	}	
+	
 	
 /*==============================================================================
 							TEMPLATE SUBCOMMAND
@@ -35,27 +64,14 @@ cap program drop iecorrect
 	if "`subcommand'" == "template" {
 		
 		if !missing("`debug'") noi di "Entering template subcommand"
-		
-		* Check that folder exists
-			
-		// Standardize template file path
-		local using = subinstr(`"`using'"',"\","/",.)
-		
-		// Check that file doesn't already exist -----------------------------------		
-		cap confirm file "`using'"
-		if !_rc {
-		    noi di as error `"{phang}File "`using'" already exists. Template was not created.{p_end}"'
-			error 602	
-		}
-		         
-		// Get the file extension and check if it is the correct			
-		local fileext = substr(`"`using'"',strlen(`"`using'"')-strpos(strreverse(`"`using'"'),".")+1,.)
-					
-		if !inlist("`fileext'",".xlsx",".xls") {
-				noi di as error `"{phang}The file must include the extension [.xlsx] or [.xls].{p_end}"'
-				error 601
+	
+		// Check if file already exists
+		cap confirm new file `using'
+		if (_rc == 602) {
+			noi di as error `"{phang}File [`using'] already exists. Template was not created.{p_end}"'
+			error 602
 		}	
-		
+				
 		// Create the template -----------------------------------------------------
 		templateworkbook using "`using'" 
 			
@@ -94,22 +110,11 @@ cap program drop iecorrect
 		
 // Check that file exists ------------------------------------------------------
 
-		cap confirm file "`using'"
-		if _rc {
-			* Standardize do file path
-			local using = subinstr(`"`using'"',"\","/",.)
-         
-			* Get the file extension and check if it is the correct			
-			local fileext = substr(`"`using'"',strlen(`"`using'"')-strpos(strreverse(`"`using'"'),".")+1,.)
-					
-			if !inlist("`fileext'",".xlsx",".xls")   {
-				noi di as error `"{phang}The file extension used in the option using is not valid. It must include the extension [.xlsx] or [.xls].{p_end}"'
-				error 198
-			}				
-			noi di as error `"{phang}File "`using'" could not be found.{p_end}"'
+		cap confirm new file "`using'"
+		if (_rc != 602) {	
+			noi di as error `"{phang}The iecorrect template is not found. The template must be created before use apply subcommand. {p_end}"'
 			error 601 
 		}
-		
 		
 // Check which types of corrections need to be made ----------------------------
 
@@ -227,12 +232,12 @@ cap program drop iecorrect
 			* Check that folder exists and save the do file
 			cap qui copy "`dofile'" `"`save'"', `replace'
 			if _rc == 603 {
-				noi di as error `"{phang}The folder path [`save'] does not exist.{p_end}"'
-				error 603		
+				noi di as error `"{phang}The folder path used in the option save [`save'] does not exist.{p_end}"'
+				error 601		
 			}
 			
 			else if _rc == 602 {
-				noi di as error `"{phang}The file [`save'] already exists. Use [replace] option if yo want to overwrite it. {p_end}"'
+				noi di as error `"{phang}The file used in the option save [`save'] already exists. Use [replace] option if yo want to overwrite it. {p_end}"'
 				error 602			    
 			}
 			
@@ -890,12 +895,8 @@ cap program drop templatesheet
 				lab var `current'current "`current':current"
 			}
 			
-			cap export excel using "`using'", sheet("`sheetname'") firstrow(varlabels)
-
-			if _rc == 603 {
-				noi di as error `"{phang}The folder path [`using'] does not exist.{p_end}"'
-				error 603
-			}			
+			export excel using "`using'", sheet("`sheetname'") firstrow(varlabels)
+		
 
 		}		
 	end
