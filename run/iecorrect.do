@@ -1,6 +1,6 @@
-global GitHub      "...\GitHub"
+global GitHub      "C:\Users\Inspiron\Desktop\GitHub"
 global iefieldkit  "${GitHub}/iefieldkit"
-global testouput   "/dropbox"	
+global testouput   ".../dropbox"	
 	
 	
 qui do "${iefieldkit}/src/ado_files/iecorrect.ado"
@@ -13,33 +13,34 @@ qui do "${iefieldkit}/src/ado_files/iecorrect.ado"
 		encode 	make,	gen(id)
 	tempfile tocorrect
 	save 	`tocorrect'
-
+		
 /*******************************************************************************
 	Folder and format testing
 *******************************************************************************/	
 	
-	
 	* Folder does not exist
 	cap iecorrect template using "folder/iecorrect-template.xlsx"               // Now it returns a better description of the expected error          
-	assert _rc == 603
-	
-	cap iecorrect apply using "folder/iecorrect-template.xlsx", idvar(id)       // "folder/iecorrect-template.xlsx" could not be found. 
 	assert _rc == 601
 	
-	* File does not exist
-	cap iecorrect apply using "${testouput}/template-no-exist.xlsx", idvar(id)  // "folder/iecorrect-template.xlsx" could not be found. 
+	cap iecorrect apply using "folder/iecorrect-template.xlsx", idvar(id)       // Now it returns a better description of the expected error  
+	assert _rc == 601
+	
+	* File does not exist 
+	cap iecorrect apply using "${testouput}/template-no-exist.xlsx", idvar(id)  // Now it returns a better description of the expected error 
 	assert _rc == 601
 	
 	* Wrong file extension
+	cap iecorrect template using "${testouput}/iecorrect-template.wrong"
+	assert _rc == 198
+	
 	cap iecorrect apply using "${testouput}/iecorrect-template.wrong", idvar(id) 
-	assert _rc == 601
+	assert _rc == 198
 	
 	* No file extension
-	cap iecorrect apply using "${testouput}/iecorrect-template", idvar(id)
-	assert _rc == 601
+	iecorrect apply using "${testouput}/iecorrect-template", idvar(id)
 
-	cap iecorrect template using "${testouput}/iecorrect-template-no-file-extension"  
-	assert _rc == 601
+	cap erase "${testouput}/iecorrect-template-no-file-ext.xlsx" 
+	iecorrect template using "${testouput}/iecorrect-template-no-file-ext"  
 	
 /*******************************************************************************
 	Template
@@ -54,9 +55,6 @@ qui do "${iefieldkit}/src/ado_files/iecorrect.ado"
 	cap iecorrect template using "${testouput}/iecorrect-template.xlsx"         // Now it returns an error     
 	assert _rc == 602
 
-	* Replace option, template already exist
-	iecorrect template using "${testouput}/iecorrect-template.xlsx", replace    // Now it overwrites the file if replace is used    
-	
 
 /*******************************************************************************
 	Apply 
@@ -73,8 +71,7 @@ qui do "${iefieldkit}/src/ado_files/iecorrect.ado"
 	
 	* Simple run when template is filled
 	iecorrect apply using "${testouput}/iecorrect-simple-num-id.xlsx", idvar(id)
-	
-	
+		
 	* Sheets
 	use 	`tocorrect', clear
 	iecorrect apply using "${testouput}/iecorrect-simple-num-id.xlsx",       ///
@@ -112,7 +109,6 @@ qui do "${iefieldkit}/src/ado_files/iecorrect.ado"
 	iecorrect apply using "${testouput}/iecorrect-gen.xlsx", idvar(id)       ///
 	generate
 
-	
 	
 	
 	********************************************
@@ -169,6 +165,11 @@ qui do "${iefieldkit}/src/ado_files/iecorrect.ado"
 	********************************************
 	* Incorrect uses : error messages expected *
 	********************************************
+
+	
+    ********
+	* save *
+	********	
 	
 	* Save, Wrong file extension
 	iecorrect apply using "${testouput}/iecorrect-simple-num-id.xlsx", ///      Now it validates the path and adds .do 
@@ -176,11 +177,26 @@ qui do "${iefieldkit}/src/ado_files/iecorrect.ado"
 	
 	cap iecorrect apply using "${testouput}/iecorrect-simple-num-id.xlsx", ///  Now it validates the path and returns an error 
 	idvar(id) save("${testouput}/iecorrect-simple-num-id.c") replace
+	assert _rc == 198
+	
+	* Save, folder path does not exist
+	cap iecorrect apply using "${testouput}/iecorrect-simple-num-id.xlsx", ///  Now it validates the path and returns an error 
+	idvar(id) save("${testouput}/noexist/iecorrect-simple-num-id.do") replace
 	assert _rc == 601
-	
-	
 
 	
+    ***********************
+	* Type of corrections *
+	***********************	
+	* Should return an error when string is used to make other types corrections 
+	cap iecorrect apply using "${testouput}/iecorrect-no-string-corrections.xlsx", ///  Check! Put better expected error ms
+	idvar(id)
+	assert == 109 
+	
+	* Should return an error when num sheet is used to make other types corrections 
+	iecorrect apply using "${testouput}/iecorrect-no-num-corrections.xlsx", 
+	idvar(id)
+	assert == 198 
 	
 
 *******************************************************************************/
