@@ -132,6 +132,8 @@ cap program drop iecorrect
 				if "`type'" == "other" {
 					local categoricalvars `r(categoricalvars)'
 				}
+				
+				local any_corrections 1
 			}	
 		}
 		
@@ -251,8 +253,10 @@ cap program drop iecorrect
 		restore
 		noi di _n 
 		
-		dorun , doname("`doname'") dofile("`dofile'") data("`data'") `debug' `noisily' 
-		
+		* Don't run if there are no corrections to be made
+		if !missing("`any_corrections'") {
+			dorun , doname("`doname'") dofile("`dofile'") data("`data'") `debug' `noisily' 
+		} 		
 	
 		if !missing("`debug'") noi di as result "Exiting template subcommand"
 	
@@ -819,10 +823,8 @@ cap program drop dorun
 								local display qui
 	if !missing("`noisily'")	local display noi
 	
-	cap file open `doname' using "`dofile'", read
-		
-	if !_rc { 
-		file read `doname' line
+	file open `doname' using "`dofile'", read		
+	file read `doname' line
 		
 		while r(eof)==0 {
 			if !missing("`noisily'") display `"`line'"'
@@ -830,16 +832,12 @@ cap program drop dorun
 			file read `doname' line
 		}
 
-		file close `doname'
+	file close `doname'
 
-		qui save `data', replace
+	qui save `data', replace
 
-		if !missing("`debug'") noi di as result "Exiting dorun subcommand"
-	}
-	else {
-		noi di as error `"{phang}iecorrect could not find any corrections to be made. Check that you have filled the template spreadsheet. {p_end}"'
-		error 601
-	}
+	if !missing("`debug'") noi di as result "Exiting dorun subcommand"
+	
 end
 
 /*******************************************************************************	

@@ -32,8 +32,9 @@ qui {
 	local ieduplicates	0
 	local iecompdup		0
 	local ietestform	0
-	local iecodebook	1
+	local iecodebook	0
 	local iefieldkit	0
+	local iecorrect		1
 	
 /*******************************************************************************
 	Part II: Test inputs
@@ -43,7 +44,7 @@ qui {
 		noi di as error "Add the folder path to your GitHub folder to the Master run file."
 		exit
 	}
-	if !inlist(1, `ieduplicates', `iecompdup', `ietestform', `iecodebook', `iefieldkit') {
+	if !inlist(1, `ieduplicates', `iecompdup', `ietestform', `iecodebook', `iefieldkit', `iecorrect') {
 		noi di as error "No commands to test"
 		exit
 	}
@@ -66,7 +67,11 @@ qui {
 	* Test ietestform
 	if `ietestform' do "${iefieldkit}/run/ietestform.do"	
 	
-	* Test ietestform
+	* Test iecodebook
 	if `iecodebook' do "${iefieldkit}/run/iecodebook.do"	
+
+	* Test iecorrect
+	if `iecorrect' do "${iefieldkit}/run/iecorrect.do"	
+
 	
 *************************** End of Master Do-File ******************************

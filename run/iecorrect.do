@@ -1,8 +1,3 @@
-global GitHub      "C:\Users\Inspiron\Desktop\GitHub"
-global iefieldkit  "${GitHub}/iefieldkit"
-global testouput   ".../dropbox"	
-	
-	
 qui do "${iefieldkit}/src/ado_files/iecorrect.ado"
 
 
