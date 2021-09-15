@@ -421,7 +421,7 @@ cap program drop checkcolnumeric
 	syntax [anything]
 	
 		* Are all the necessary variables there?
-		foreach var in numvar idvalue valuecurrent value {
+		foreach var in varname idvalue valuecurrent value {
 			cap confirm var `var'
 			if _rc {
 				noi di as error `"{phang}Column `var' not found in sheet [numeric]. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
@@ -431,12 +431,12 @@ cap program drop checkcolnumeric
 		
 		* Keep only those variables in the data set -- the user may have added notes
 		* that are not relevant for the command
-		keep numvar idvalue valuecurrent value 
+		keep varname idvalue valuecurrent value 
 		
 		** Check that variables have the correct format
-		cap confirm string var numvar
+		cap confirm string var varname
 		if _rc {
-			noi di as error `"{phang}Column numvar in sheet [numeric] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
+			noi di as error `"{phang}Column varname in sheet [numeric] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
 			local errorfill 1
 		}
 				
@@ -484,7 +484,7 @@ cap program drop checkcolstring
 	syntax [anything]
 	
 		* Are all the necessary variables there?
-		foreach var in strvar idvalue valuecurrent value {
+		foreach var in varname idvalue valuecurrent value {
 			cap confirm var `var'
 			if _rc {
 				noi di as error `"{phang}Column `var' not found in `type' sheet. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
@@ -493,12 +493,12 @@ cap program drop checkcolstring
 		
 		* Keep only those variables in the data set -- the user may have added notes
 		* that are not relevant for the command
-		keep strvar idvalue valuecurrent value 
+		keep varname idvalue valuecurrent value 
 		
 		** Check that variables have the correct format
-		cap confirm string var strvar
+		cap confirm string var varname
 		if _rc {
-			noi di as error `"{phang}Column numvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
+			noi di as error `"{phang}Column varname in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
 			local errorfill 1
 		}
 		
@@ -636,7 +636,7 @@ cap program drop donumeric
 	forvalues row = 1/`r(N)' {
 
 		* Calculate the user-specified inputs for this line
-		local var			= numvar[`row']
+		local var			= varname[`row']
 		local valuecurrent 	= valuecurrent[`row']
 		local value		 	= value[`row']
 		local idvalue		= idvalue[`row']
@@ -691,7 +691,7 @@ cap program drop dostring
 	forvalues row = 1/`r(N)' {
 		
 		* Identify the user-specified input in that line
-		local var			= strvar[`row']						
+		local var			= varname[`row']						
 		local valuecurrent 	= valuecurrent[`row']
 		local value		 	= value[`row']
 		local idvalue		= idvalue[`row']
