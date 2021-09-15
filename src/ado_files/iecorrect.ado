@@ -835,7 +835,11 @@ cap program drop dorun
 		qui save `data', replace
 
 		if !missing("`debug'") noi di as result "Exiting dorun subcommand"
-	}	
+	}
+	else {
+		noi di as error `"{phang}iecorrect could not find any corrections to be made. Check that you have filled the template spreadsheet. {p_end}"'
+		error 601
+	}
 end
 
 /*******************************************************************************	
