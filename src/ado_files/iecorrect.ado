@@ -130,7 +130,7 @@ cap program drop iecorrect
 	foreach var in `stringvars' {
 	
 		cap assert regex("`original_vars'", "`var'")
-		if _rc {
+		if _rc &  "`generate'" != "" {
 			qui {
 				cap	file close 	`doname'
 					file open  	`doname' using 	"`dofile'", text write append
@@ -143,7 +143,7 @@ cap program drop iecorrect
 	foreach var in `numericvars' `categoricalvars' {
 
 		cap assert regex("`original_vars'", "`var'")	
-		if _rc {
+		if _rc &  "`generate'" != "" {
 			qui {
 				cap	file close 	`doname'
 					file open  	`doname' using 	"`dofile'", text write append
