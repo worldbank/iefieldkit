@@ -853,13 +853,13 @@ cap program drop templateworkbook
 	
 		* String variables
 		templatesheet using "`using'", ///
-			varlist("strvar idvalue valuecurrent value initials notes") ///
+			varlist("varname idvalue value valuecurrent initials notes") ///
 			sheetname("string") ///
 			current("value")
 					
 		* Numeric variables
 		templatesheet using "`using'", ///
-			varlist("numvar idvalue valuecurrent value initials notes") ///
+			varlist("varname idvalue value valuecurrent initials notes") ///
 			sheetname("numeric") ///
 			current("value")
 
