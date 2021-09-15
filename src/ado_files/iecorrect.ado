@@ -112,7 +112,7 @@ cap program drop iecorrect
 
 		cap confirm new file "`using'"
 		if (_rc != 602) {	
-			noi di as error `"{phang}The iecorrect template is not found. The template must be created before use apply subcommand. {p_end}"'
+			noi di as error `"{phang}The iecorrect template is not found. The template must be created before the apply subcommand can be used. {p_end}"'
 			error 601 
 		}
 		
