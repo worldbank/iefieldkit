@@ -25,6 +25,35 @@ cap program drop iecorrect
 	else {
 		local corrSheets	`sheet'
 	}
+
+/*==============================================================================
+								Test File
+==============================================================================*/
+	// Standardize file path
+	local using = subinstr(`"`using'"',"\","/",.)	
+	
+	// Get the file extension 			
+		local fileext = substr(`"`using'"',strlen(`"`using'"')-strpos(strreverse(`"`using'"'),".")+1,.)
+
+	// If no fileextension was used, then add .xslx to "`using'"
+	if "`fileext'" == "" {
+	    
+		local using  "`using'.xlsx"
+	}
+
+	// Check if the file extension is the correct  
+	else if !inlist("`fileext'",".xlsx",".xls") {
+				noi di as error `"{phang}The file must include the extension [.xlsx] or [.xls] The format [`fileext'] is not allowed.{p_end}"'
+				error 198
+		}	
+				
+	// 	Confirm the file path is correct
+	cap confirm new file `using'
+	if (_rc == 603) {
+		noi di as error `"{phang} The file path used [`using'] does not exist.{p_end}"'
+      error 601	
+	}	
+	
 	
 /*==============================================================================
 							TEMPLATE SUBCOMMAND
@@ -35,20 +64,16 @@ cap program drop iecorrect
 	if "`subcommand'" == "template" {
 		
 		if !missing("`debug'") noi di "Entering template subcommand"
-		
-		* Check that folder exists
-			
-			
-		// Check that file doesn't already exist -----------------------------------
-		
-		cap confirm file "`using'"
-		if !_rc {
-			noi di as error `"{phang}File "`using'" already exists. Template was not created.{p_end}"'
-			error 601
-		}
-		
+	
+		// Check if file already exists
+		cap confirm new file `using'
+		if (_rc == 602) {
+			noi di as error `"{phang}File [`using'] already exists. Template was not created.{p_end}"'
+			error 602
+		}	
+				
 		// Create the template -----------------------------------------------------
-		templateworkbook using "`using'"
+		templateworkbook using "`using'" 
 			
 		if !missing("`debug'") noi di "Exiting template subcommand"
 	}																			// End of template subcommand
@@ -85,13 +110,12 @@ cap program drop iecorrect
 		
 // Check that file exists ------------------------------------------------------
 
-		cap confirm file "`using'"
-		if _rc {
-			noi di as error `"{phang}File "`using'" could not be found.{p_end}"'
-			error 601
+		cap confirm new file "`using'"
+		if (_rc != 602) {	
+			noi di as error `"{phang}The iecorrect template is not found. The template must be created before the apply subcommand can be used. {p_end}"'
+			error 601 
 		}
 		
-
 // Check which types of corrections need to be made ----------------------------
 
 		foreach type of local corrSheets {
@@ -108,6 +132,8 @@ cap program drop iecorrect
 				if "`type'" == "other" {
 					local categoricalvars `r(categoricalvars)'
 				}
+				
+				local any_corrections 1
 			}	
 		}
 		
@@ -189,12 +215,37 @@ cap program drop iecorrect
 	Save the do file containing the corrections if "save" was selected
 *******************************************************************************/
 		if "`save'" != "" {
+			* Standardize do file path
+			local save= subinstr(`"`save'"',"\","/",.)
+         
+			* Get the file extension 			
+			local save_fileext = substr(`"`save'"',strlen(`"`save'"')-strpos(strreverse(`"`save'"'),".")+1,.)
 			
-			* Check that folder exists
-			qui copy "`dofile'" `"`save'"', `replace'
+			* If no file extension was used, then add .do to "`save'"
+			if "`save_fileext'" == "" {
+				local save  "`save'.do"
+			}		
+						
+			else if !(`"`save_fileext'"' == ".do" ){
+				noi di as error `"{phang}The file extension used in the option save is not valid. The do-file must include the file extension [.do].{p_end}"'
+				error 198
+			}			
+			
+			* Check that folder exists and save the do file
+			cap qui copy "`dofile'" `"`save'"', `replace'
+			if _rc == 603 {
+				noi di as error `"{phang}The folder path used in the option save [`save'] does not exist.{p_end}"'
+				error 601		
+			}
+			
+			else if _rc == 602 {
+				noi di as error `"{phang}The file used in the option save [`save'] already exists. Use [replace] option if yo want to overwrite it. {p_end}"'
+				error 602			    
+			}
+			
 			noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} {p_end}"'
-		}			
-				
+		}	
+		
 /*******************************************************************************	
 	Run the do file containing the corrections
 *******************************************************************************/
@@ -202,8 +253,10 @@ cap program drop iecorrect
 		restore
 		noi di _n 
 		
-		dorun , doname("`doname'") dofile("`dofile'") data("`data'") `debug' `noisily' 
-		
+		* Don't run if there are no corrections to be made
+		if !missing("`any_corrections'") {
+			dorun , doname("`doname'") dofile("`dofile'") data("`data'") `debug' `noisily' 
+		} 		
 	
 		if !missing("`debug'") noi di as result "Exiting template subcommand"
 	
@@ -770,14 +823,14 @@ cap program drop dorun
 								local display qui
 	if !missing("`noisily'")	local display noi
 	
-	file open `doname' using "`dofile'", read
+	file open `doname' using "`dofile'", read		
 	file read `doname' line
-	
-	while r(eof)==0 {
-		if !missing("`noisily'") display `"`line'"'
-		`display' `line'
-		file read `doname' line
-	}
+		
+		while r(eof)==0 {
+			if !missing("`noisily'") display `"`line'"'
+			`display' `line'
+			file read `doname' line
+		}
 
 	file close `doname'
 
@@ -843,8 +896,10 @@ cap program drop templatesheet
 			if "`curent'" != "" {
 				lab var `current'current "`current':current"
 			}
-						
+			
 			export excel using "`using'", sheet("`sheetname'") firstrow(varlabels)
+		
+
 		}		
 	end
 
