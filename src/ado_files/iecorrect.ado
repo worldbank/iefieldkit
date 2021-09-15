@@ -312,9 +312,9 @@ cap program drop prepdata
 		
 		if "`anything'" == "numeric" 	{
 			qui destring valuecurrent value, replace
-			local mainvar	numvar
+			local mainvar	varname
 		}
-		if "`anything'" == "string" 	local mainvar	strvar
+		if "`anything'" == "string" 	local mainvar	varname
 		if "`anything'" == "other" 		{
 			qui destring catvalue, replace
 			local mainvar	strvar
