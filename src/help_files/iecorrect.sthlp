@@ -15,17 +15,24 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Iecorrect":D
 
 {title:Functions}
 
+{p 2 4}iecorrect consists of two separate subcommands. See section {help iecorrect##IntendedWokflow:Intended workflow} for a full description of how to use the command. {p_end}
+{break}
 {p 2 4}{cmdab:iecorrect template}{break} creates an Excel template
 with empty columns for you to specify the modification to be made when using {bf:iecorrect apply}.{p_end}
 {break}
-{p 2 4}{cmdab:iecorrect apply}{break} reads an Excel file that specifies
-which changes should be made to the dataset and applies them to the current dataset.{p_end}
+{p 2 4}{cmdab:iecorrect apply}{break} reads an Excel file created
+by iecorrect template and filled by the user to specify which changes should be made to the dataset and applies them to the current dataset.{p_end}
 {break}
 
 {title:Syntax}
 
 {phang2}
-{cmdab:iecorrect}
+{cmdab:iecorrect template}
+{help using} {it:"/path/to/corrections/file.xlsx"}
+{p_end}
+
+{phang2}
+{cmdab:iecorrect apply}
 {help using} {it:"/path/to/corrections/file.xlsx"},
 [
 {cmdab:idvar(}{it:varlist}{cmd:)}
@@ -40,18 +47,22 @@ which changes should be made to the dataset and applies them to the current data
 {synopthdr:options}
 {synoptline}
 {synopt :{cmdab:idvar(}{it:varlist}{cmd:)}}variable that uniquely identifies the dataset. Used to select specific observations to be changed. Required when using the {bf:apply} subcommand. {p_end}
-{synopt :{cmdab:sheet(}{it:string}{cmd:)}}select which types of corrections will be made.{p_end}
-{synopt :{cmdab:gen:erate}}used to create new categorical variables encoding open-ended questions. See corrections to categorical variables below. {p_end}
+{synopt :{cmdab:sheet(}{it:string}{cmd:)}}select which {help iecorrect##TypeCorrections:types of corrections} will be made.{p_end}
+{synopt :{cmdab:gen:erate}}used to add new variables to the datasets when making corrections to categorical variables. Use with caution. See {help iecorrect##CatCorrections:corrections to categorical variables} below for more details.{p_end}
 {synopt :{cmdab:save(}{it:string}{cmd:)}}save the do-file that makes modifications to the dataset.{p_end}
 {synopt :{cmdab:replace}}overwrite the do-file that makes modifications to the dataset if it already exists.{p_end}
-{synopt :{cmdab:noi:sily}}print the code and messages for the modifications as they run.{p_end}
+{synopt :{cmdab:noi:sily}}print the code and list of modifications as they run..{p_end}
 {synoptline}
 
+{marker IntendedWokflow}{...}
 {title:Intended workflow}
 
 {pstd}When starting the data correction process for any dataset, first run {cmd:iecorrect template} to create an empty Excel form. This form should only be created once, and then filled to indicate the changes that will be made to the data. Once the form is filled, run {cmd:iecorrect apply} to apply the changed indicated in the form to the dataset that is currently in memory.{p_end}
 
-{pstd}The Excel report includes four sheets, called {it:categorical}, {it:string}, {it:numeric}, and {it:drop}. Each of these sheets indicates one type of correction. Each type of correction requires slightly different input from the user, discussed below. Do not delete the information included in the template form, or the command will not run properly. {p_end}
+{pstd}The Excel report includes four sheets, called {it:categorical}, {it:string}, {it:numeric}, and {it:drop}. Each of these sheets indicates one type of correction. Each type of correction requires slightly different input from the user, discussed below. Do not delete the sheets and headers in the template form, or the command will not run properly. {p_end}
+
+{marker TypeCorrections}{...}
+{title:Types of corrections}
 
 {dlgtab:Columns for documentation:}
 
@@ -89,8 +100,8 @@ Filling this column is {bf:required} for this type of correction to run properly
 
 {pstd} These correction can be made through the {bf:numeric} tab of the Excel spreadsheet. It contains the following columns:{p_end}
 
-{phang2}{it:numvar}, which should be filled with the {bf:name of the numeric 
-variable to be corrected}. Filling this column is {bf:required} for this type of 
+{phang2}{it:numvar}, which should be filled with the {bf:name of the numeric variable to be corrected}. 
+Filling this column is {bf:required} for this type of 
 correction to run properly.{p_end}
 
 {phang2}{it:idvalue}, which should be filled with the value of the ID variable 
@@ -102,24 +113,31 @@ this type of correction to run properly,
 {phang2}{it:valuecurrent}, which should be filled with the current, 
 {bf:incorrect value} of the numeric variable in the observation to be corrected. 
 Filling this column is not required for this type of correction to run properly, 
-but either this column or the {it:valuecurrent} column must be filled.{p_end}
+{bf:but either this column or the {it:idvalue} column must be filled}.{p_end}
 
 {phang2}{it:value}, which should be filled with the {bf:correct value} of the variable.
 This value will replace the current value once {cmd:iecorrect apply} is run. 
 Filling this column is {bf:required} for this type of correction to run properly.{p_end}
 
+{marker CatCorrections}{...}
 {dlgtab:Corrections to categorical variables:}
 
 {pstd} These correction can be made through the {bf:other} tab of the Excel 
 spreadsheet. 
 The tab is called "other" because it is meant to enable the addition new categories 
 based on the string values on "Other: specify" fields. 
-It can also be used to encode open-ended fields and create a categorical 
-variable to represent them.It contains the following columns:{p_end}
+If combined with the option generate, it can also be used to encode open-ended 
+fields and create a categorical variable to represent them.{p_end}
 
-{phang2}{it:strvar}, which should be filled with the name of the string variable 
-where the "other" category was entered. 
-Filling this column is {bf:required} for this type of correction to run properly.{p_end}
+{pstd}In Stata, categorical variables are represented by numbers with associated value
+ labels. Differently from the other sheets, where the column to be correct is also used 
+ to identify the rows to be corrected, this sheet uses values of a text column 
+ (the string variable or {bf:strvar}) as a reference to replace values in a categorical 
+ column (the {bf:catvar}). It contains the following columns:{p_end}
+ 
+{phang2}{it:strvar}, which should be filled with the name of the string variable representing 
+the "Other: specify" question (or whatever variable needs to be encoded).  Filling this column 
+is {bf:required} for this type of correction to run properly.{p_end}
 
 {phang2}{it:strvaluecurrent}, which should be filled with the value of the 
 string variable in the observation to be corrected. 
@@ -129,15 +147,17 @@ Filling this column is {bf:required} for this type of correction to run properly
 the string variable with, in case you also want to correct it. 
 Filling this column is not required for this type of correction to run properly.{p_end}
 
-{phang2}{it:catvar}, which should be filled with the {bf:name of the categorical variable
-to be corrected}. 
+{phang2}{it:catvar}, which should be filled with the {bf:name of the categorical variable to be corrected}. 
 Filling this column is {bf:required} for this type of correction to run properly.
 If this variable does not yet exist, the option {cmdab:gen:erate} can be used to create it. {p_end}
 
 {phang2}{it:catvalue}, which should be filled with the {bf:correct value} of the categorical variable.
-This value will replace the replace the current value of the categorical variable
+This value will replace the current value of the categorical variable
 once {cmd:iecorrect apply} is run. 
 Filling this column is not required for this type of correction to run properly.{p_end}
+
+
+{pstd}{it:If the variable listed under the {bf:catvar} column does not exist, then the command will return an error indicating so. To override this error and create the specified variable, use the option {cmdab:gen:erate}.}{p_end}
 
 {pstd}{p_end}
 
