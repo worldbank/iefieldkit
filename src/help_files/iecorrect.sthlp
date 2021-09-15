@@ -21,7 +21,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/Iecorrect":D
 with empty columns for you to specify the modification to be made when using {bf:iecorrect apply}.{p_end}
 {break}
 {p 2 4}{cmdab:iecorrect apply}{break} reads an Excel file created
-by iecorrect template filled by the user to specify which changes should be made to the dataset and applies them to the current dataset.{p_end}
+by iecorrect template and filled by the user to specify which changes should be made to the dataset and applies them to the current dataset.{p_end}
 {break}
 
 {title:Syntax}
