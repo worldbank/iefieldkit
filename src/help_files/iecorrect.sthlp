@@ -28,7 +28,7 @@ by iecorrect template and filled by the user to specify which changes should be 
 
 {phang2}
 {cmdab:iecorrect template}
-{help using} {it:"/path/to/corrections/file.xlsx"}
+{help using} {it:"/path/to/corrections/file.xlsx"}, [ {cmdab:other} ]
 {p_end}
 
 {phang2}
@@ -36,11 +36,13 @@ by iecorrect template and filled by the user to specify which changes should be 
 {help using} {it:"/path/to/corrections/file.xlsx"},
 [
 {cmdab:idvar(}{it:varlist}{cmd:)}
-{cmdab:gen:erate} 
 {cmdab:replace}
 {cmdab:save(}{it:string}{cmd:)} 
 {cmdab:noi:sily}
-{cmdab:sheet(}{it:string}{cmd:)}]{p_end}
+{cmdab:sheet(}{it:string}{cmd:)}
+{cmdab:other}
+{cmdab:gen:erate} 
+]{p_end}
 
 {marker opts}{...}
 {synoptset 28}{...}
@@ -48,11 +50,12 @@ by iecorrect template and filled by the user to specify which changes should be 
 {synoptline}
 {synopt :{cmdab:idvar(}{it:varlist}{cmd:)}}variable that uniquely identifies the dataset. Used to select specific observations to be changed. Required when using the {bf:apply} subcommand. {p_end}
 {synopt :{cmdab:sheet(}{it:string}{cmd:)}}select which {help iecorrect##TypeCorrections:types of corrections} will be made.{p_end}
-{synopt :{cmdab:gen:erate}}used to add new variables to the datasets when making corrections to categorical variables. Use with caution. See {help iecorrect##CatCorrections:corrections to categorical variables} below for more details.{p_end}
 {synopt :{cmdab:save(}{it:string}{cmd:)}}save the do-file that makes modifications to the dataset.{p_end}
 {synopt :{cmdab:replace}}overwrite the do-file that makes modifications to the dataset if it already exists.{p_end}
-{synopt :{cmdab:noi:sily}}print the code and list of modifications as they run..{p_end}
-{synoptline}
+{synopt :{cmdab:noi:sily}}print the code and list of modifications as they run.{p_end}
+{synopt :{cmdab:other}}include sheet to categorize open-ended responses. 
+This is an advanced option. See {help iecorrect##CatCorrections:corrections to categorical variables} below for more details.{p_end}
+{synopt :{cmdab:gen:erate}}used with option {cmdab:other} to add new variables to the datasets when making corrections to categorical variables. Use with caution. 
 
 {marker IntendedWokflow}{...}
 {title:Intended workflow}
@@ -119,6 +122,14 @@ Filling this column is not required for this type of correction to run properly,
 This value will replace the current value once {cmd:iecorrect apply} is run. 
 Filling this column is {bf:required} for this type of correction to run properly.{p_end}
 
+{dlgtab:Dropping observations:}
+
+{pstd}Corrections made by {it:dropping} observations are implemented through the 
+{it:drop} tab of the Excel spreadsheet. This tab only has one {bf:required} column:{p_end}
+
+{phang2}{it:idvalue}, which should be filled with the value of the ID variable in the observations to be dropped.{p_end}
+
+
 {marker CatCorrections}{...}
 {dlgtab:Corrections to categorical variables:}
 
@@ -127,7 +138,12 @@ spreadsheet.
 The tab is called "other" because it is meant to enable the addition new categories 
 based on the string values on "Other: specify" fields. 
 If combined with the option generate, it can also be used to encode open-ended 
-fields and create a categorical variable to represent them.{p_end}
+fields and create a categorical variable to represent them.
+This is an advanced feature and the sheet that allows for these corrections is notes
+included in the template spreadsheet by default. 
+To make corrections of this type, include the option {cmdab:other} in both the 
+{cmdab:template} and {cmdab:apply} subcommands.
+{p_end}
 
 {pstd}In Stata, categorical variables are represented by numbers with associated value
  labels. Differently from the other sheets, where the column to be correct is also used 
@@ -160,14 +176,6 @@ Filling this column is not required for this type of correction to run properly.
 {pstd}{it:If the variable listed under the {bf:catvar} column does not exist, then the command will return an error indicating so. To override this error and create the specified variable, use the option {cmdab:gen:erate}.}{p_end}
 
 {pstd}{p_end}
-
-{dlgtab:Dropping observations:}
-
-{pstd}Corrections made by {it:dropping} observations are implemented through the 
-{it:drop} tab of the Excel spreadsheet. This tab only has one {bf:require} column:{p_end}
-
-{phang2}{it:idvalue}, which should be filled with the value of the ID variable in the observations to be dropped.{p_end}
-
 
 {space 4}{hline}
 
