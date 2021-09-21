@@ -3,7 +3,7 @@
 cap program drop iecorrect
 	program 	 iecorrect
 		
-	syntax [anything] using/, [GENerate idvar(varlist) NOIsily save(string) replace sheet(string) debug]
+	syntax [anything] using/, [GENerate idvar(varlist) NOIsily save(string) replace other sheet(string) debug]
 		
 	gettoken subcommand anything : anything
 	
@@ -20,7 +20,11 @@ cap program drop iecorrect
 ==============================================================================*/
 	
 	if "`sheet'" == "" {
-		local corrSheets	numeric string other drop 
+		local corrSheets	numeric string drop 
+		
+		if "`other'" != "" {
+			local corrSheets "`corrSheets' other"
+		}
 	}
 	else {
 		local corrSheets	`sheet'
@@ -73,7 +77,7 @@ cap program drop iecorrect
 		}	
 				
 		// Create the template -----------------------------------------------------
-		templateworkbook using "`using'" 
+		templateworkbook using "`using'" , `other'
 			
 		if !missing("`debug'") noi di "Exiting template subcommand"
 	}																			// End of template subcommand
@@ -214,6 +218,7 @@ cap program drop iecorrect
 /*******************************************************************************	
 	Save the do file containing the corrections if "save" was selected
 *******************************************************************************/
+
 		if "`save'" != "" {
 			* Standardize do file path
 			local save= subinstr(`"`save'"',"\","/",.)
@@ -847,7 +852,7 @@ end
 cap program drop templateworkbook
 	program		 templateworkbook
 	
-	syntax using/
+	syntax using/ , [other]
 	
 	preserve
 	
@@ -863,16 +868,19 @@ cap program drop templateworkbook
 			sheetname("numeric") ///
 			current("value")
 
-		* Other variables
-		templatesheet using "`using'", ///
-			varlist("strvar strvaluecurrent strvalue catvar catvalue initials notes") ///
-			sheetname("other") ///
-			current("strvalue")
-
 		* Drop observations
 		templatesheet using "`using'", ///
 			varlist("idvalue initials notes") ///
 			sheetname("drop")
+
+		* Other variables
+		if "`other'" != "" {
+			templatesheet using "`using'", ///
+				varlist("strvar strvaluecurrent strvalue catvar catvalue initials notes") ///
+				sheetname("other") ///
+				current("strvalue")
+		}
+			
 
 		noi di as result `"{phang}Template spreadsheet saved to: {browse "`using'":`using'}{p_end}"'
 			
