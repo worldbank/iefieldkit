@@ -515,6 +515,11 @@ cap program drop checkcolstring
 			local errorfill 1
 		}
 		
+		** Check if the string columns have extra whitespaces and special characters
+		foreach var in strvar valuecurrent value {
+		    valstrings `var' 
+		}
+		 
 		return local errorfill `errorfill'
 		
 end		
@@ -594,7 +599,36 @@ cap program drop checkcoldrop
 		
 		return local errorfill `errorfill'
 			
-end		
+end	
+
+*************************************************************
+* Check if there are extra whitespaces and special characters
+*************************************************************
+cap program drop valstrings
+	program 	 valstrings, rclass
+	
+	syntax varname
+	
+		tempname sum val	
+	
+		gen `val' = 0
+		*Test if there are any leading or trailing spaces
+		qui replace `val' = 1 if `varlist'!= strtrim(`varlist')
+			
+		* Test if there are consecutive spaces
+		qui replace `val' = 1 if `varlist'!= stritrim(`varlist')
+			
+		* Test if there are any Unicode whitespace (line, Tab..)
+		qui replace `val' = 1 if `varlist'!= ustrtrim(`varlist')
+
+		egen `sum' = total(`val')
+		qui if `sum' > 0 {
+			noi di as error `"{phang}The {bf:`varlist'} column has whitespaces (leading, trailing or consecutive spaces) or blank characters (tabs, new lines) that can cause mismatches. Please, clean the {bf:`varlist'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
+
+		}
+		list `varlist' if `val' == 1
+	
+end
 	
 /*******************************************************************************	
 	Write the do file with corrections
