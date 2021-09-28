@@ -609,9 +609,12 @@ cap program drop valstrings
 	
 	syntax varname
 	
-		tempname sum val	
-	
+		*******************
+		* Extra whitespaces
+		*******************
+		tempname sum val
 		gen `val' = 0
+		
 		*Test if there are any leading or trailing spaces
 		qui replace `val' = 1 if `varlist'!= strtrim(`varlist')
 			
@@ -620,14 +623,37 @@ cap program drop valstrings
 			
 		* Test if there are any Unicode whitespace (line, Tab..)
 		qui replace `val' = 1 if `varlist'!= ustrtrim(`varlist')
-
+		
 		egen `sum' = total(`val')
 		qui if `sum' > 0 {
 			noi di as error `"{phang}The {bf:`varlist'} column has whitespaces (leading, trailing or consecutive spaces) or blank characters (tabs, new lines) that can cause mismatches. Please, clean the {bf:`varlist'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
 
 		}
 		list `varlist' if `val' == 1
-	
+		
+		********************
+		* Special Characters
+		********************
+		tempname sum val
+		gen `val' = 0
+		
+		* Test if there are quotation marks: " ' `	
+		foreach i in 34 36 96 {
+			qui replace `val' = 1 if index(`varlist', char(`i')) != 0	
+		}
+
+		* Test if there are other special characters: ! & , . / < >  [ ] |  ^ + - : = ( ) # { }
+		foreach i in 33 38 44 46 47 60 62 91 93 124 94 43 45 58 61 40 41 35 123 125 {
+			qui replace `val' = 1 if index(`varlist', char(`i')) != 0
+		}
+		
+		egen `sum' = total(`val')
+		qui if `sum' > 0 {
+			noi di as error `"{phang}The {bf:`varlist'} column has special characters that can cause mismatches. Please, clean the {bf:`varlist'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
+
+		}
+		list `varlist' if `val' == 1
+			
 end
 	
 /*******************************************************************************	
