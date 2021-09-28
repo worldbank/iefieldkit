@@ -305,7 +305,7 @@ cap program drop prepdata
 				cap confirm string var idvalue
 				if !_rc {
 					noi di as error `"{phang}Column idvalue in sheet [`anything'] is not numeric. This column should contain the unique identifier of the observations to be corrected.{p_end}"'
-					local errorfill 1
+					error 198
 				}
 			}
 		}
@@ -434,6 +434,7 @@ cap program drop checkcolnumeric
 		keep numvar idvalue valuecurrent value 
 		
 		** Check that variables have the correct format
+		qui destring numvar, replace
 		cap confirm string var numvar
 		if _rc {
 			noi di as error `"{phang}Column numvar in sheet [numeric] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
@@ -496,9 +497,10 @@ cap program drop checkcolstring
 		keep strvar idvalue valuecurrent value 
 		
 		** Check that variables have the correct format
+		qui destring strvar, replace
 		cap confirm string var strvar
 		if _rc {
-			noi di as error `"{phang}Column numvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
+			noi di as error `"{phang}Column strvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
 			local errorfill 1
 		}
 		
@@ -511,7 +513,7 @@ cap program drop checkcolstring
 		** Either idvalue or valuecurrent need to be specified
 		qui count if missing(idvalue) & missing(valuecurrent)
 		if r(N) > 0 {
-			noi di as error `"{phang}There are `r(N)' lines in the `type' sheet where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for numeric corrections to be made correctly.{p_end}"'
+			noi di as error `"{phang}There are `r(N)' lines in the `type' sheet where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for string corrections to be made correctly.{p_end}"'
 			local errorfill 1
 		}
 		
@@ -543,6 +545,7 @@ cap program drop checkcolother
 		
 		** Check that variables have the correct format
 		foreach var in strvar catvar {
+			qui destring `var', replace
 			cap confirm string var `var'
 			if _rc {
 				noi di as error `"{phang}Column `var' in [other] sheet is not a string. This column needs to be filled for corrections of categorical variable to be made.{p_end}"'
