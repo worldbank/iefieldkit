@@ -434,6 +434,7 @@ cap program drop checkcolnumeric
 		keep numvar idvalue valuecurrent value 
 		
 		** Check that variables have the correct format
+		qui destring numvar, replace
 		cap confirm string var numvar
 		if _rc {
 			noi di as error `"{phang}Column numvar in sheet [numeric] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
@@ -496,6 +497,7 @@ cap program drop checkcolstring
 		keep strvar idvalue valuecurrent value 
 		
 		** Check that variables have the correct format
+		qui destring strvar, replace
 		cap confirm string var strvar
 		if _rc {
 			noi di as error `"{phang}Column strvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
@@ -543,6 +545,7 @@ cap program drop checkcolother
 		
 		** Check that variables have the correct format
 		foreach var in strvar catvar {
+			qui destring `var', replace
 			cap confirm string var `var'
 			if _rc {
 				noi di as error `"{phang}Column `var' in [other] sheet is not a string. This column needs to be filled for corrections of categorical variable to be made.{p_end}"'
