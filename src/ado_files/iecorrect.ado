@@ -513,7 +513,7 @@ cap program drop checkcolstring
 		** Either idvalue or valuecurrent need to be specified
 		qui count if missing(idvalue) & missing(valuecurrent)
 		if r(N) > 0 {
-			noi di as error `"{phang}There are `r(N)' lines in the `type' sheet where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for strings corrections to be made correctly.{p_end}"'
+			noi di as error `"{phang}There are `r(N)' lines in the `type' sheet where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for string corrections to be made correctly.{p_end}"'
 			local errorfill 1
 		}
 		
