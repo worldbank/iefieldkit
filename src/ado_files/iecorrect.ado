@@ -179,7 +179,7 @@ cap program drop iecorrect
 		}
 		
 		if _rc &  "`generate'" == "" {
-			noi di as error `"{phang} The var {bf:`var'} does not exist in the dataset. Please, use generate option to create a categorical variable to represent your corrections.{p_end}"'
+			noi di as error `"{phang} The variable {bf:`var'} does not exist in the dataset. Check the variable name or use [generate] option to create a categorical variable to represent your corrections.{p_end}"'
 			error 111
 		}
 	}
