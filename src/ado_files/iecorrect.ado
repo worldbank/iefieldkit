@@ -498,7 +498,7 @@ cap program drop checkcolstring
 		** Check that variables have the correct format
 		cap confirm string var strvar
 		if _rc {
-			noi di as error `"{phang}Column numvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
+			noi di as error `"{phang}Column strvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
 			local errorfill 1
 		}
 		
@@ -511,7 +511,7 @@ cap program drop checkcolstring
 		** Either idvalue or valuecurrent need to be specified
 		qui count if missing(idvalue) & missing(valuecurrent)
 		if r(N) > 0 {
-			noi di as error `"{phang}There are `r(N)' lines in the `type' sheet where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for numeric corrections to be made correctly.{p_end}"'
+			noi di as error `"{phang}There are `r(N)' lines in the `type' sheet where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for strings corrections to be made correctly.{p_end}"'
 			local errorfill 1
 		}
 		
