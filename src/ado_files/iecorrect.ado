@@ -177,6 +177,11 @@ cap program drop iecorrect
 					file close  `doname'
 			}
 		}
+		
+		if _rc &  "`generate'" == "" {
+			noi di as error `"{phang} The variable {bf:`var'} does not exist in the dataset. Check the variable name or use [generate] option to create a categorical variable to represent your corrections.{p_end}"'
+			error 111
+		}
 	}
 
 // Read correction sheet -------------------------------------------------------
