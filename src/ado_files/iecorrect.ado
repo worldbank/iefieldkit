@@ -305,7 +305,7 @@ cap program drop prepdata
 				cap confirm string var idvalue
 				if !_rc {
 					noi di as error `"{phang}Column idvalue in sheet [`anything'] is not numeric. This column should contain the unique identifier of the observations to be corrected.{p_end}"'
-					local errorfill 1
+					error 198
 				}
 			}
 		}
