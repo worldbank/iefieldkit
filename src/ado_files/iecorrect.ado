@@ -517,11 +517,17 @@ cap program drop checkcolstring
 		
 		** Check if the string columns have extra whitespaces and special characters
 		foreach var in strvar valuecurrent value {
-		    valstrings `var' 
+		    valstrings `var'
+			if "`r(errorspecialcharac)'" == "1" {
+				noi di as error `"{phang}The {bf:`var'} column has special characters that can cause mismatches. Please, clean the {bf:`var'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
+			}
+				
+			if "`r(errorwhitespace)'" == "1" {
+				noi di as error `"{phang}The {bf:`var'} column has whitespaces (leading, trailing or consecutive spaces) or blank characters (tabs, new lines) that can cause mismatches. Please, clean the {bf:`var'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
+			}					 
 		}
 		 
 		return local errorfill `errorfill'
-		
 end		
 	
 ***********************************
@@ -608,52 +614,45 @@ cap program drop valstrings
 	program 	 valstrings, rclass
 	
 	syntax varname
-	
+
 		*******************
 		* Extra whitespaces
 		*******************
-		tempname sum val
-		gen `val' = 0
+		tempname validation
+		qui gen `validation' = `varlist'
 		
 		*Test if there are any leading or trailing spaces
-		qui replace `val' = 1 if `varlist'!= strtrim(`varlist')
-			
-		* Test if there are consecutive spaces
-		qui replace `val' = 1 if `varlist'!= stritrim(`varlist')
-			
-		* Test if there are any Unicode whitespace (line, Tab..)
-		qui replace `val' = 1 if `varlist'!= ustrtrim(`varlist')
-		
-		egen `sum' = total(`val')
-		qui if `sum' > 0 {
-			noi di as error `"{phang}The {bf:`varlist'} column has whitespaces (leading, trailing or consecutive spaces) or blank characters (tabs, new lines) that can cause mismatches. Please, clean the {bf:`varlist'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
+		qui replace `validation' = strtrim(`validation')
 
+		* Test if there are consecutive spaces
+		qui replace `validation' = stritrim(`validation')
+	
+		* Test if there are any Unicode whitespace (line, Tab..)
+		qui replace `validation' = ustrtrim(`validation')
+	
+		cap assert `varlist' == `validation'
+		if _rc {
+			local errorwhitespace 1
 		}
-		list `varlist' if `val' == 1
-		
+	
 		********************
 		* Special Characters
 		********************
-		tempname sum val
-		gen `val' = 0
+		forvalues i = 0/255 {
+			if !inrange(`i', 48, 57) /// numbers
+				& !inrange(`i', 65, 90) /// uppers case letters
+				& !inrange(`i', 97, 122) ///  case letters
+				& !inlist(`i', 32, 33, 35, 37, 38, 40, 41, 42, 43, 44, 45, 46, 58, 59, 60, 61, 62, 63, 64, 91, 93, 95){ 
+				capture assert index(`validation', char(`i')) == 0 
+				if _rc {
+					local errorspecialcharac 1
+		        }
+			}
+		}
 		
-		* Test if there are quotation marks: " ' `	
-		foreach i in 34 36 96 {
-			qui replace `val' = 1 if index(`varlist', char(`i')) != 0	
-		}
-
-		* Test if there are other special characters: ! & , . / < >  [ ] |  ^ + - : = ( ) # { }
-		foreach i in 33 38 44 46 47 60 62 91 93 124 94 43 45 58 61 40 41 35 123 125 {
-			qui replace `val' = 1 if index(`varlist', char(`i')) != 0
-		}
+		return local errorwhitespace `errorwhitespace'
+		return local errorspecialcharac `errorspecialcharac'
 		
-		egen `sum' = total(`val')
-		qui if `sum' > 0 {
-			noi di as error `"{phang}The {bf:`varlist'} column has special characters that can cause mismatches. Please, clean the {bf:`varlist'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
-
-		}
-		list `varlist' if `val' == 1
-			
 end
 	
 /*******************************************************************************	
