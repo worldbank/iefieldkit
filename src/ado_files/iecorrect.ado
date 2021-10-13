@@ -136,6 +136,28 @@ cap program drop iecorrect
 			}	
 		}
 
+// Check dataset variables to be correct---------------------------------
+		qui use `data', clear
+		
+		foreach type of local corrSheets {
+		    
+			* Check if the string variables to be corrected don't have extra white spaces and special characters
+			foreach var of local `type'vars {
+				qui destring `var', replace
+				qui cap confirm string var `var' 
+				if !_rc{
+					valstrings `var'
+					if "`r(errorspecialcharac)'" == "1" {
+						noi di as error `"{phang}Variable {bf:`var'} has special characters that can cause mismatches. Please, clean the variable before run the template or take that into consideration.{p_end}"'
+					}
+						
+					if "`r(errorwhitespace)'" == "1" {
+						noi di as error `"{phang}Variable {bf:`var'} has whitespaces (leading, trailing or consecutive spaces) or blank characters (tabs, new lines) that can cause mismatches. Please, clean the variable before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
+					}				    
+				} 
+			}
+			
+		}		
 		
 /*******************************************************************************	
 	Create a do file containing the corrections
