@@ -95,7 +95,6 @@ cap program drop iecorrect
 	
 // Crete a list of variables in the data ---------------------------------------
 
-	
 	qui ds
 	local original_vars `" `r(varlist)' "'
 
@@ -136,6 +135,7 @@ cap program drop iecorrect
 				local any_corrections 1
 			}	
 		}
+
 		
 /*******************************************************************************	
 	Create a do file containing the corrections
@@ -334,7 +334,7 @@ cap program drop prepdata
 /*******************************************************************************	
 	Initial checks
 *******************************************************************************/
-	
+
 ****************************************
 * Check that sheet is filled correctly
 ****************************************
@@ -384,7 +384,7 @@ cap program drop checksheets
 				noi di as result `"{phang}IDs of observations to be dropped: ``type'vars'{p_end}"'
 			}		
 		}
-
+		
 		* If there are no corrections to be made, save that information and move forward
 		else if `r(N)' == 0 {
 			local	`type'corr	0
@@ -572,6 +572,18 @@ cap program drop checkcolother
 		if r(N) > 0 {
 			noi di as error `"{phang}There are `r(N)' lines in sheet [other] where strvaluecurrent column is not filled. This column should be filled for categorical corrections to be made correctly.{p_end}"'
 			local errorfill 1
+		}
+
+		** Check if the string columns have extra whitespaces and special characters
+		foreach var in strvar strvaluecurrent strvalue catvar {
+		    valstrings `var'
+			if "`r(errorspecialcharac)'" == "1" {
+				noi di as error `"{phang}The {bf:`var'} column has special characters that can cause mismatches. Please, clean the {bf:`var'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
+			}
+				
+			if "`r(errorwhitespace)'" == "1" {
+				noi di as error `"{phang}The {bf:`var'} column has whitespaces (leading, trailing or consecutive spaces) or blank characters (tabs, new lines) that can cause mismatches. Please, clean the {bf:`var'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
+			}					 
 		}
 		
 		return local errorfill `errorfill'
