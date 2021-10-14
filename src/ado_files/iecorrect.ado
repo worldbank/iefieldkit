@@ -132,11 +132,39 @@ cap program drop iecorrect
 				if "`type'" == "other" {
 					local categoricalvars `r(categoricalvars)'
 				}
+				if "`type'" == "drop" {
+					local idvals   `r(idvals)'
+					local num_obs  `r(num_obs)'
+				}
+				
 				
 				local any_corrections 1
 			}	
 		}
+// Check drop number corrections ----------------------------
+		qui use `data', clear
 		
+		local n : word count `idvals'
+		
+		forvalues i = 1/`n' {
+			local id  : word `i' of `idvals'
+			local obs : word `i' of `num_obs'
+			
+			* Test that the number of observations that will be dropped is correct
+			qui count if `idvar' == `id'
+			local totalobs = r(N)
+			qui assert `obs' < r(N)
+			
+			if !_rc {
+			noi di as error `"{phang} The number of observations to be dropped is incorrect. The up number of observations that you can drop with the idvalue `id' is `r(N)'.{p_end}"'
+			error 111		
+			}
+			
+			if _rc {
+			noi di as error `"{phang} `obs' observations will be dropped from the idvalue `id'. {p_end}"'
+			}
+		}
+				
 /*******************************************************************************	
 	Create a do file containing the corrections
 *******************************************************************************/		
@@ -201,8 +229,13 @@ cap program drop iecorrect
 				* Open the placeholder do file and write the corrections to be made
 				cap	file close 	`doname'
 				qui	file open  	`doname' using "`dofile'", text write append
-							
+				
+				if inlist("`type'", "string", "numeric", "other") {
 					do`type', 	 doname("`doname'") idvar("`idvar'") stringid(`stringid') `debug'
+			    }
+				else {
+					do`type', 	 doname("`doname'") idvar("`idvar'") stringid(`stringid') totalobs(`totalobs') `debug'
+				}		
 
 				* Add an extra space before the next set of corrections
 					file write  `doname'		  _n _n					
@@ -382,6 +415,16 @@ cap program drop checksheets
 				qui levelsof catvar, local(categoricalvars) clean
 			}
 			
+			* List idvals and number of observations to be dropped
+			if "`type'" == "drop" {
+				qui levelsof idvalue, local(idvals)
+				qui destring n_obs, replace
+				qui levelsof n_obs, local(num_obs)
+				
+			}
+			
+			
+			
 			if inlist("`type'", "string", "numeric", "other") {
 				noi di as result `"{phang}Variables for corrections of type `type': ``type'vars'{p_end}"'
 			}
@@ -410,6 +453,11 @@ cap program drop checksheets
 		
 		if "`type'" == "other" {
 		return local categoricalvars `categoricalvars'
+		}
+		
+		if "`type'" == "drop" {
+			return local idvals 		  `idvals'
+			return local num_obs          `num_obs'
 		}
 		
 		if !missing("`debug'") noi di as result "Exiting checksheets subcommand"
@@ -741,7 +789,7 @@ end
 cap program drop dodrop
 	program 	 dodrop
 	
-	syntax , doname(string) idvar(string) stringid(numlist) [debug]
+	syntax , doname(string) idvar(string) stringid(numlist) totalobs(string) [debug]
 
 	if !missing("`debug'") noi di as result "Entering dodrop subcommand"
 	
@@ -752,6 +800,7 @@ cap program drop dodrop
 	forvalues row = 1/`r(N)' {
 		
 		local idvalue		= idvalue[`row']
+		local n_obs 		= n_obs[`row']
 
 		if `"`idvalue'"' != "" {
 			*Confirm that ID var was specified
@@ -760,8 +809,8 @@ cap program drop dodrop
 			** Write the line to the do file
 			if `stringid'	local idvalue = `""`idvalue'""'
 			
-			file write `doname'	`"drop if `idvar' == `idvalue' "' _n							// <---- Writing in do file here
-			
+			file write `doname'	`"drop if `idvar' == `idvalue' in `n_obs'/`totalobs' "' _n							// <---- Writing in do file here
+				
 		}
 	}
 
