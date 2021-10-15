@@ -879,7 +879,7 @@ cap program drop templateworkbook
 
 		* Drop observations
 		templatesheet using "`using'", ///
-			varlist("idvalue initials notes") ///
+			varlist("idvalue num_obs initials notes") ///
 			sheetname("drop")
 
 		noi di as result `"{phang}Template spreadsheet saved to: {browse "`using'":`using'}{p_end}"'
