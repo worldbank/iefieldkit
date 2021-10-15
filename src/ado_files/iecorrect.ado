@@ -600,6 +600,13 @@ cap program drop checkcoldrop
 			local errorfill 1
 		}
 		
+		
+		cap assert !missing(n_obs)
+		if _rc {
+			noi di as error `"{phang}At least one entry for column n_obs in sheet [drop] is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
+			local errorfill 1
+		}
+		
 		return local errorfill `errorfill'
 			
 end		
