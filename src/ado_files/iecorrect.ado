@@ -643,7 +643,14 @@ cap program drop checkcoldrop
 			noi di as error `"{phang}At least one entry for column n_obs in sheet [drop] is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
 			local errorfill 1
 		}
-				
+		
+		qui destring n_obs, replace
+		cap confirm string var n_obs
+		if !_rc {
+			noi di as error `"{phang}Column n_obs in sheet [drop] is not numeric. This column should contain the number of observations to be dropped.{p_end}"'
+			local errorfill 1
+		}
+		
 		return local errorfill `errorfill'
 			
 end		
