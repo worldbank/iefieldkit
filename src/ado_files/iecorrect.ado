@@ -152,15 +152,13 @@ cap program drop iecorrect
 
 			* Test that the number of observations that will be dropped is correct
 			qui count if `idvar' == `id'
-			local totalobs = r(N)
-			qui assert `obs' != r(N)
-
-			if _rc {
+			cap assert `obs' != r(N)
+			if !_rc {
 			noi di as error `"{phang} The number of observations to be dropped is incorrect.{p_end}"'
 			error 111		
 			}
 
-			if !_rc {
+			if _rc {
 			noi di as error `"{phang} `obs' observations will be dropped from the idvalue `id'. {p_end}"'
 			}
 		}		
@@ -645,7 +643,7 @@ cap program drop checkcoldrop
 			noi di as error `"{phang}At least one entry for column n_obs in sheet [drop] is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
 			local errorfill 1
 		}
-		
+				
 		return local errorfill `errorfill'
 			
 end		
