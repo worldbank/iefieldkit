@@ -146,14 +146,7 @@ cap program drop iecorrect
 				qui destring `var', replace
 				qui cap confirm string var `var' 
 				if !_rc{
-					valstrings `var'
-					if "`r(errorspecialcharac)'" == "1" {
-						noi di as error `"{phang}Variable {bf:`var'} has special characters that can cause mismatches. Please, clean the variable before run the template or take that into consideration.{p_end}"'
-					}
-						
-					if "`r(errorwhitespace)'" == "1" {
-						noi di as error `"{phang}Variable {bf:`var'} has whitespaces (leading, trailing or consecutive spaces) or blank characters (tabs, new lines) that can cause mismatches. Please, clean the variable before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
-					}				    
+					valstrings `var', location(Variable)			    
 				} 
 			}
 			
@@ -539,14 +532,7 @@ cap program drop checkcolstring
 		
 		** Check if the string columns have extra whitespaces and special characters
 		foreach var in strvar valuecurrent value {
-		    valstrings `var'
-			if "`r(errorspecialcharac)'" == "1" {
-				noi di as error `"{phang}The {bf:`var'} column has special characters that can cause mismatches. Please, clean the {bf:`var'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
-			}
-				
-			if "`r(errorwhitespace)'" == "1" {
-				noi di as error `"{phang}The {bf:`var'} column has whitespaces (leading, trailing or consecutive spaces) or blank characters (tabs, new lines) that can cause mismatches. Please, clean the {bf:`var'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
-			}					 
+		    valstrings `var', location(Column)
 		}
 		 
 		return local errorfill `errorfill'
@@ -598,14 +584,7 @@ cap program drop checkcolother
 
 		** Check if the string columns have extra whitespaces and special characters
 		foreach var in strvar strvaluecurrent strvalue catvar {
-		    valstrings `var'
-			if "`r(errorspecialcharac)'" == "1" {
-				noi di as error `"{phang}The {bf:`var'} column has special characters that can cause mismatches. Please, clean the {bf:`var'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
-			}
-				
-			if "`r(errorwhitespace)'" == "1" {
-				noi di as error `"{phang}The {bf:`var'} column has whitespaces (leading, trailing or consecutive spaces) or blank characters (tabs, new lines) that can cause mismatches. Please, clean the {bf:`var'} column before run the template or take that into consideration when filling the spreadsheet.{p_end}"'
-			}					 
+			valstrings `var', location(Column)				 
 		}
 		
 		return local errorfill `errorfill'
@@ -647,7 +626,7 @@ end
 cap program drop valstrings
 	program 	 valstrings, rclass
 	
-	syntax varname
+	syntax varname, location(string)
 
 		*******************
 		* Extra whitespaces
@@ -666,7 +645,7 @@ cap program drop valstrings
 	
 		cap assert `varlist' == `validation'
 		if _rc {
-			local errorwhitespace 1
+			strerror, var(`var') type(whitespace) location(`location')	
 		}
 	
 		********************
@@ -679,13 +658,28 @@ cap program drop valstrings
 				& !inlist(`i', 32, 33, 35, 37, 38, 40, 41, 42, 43, 44, 45, 46, 58, 59, 60, 61, 62, 63, 64, 91, 93, 95){ 
 				capture assert index(`validation', char(`i')) == 0 
 				if _rc {
-					local errorspecialcharac 1
+					strerror, var(`var') type(specialchar) location(`location')	
 		        }
 			}
 		}
 		
-		return local errorwhitespace `errorwhitespace'
-		return local errorspecialcharac `errorspecialcharac'
+end	
+
+cap program drop strerror
+	program 	 strerror
+	
+	syntax , var(string) type(string) location(string)
+	
+	if "`type'" == "specialchar" {
+		local issue 	special characters
+		local details 	""
+	}
+	else if "`type'" == "whitespace" {
+		local issue 	extra whitespaces
+		local details 	(leading, trailing or consecutive spaces, tabs or new lines)
+	}
+	
+	noi di as error `"{phang}`location' {bf:`var'} contains `issue' `details'. [iecorrect] will run, but this may cause mismatches between the template spreadsheet and the content of the data, in which case the corrections will not be applied. It is recommended to remove `issue' from the data and the template spreadsheet before running [iecorrect].{p_end}"'
 		
 end
 	
