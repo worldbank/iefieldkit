@@ -173,7 +173,7 @@ once {cmd:iecorrect apply} is run.
 Filling this column is not required for this type of correction to run properly.{p_end}
 
 
-{pstd}{it:If the variable listed under the {bf:catvar} column does not exist, then the command will return an error indicating so. To override this error and create the specified variable, use the option {cmdab:gen:erate}.}{p_end}
+{pstd}If the variable listed under the {bf:catvar} column does not exist, then the command will return an error indicating so. To override this error and create the specified variable, use the option {cmdab:gen:erate}.{p_end}
 
 {pstd}{p_end}
 
