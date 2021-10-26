@@ -126,10 +126,15 @@ cap program drop iecorrect
 
 			* If there are, it also lists the variables to be corrected or IDs to be dropped
 			if ``type'corr' == 1 {
+			    
+				* List variables to be corrected
 				local `type'vars	`r(`type'vars)'
+				
 				if "`type'" == "other" {
 					local categoricalvars `r(categoricalvars)'
 				}
+				
+				* List IDs to be dropped and corresponding number of observations
 				if "`type'" == "drop" {
 					local idvals   `r(idvals)'
 					local n_obs    `r(n_obs)'
@@ -139,37 +144,45 @@ cap program drop iecorrect
 			}	
 		}
 
-// Check drop number corrections ----------------------------
+// Check drop number corrections -----------------------------------------------
+
 		qui use `data', clear
 
 		local n : word count `idvals'
 
 		forvalues i = 1/`n' {
+		    
+			* Get ID and number of corresponding observations
 			local id  : word `i' of `idvals'
 			local obs : word `i' of `n_obs'
 
 			* Test that the number of observations that will be dropped is correct
 			qui count if `idvar' == `id'
+			
 			cap assert `obs' != r(N)
 			if !_rc {
-			noi di as error `"{phang} The number of observations to be dropped is incorrect.{p_end}"'
-			error 111		
+				noi di as error `"{phang} The number of observations with ID value [`id'] in the data does not match the number of observations listed in the column [n_obs] of the template sheet [drop].{p_end}"'
+				error 111		
 			}
 
-			if _rc {
-			noi di as error `"{phang} `obs' observations will be dropped from the idvalue `id'. {p_end}"'
+			else if _rc {
+				noi di as error `"{phang} `obs' observations with ID value [`id'] will be removed from the data. {p_end}"'
 			}
+		}
 
-// Check dataset variables to be correct---------------------------------
+// Check dataset variables to be corrected -------------------------------------
+
 		qui use `data', clear
 		
 		foreach type of local corrSheets {
 		    
 			* Check if the string variables to be corrected don't have extra white spaces and special characters
 			foreach var of local `type'vars {
+				
 				qui destring `var', replace
 				qui cap confirm string var `var' 
-				if !_rc{
+				
+				if !_rc {
 					valstrings `var', location(Variable)			    
 				} 
 			}
@@ -421,8 +434,8 @@ cap program drop checksheets
 			
 			* List idvals and number of observations to be dropped
 			if "`type'" == "drop" {
-				qui levelsof idvalue, local(idvals)
-				qui levelsof n_obs, local(n_obs)
+				qui levelsof idvalue, 	local(idvals)
+				qui levelsof n_obs, 	local(n_obs)
 			}
 			
 			if inlist("`type'", "string", "numeric", "other") {
@@ -452,12 +465,12 @@ cap program drop checksheets
 		return local `type'vars 	``type'vars'
 		
 		if "`type'" == "other" {
-		return local categoricalvars `categoricalvars'
+			return local categoricalvars `categoricalvars'
 		}
 		
 		if "`type'" == "drop" {
-			return local idvals 		`idvals'
-			return local n_obs          `n_obs'
+			return local idvals `idvals'
+			return local n_obs	`n_obs'
 		}
 		
 		if !missing("`debug'") noi di as result "Exiting checksheets subcommand"
