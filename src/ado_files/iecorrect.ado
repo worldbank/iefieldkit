@@ -10,10 +10,8 @@ cap program drop iecorrect
 	if !inlist("`subcommand'","template","apply") {
 		di as err "{bf:iecorrect} requires [template] or [apply] to be specified with a target [using] file. Type {bf:help iecorrect} for details."
 	}
-
-	preserve
 	
-	noi di _n
+	preserve
 	
 /*==============================================================================
 								PROCESS OPTIONS
@@ -29,6 +27,7 @@ cap program drop iecorrect
 /*==============================================================================
 								Test File
 ==============================================================================*/
+
 	// Standardize file path
 	local using = subinstr(`"`using'"',"\","/",.)	
 	
@@ -134,7 +133,7 @@ cap program drop iecorrect
 				}
 				if "`type'" == "drop" {
 					local idvals   `r(idvals)'
-					local num_obs  `r(num_obs)'
+					local n_obs    `r(n_obs)'
 				}
 				
 				local any_corrections 1
@@ -148,7 +147,7 @@ cap program drop iecorrect
 
 		forvalues i = 1/`n' {
 			local id  : word `i' of `idvals'
-			local obs : word `i' of `num_obs'
+			local obs : word `i' of `n_obs'
 
 			* Test that the number of observations that will be dropped is correct
 			qui count if `idvar' == `id'
@@ -282,7 +281,6 @@ cap program drop iecorrect
 *******************************************************************************/
 	
 		restore
-		noi di _n 
 		
 		* Don't run if there are no corrections to be made
 		if !missing("`any_corrections'") {
@@ -294,7 +292,7 @@ cap program drop iecorrect
 	}																				// End of apply subcommand 
 	
 end
-	
+
 /*==============================================================================
 ================================================================================
 
@@ -411,7 +409,7 @@ cap program drop checksheets
 			* List idvals and number of observations to be dropped
 			if "`type'" == "drop" {
 				qui levelsof idvalue, local(idvals)
-				qui levelsof n_obs, local(num_obs)
+				qui levelsof n_obs, local(n_obs)
 			}
 			
 			if inlist("`type'", "string", "numeric", "other") {
@@ -445,8 +443,8 @@ cap program drop checksheets
 		}
 		
 		if "`type'" == "drop" {
-			return local idvals 		  `idvals'
-			return local num_obs          `num_obs'
+			return local idvals 		`idvals'
+			return local n_obs          `n_obs'
 		}
 		
 		if !missing("`debug'") noi di as result "Exiting checksheets subcommand"
@@ -622,14 +620,13 @@ cap program drop checkcoldrop
 	syntax [anything]
 	
 		* Are all the necessary variables there?
-		foreach var in idvalue {
+		foreach var in idvalue n_obs {
 			cap confirm var `var'
 			if _rc {
-				noi di as error `"{phang}Column `var' not found in sheet [drop]. This column must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
+				noi di as error `"{phang}Column `var' not found in sheet [drop]. This column must not be erased from the template.{p_end}"'
 				local errorfill 1
 			}
 		}
-		
 		
 		cap assert !missing(idvalue)
 		if _rc {
@@ -637,13 +634,12 @@ cap program drop checkcoldrop
 			local errorfill 1
 		}
 		
-		
 		cap assert !missing(n_obs)
 		if _rc {
-			noi di as error `"{phang}At least one entry for column n_obs in sheet [drop] is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
+			noi di as error `"{phang}At least one entry for column n_obs in sheet [drop] is blank. Dropping observations without confirming the number of rows to be deleted is a risky practice that is not allowed by iecorrect. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
 			local errorfill 1
 		}
-		
+				
 		qui destring n_obs, replace
 		cap confirm string var n_obs
 		if !_rc {
@@ -930,7 +926,7 @@ cap program drop templateworkbook
 
 		* Drop observations
 		templatesheet using "`using'", ///
-			varlist("idvalue num_obs initials notes") ///
+			varlist("idvalue n_obs initials notes") ///
 			sheetname("drop")
 
 		noi di as result `"{phang}Template spreadsheet saved to: {browse "`using'":`using'}{p_end}"'
