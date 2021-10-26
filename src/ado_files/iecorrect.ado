@@ -95,7 +95,6 @@ cap program drop iecorrect
 	
 // Crete a list of variables in the data ---------------------------------------
 
-	
 	qui ds
 	local original_vars `" `r(varlist)' "'
 
@@ -160,6 +159,20 @@ cap program drop iecorrect
 
 			if _rc {
 			noi di as error `"{phang} `obs' observations will be dropped from the idvalue `id'. {p_end}"'
+			}
+
+// Check dataset variables to be correct---------------------------------
+		qui use `data', clear
+		
+		foreach type of local corrSheets {
+		    
+			* Check if the string variables to be corrected don't have extra white spaces and special characters
+			foreach var of local `type'vars {
+				qui destring `var', replace
+				qui cap confirm string var `var' 
+				if !_rc{
+					valstrings `var', location(Variable)			    
+				} 
 			}
 		}		
 		
@@ -365,7 +378,7 @@ cap program drop prepdata
 /*******************************************************************************	
 	Initial checks
 *******************************************************************************/
-	
+
 ****************************************
 * Check that sheet is filled correctly
 ****************************************
@@ -421,7 +434,7 @@ cap program drop checksheets
 				noi di as result `"{phang}IDs of observations to be dropped: ``type'vars'{p_end}"'
 			}		
 		}
-
+		
 		* If there are no corrections to be made, save that information and move forward
 		else if `r(N)' == 0 {
 			local	`type'corr	0
@@ -559,8 +572,12 @@ cap program drop checkcolstring
 			local errorfill 1
 		}
 		
+		** Check if the string columns have extra whitespaces and special characters
+		foreach var in strvar valuecurrent value {
+		    valstrings `var', location(Column)
+		}
+		 
 		return local errorfill `errorfill'
-		
 end		
 	
 ***********************************
@@ -606,6 +623,11 @@ cap program drop checkcolother
 		if r(N) > 0 {
 			noi di as error `"{phang}There are `r(N)' lines in sheet [other] where strvaluecurrent column is not filled. This column should be filled for categorical corrections to be made correctly.{p_end}"'
 			local errorfill 1
+		}
+
+		** Check if the string columns have extra whitespaces and special characters
+		foreach var in strvar strvaluecurrent strvalue catvar {
+			valstrings `var', location(Column)				 
 		}
 		
 		return local errorfill `errorfill'
@@ -653,7 +675,70 @@ cap program drop checkcoldrop
 		
 		return local errorfill `errorfill'
 			
-end		
+end	
+
+*************************************************************
+* Check if there are extra whitespaces and special characters
+*************************************************************
+cap program drop valstrings
+	program 	 valstrings, rclass
+	
+	syntax varname, location(string)
+
+		*******************
+		* Extra whitespaces
+		*******************
+		tempname validation
+		qui gen `validation' = `varlist'
+		
+		*Test if there are any leading or trailing spaces
+		qui replace `validation' = strtrim(`validation')
+
+		* Test if there are consecutive spaces
+		qui replace `validation' = stritrim(`validation')
+	
+		* Test if there are any Unicode whitespace (line, Tab..)
+		qui replace `validation' = ustrtrim(`validation')
+	
+		cap assert `varlist' == `validation'
+		if _rc {
+			strerror, var(`var') type(whitespace) location(`location')	
+		}
+	
+		********************
+		* Special Characters
+		********************
+		forvalues i = 0/255 {
+			if !inrange(`i', 48, 57) /// numbers
+				& !inrange(`i', 65, 90) /// uppers case letters
+				& !inrange(`i', 97, 122) ///  case letters
+				& !inlist(`i', 32, 33, 35, 37, 38, 40, 41, 42, 43, 44, 45, 46, 58, 59, 60, 61, 62, 63, 64, 91, 93, 95){ 
+				capture assert index(`validation', char(`i')) == 0 
+				if _rc {
+					strerror, var(`var') type(specialchar) location(`location')	
+		        }
+			}
+		}
+		
+end	
+
+cap program drop strerror
+	program 	 strerror
+	
+	syntax , var(string) type(string) location(string)
+	
+	if "`type'" == "specialchar" {
+		local issue 	special characters
+		local details 	""
+	}
+	else if "`type'" == "whitespace" {
+		local issue 	extra whitespaces
+		local details 	(leading, trailing or consecutive spaces, tabs or new lines)
+	}
+	
+	noi di as error `"{phang}`location' {bf:`var'} contains `issue' `details'. [iecorrect] will run, but this may cause mismatches between the template spreadsheet and the content of the data, in which case the corrections will not be applied. It is recommended to remove `issue' from the data and the template spreadsheet before running [iecorrect].{p_end}"'
+		
+end
 	
 /*******************************************************************************	
 	Write the do file with corrections
