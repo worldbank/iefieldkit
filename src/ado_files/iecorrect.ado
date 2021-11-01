@@ -10,9 +10,8 @@ cap program drop iecorrect
 	if !inlist("`subcommand'","template","apply") {
 		di as err "{bf:iecorrect} requires [template] or [apply] to be specified with a target [using] file. Type {bf:help iecorrect} for details."
 	}
-	
 	preserve
-	
+
 /*==============================================================================
 								PROCESS OPTIONS
 ==============================================================================*/
@@ -27,33 +26,19 @@ cap program drop iecorrect
 /*==============================================================================
 								Test File
 ==============================================================================*/
-
-	// Standardize file path
-	local using = subinstr(`"`using'"',"\","/",.)	
+    
+	* Get the the folder, file name and file format 
+	ieaux_filename using  `using'
 	
-	// Get the file extension 			
-		local fileext = substr(`"`using'"',strlen(`"`using'"')-strpos(strreverse(`"`using'"'),".")+1,.)
-
-	// If no fileextension was used, then add .xslx to "`using'"
-	if "`fileext'" == "" {
-	    
-		local using  "`using'.xlsx"
-	}
-
-	// Check if the file extension is the correct  
-	else if !inlist("`fileext'",".xlsx",".xls") {
-				noi di as error `"{phang}The file must include the extension [.xlsx] or [.xls] The format [`fileext'] is not allowed.{p_end}"'
-				error 198
-		}	
-				
-	// 	Confirm the file path is correct
-	cap confirm new file `using'
-	if (_rc == 603) {
-		noi di as error `"{phang} The file path used [`using'] does not exist.{p_end}"'
-      error 601	
-	}	
+	* Standarize path
+	local using  "`r(using)'"
 	
+	* Test that the folder for the do-file exists
+	ieaux_testfolder, folderpath("`r(folder)'") description("in the option save ")
 	
+	* Check if the file extension is the correct
+	ieaux_fileext using `using', valfileext(xlsx xls) fileext(`r(fileext)')
+
 /*==============================================================================
 							TEMPLATE SUBCOMMAND
 							
@@ -63,20 +48,15 @@ cap program drop iecorrect
 	if "`subcommand'" == "template" {
 		
 		if !missing("`debug'") noi di "Entering template subcommand"
-	
+		
 		// Check if file already exists
-		cap confirm new file `using'
-		if (_rc == 602) {
-			noi di as error `"{phang}File [`using'] already exists. Template was not created.{p_end}"'
-			error 602
-		}	
-				
+		ieaux_testfile using `using', typeerror(fileexist) description("to create the template")
+					
 		// Create the template -----------------------------------------------------
 		templateworkbook using "`using'" 
-			
+				
 		if !missing("`debug'") noi di "Exiting template subcommand"
-	}																			// End of template subcommand
-	
+	}																			// End of template subcommand	
 /*==============================================================================
 								APPLY SUBCOMMAND
 ==============================================================================*/
@@ -88,14 +68,13 @@ cap program drop iecorrect
 /*******************************************************************************	
 	Tests
 *******************************************************************************/
-		
+
 		tempfile 	 data
 		qui save	`data'
 	
 // Crete a list of variables in the data ---------------------------------------
-
-	qui ds
-	local original_vars `" `r(varlist)' "'
+   qui ds
+   local original_vars `" `r(varlist)' "'
 
 // Check ID format -------------------------------------------------------------
 
@@ -107,12 +86,7 @@ cap program drop iecorrect
 
 		
 // Check that file exists ------------------------------------------------------
-
-		cap confirm new file "`using'"
-		if (_rc != 602) {	
-			noi di as error `"{phang}The iecorrect template is not found. The template must be created before the apply subcommand can be used. {p_end}"'
-			error 601 
-		}
+		ieaux_testfile using `using', typeerror(filenoexist)
 		
 // Check which types of corrections need to be made ----------------------------
 
@@ -270,37 +244,27 @@ cap program drop iecorrect
 /*******************************************************************************	
 	Save the do file containing the corrections if "save" was selected
 *******************************************************************************/
+		
 		if "`save'" != "" {
-			* Standardize do file path
-			local save= subinstr(`"`save'"',"\","/",.)
-         
-			* Get the file extension 			
-			local save_fileext = substr(`"`save'"',strlen(`"`save'"')-strpos(strreverse(`"`save'"'),".")+1,.)
+			* Get the the folder, file name and file format
+			ieaux_filename using  `save'
 			
-			* If no file extension was used, then add .do to "`save'"
-			if "`save_fileext'" == "" {
-				local save  "`save'.do"
-			}		
-						
-			else if !(`"`save_fileext'"' == ".do" ){
-				noi di as error `"{phang}The file extension used in the option save is not valid. The do-file must include the file extension [.do].{p_end}"'
-				error 198
-			}			
+			* Standarize path
+			local save "`r(using)'"
 			
-			* Check that folder exists and save the do file
-			cap qui copy "`dofile'" `"`save'"', `replace'
-			if _rc == 603 {
-				noi di as error `"{phang}The folder path used in the option save [`save'] does not exist.{p_end}"'
-				error 601		
-			}
+			* Test that the folder for the do-file exists
+			ieaux_testfolder, folderpath("`r(folder)'") description("in the option save ")
 			
-			else if _rc == 602 {
-				noi di as error `"{phang}The file used in the option save [`save'] already exists. Use [replace] option if yo want to overwrite it. {p_end}"'
-				error 602			    
-			}
+			* Check if the file extension is the correct
+			ieaux_fileext using `save', valfileext(do) fileext(`r(fileext)')
 			
-			noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} {p_end}"'
-		}	
+			* Check if the file exists
+			ieaux_testfile using `save', typeerror("fileexist") replace("`replace'") replace_ms("yes")  description("in the option save ")
+			
+			* Save the do file
+			qui copy "`dofile'" `"`save'"', `replace'
+			noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} {p_end}"'	
+		}
 		
 /*******************************************************************************	
 	Run the do file containing the corrections
