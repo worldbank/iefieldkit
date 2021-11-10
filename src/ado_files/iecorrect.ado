@@ -14,7 +14,12 @@ cap program drop iecorrect
 	preserve
 	
 	noi di _n
-	
+/*==============================================================================
+								Save data
+==============================================================================*/
+
+	tempfile 	 data
+	qui save	`data'
 /*==============================================================================
 								PROCESS OPTIONS
 ==============================================================================*/
@@ -69,15 +74,24 @@ cap program drop iecorrect
 		
 		if !missing("`debug'") noi di "Entering template subcommand"
 	
-		// Check if file already exists
+		// Check if file already exists and check if the "other" tab is included
 		cap confirm new file `using'
 		if (_rc == 602) {
-			noi di as error `"{phang}File [`using'] already exists. Template was not created.{p_end}"'
-			error 602
-		}	
+			if "`other'" != "" {
+				cap import excel "`using'", sheet("other") clear
+				if _rc == 601 local addother "1"
+				else local errorfile "1"
 				
+			}
+			if ("`other'" == "") | ("`errorfile'" == "1") {
+				noi di as error `"{phang}File [`using'] already exists. Template was not created.{p_end}"'
+			error 602 
+				
+			}
+		}		
+		
 		// Create the template -----------------------------------------------------
-		templateworkbook using "`using'" , `other'
+		templateworkbook using "`using'" , `other' addother(`addother')
 			
 		if !missing("`debug'") noi di "Exiting template subcommand"
 	}																			// End of template subcommand
@@ -94,8 +108,7 @@ cap program drop iecorrect
 	Tests
 *******************************************************************************/
 		
-		tempfile 	 data
-		qui save	`data'
+	qui use `data', clear
 	
 // Crete a list of variables in the data ---------------------------------------
 
@@ -328,7 +341,7 @@ cap program drop prepdata
 
 		* Drop blank lines that were imported by mistake
 		qui drop if missing(`mainvar')
-		
+	
 		** Return the name of the main variable to be used in the next steps
 		return local mainvar `mainvar'
 		
@@ -852,10 +865,10 @@ end
 cap program drop templateworkbook
 	program		 templateworkbook
 	
-	syntax using/ , [other]
+	syntax using/ , [other addother(string)]
 	
 	preserve
-	
+	    if "`addother'" == "" { 
 		* String variables
 		templatesheet using "`using'", ///
 			varlist("varname idvalue value valuecurrent initials notes") ///
@@ -872,6 +885,7 @@ cap program drop templateworkbook
 		templatesheet using "`using'", ///
 			varlist("idvalue initials notes") ///
 			sheetname("drop")
+		}	
 
 		* Other variables
 		if "`other'" != "" {
