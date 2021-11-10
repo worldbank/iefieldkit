@@ -34,10 +34,11 @@ cap program drop iecorrect
 	local using  "`r(using)'"
 	
 	* Test that the folder for the do-file exists
-	ieaux_testfolder, folderpath("`r(folder)'") description("in the option save ")
+	ieaux_folderpath, folderpath("`r(folder)'") description("to create the template ")
 	
 	* Check if the file extension is the correct
-	ieaux_fileext using `using', valfileext(xlsx xls) fileext(`r(fileext)')
+	ieaux_fileext using `using', fileext(xlsx xls) testfileext(`r(fileext)')
+	local using  "`r(using)'"
 
 /*==============================================================================
 							TEMPLATE SUBCOMMAND
@@ -50,11 +51,14 @@ cap program drop iecorrect
 		if !missing("`debug'") noi di "Entering template subcommand"
 		
 		// Check if file already exists
-		ieaux_testfile using `using', typeerror(fileexist) description("to create the template")
+		cap confirm new file `using'
+		if (_rc == 602) {
+			noi di as error `"{phang}File [`using'] already exists. Template was not created.{p_end}"'
+			error 602
+		}	
 					
 		// Create the template -----------------------------------------------------
 		templateworkbook using "`using'" 
-				
 		if !missing("`debug'") noi di "Exiting template subcommand"
 	}																			// End of template subcommand	
 /*==============================================================================
@@ -86,7 +90,11 @@ cap program drop iecorrect
 
 		
 // Check that file exists ------------------------------------------------------
-		ieaux_testfile using `using', typeerror(filenoexist)
+		cap confirm new file "`using'"
+		if (_rc != 602) {	
+			noi di as error `"{phang}The iecorrect template is not found. The template must be created before the apply subcommand can be used. {p_end}"'
+			error 601 
+		}
 		
 // Check which types of corrections need to be made ----------------------------
 
@@ -253,16 +261,20 @@ cap program drop iecorrect
 			local save "`r(using)'"
 			
 			* Test that the folder for the do-file exists
-			ieaux_testfolder, folderpath("`r(folder)'") description("in the option save ")
+			ieaux_folderpath, folderpath(`r(folder)') description("in the option save ")
 			
 			* Check if the file extension is the correct
-			ieaux_fileext using `save', valfileext(do) fileext(`r(fileext)')
+			ieaux_fileext using `save', fileext(do) testfileext(`r(fileext)')
+			local save  "`r(using)'"
 			
-			* Check if the file exists
-			ieaux_testfile using `save', typeerror("fileexist") replace("`replace'") replace_ms("yes")  description("in the option save ")
-			
-			* Save the do file
-			qui copy "`dofile'" `"`save'"', `replace'
+
+			*Check that file exists and save the do-file
+			cap qui copy "`dofile'" `"`save'"', `replace'
+			if _rc == 602 {
+				noi di as error `"{phang}The file used in the option save [`save'] already exists. Use [replace] option if yo want to overwrite it. {p_end}"'
+				error 602			    
+			}
+	
 			noi di as result `"{phang}Corrections do file was saved to: {browse "`save'":`save'} {p_end}"'	
 		}
 		
