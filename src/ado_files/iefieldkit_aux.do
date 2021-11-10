@@ -1,10 +1,17 @@
+/* 
+	This do-file contains functions to perform the following tasks:
+*/
+
+/*******************************************************************************
+ GET FILE COMPONENTS 
+ - Folder path
+ - File extension and file name
+********************************************************************************/
 cap program drop ieaux_filename
 	program		 ieaux_filename, rclass
 
 	syntax using/
-	/***********************************************************************
-		Get the folder name
-	************************************************************************/	
+	
         * Standardize file path
 		local using = subinstr("`using'", "\", "/", .)
 		
@@ -13,21 +20,9 @@ cap program drop ieaux_filename
         if strpos(strreverse(`"`using'"'),"/") == 0 local r_lastslash -1 // Set to -1 if there is no slash
 
 		* If a folder was not specified, get the folder path
-		if `r_lastslash' != -1 {
-			local folder = substr(`"`using'"',1,`r_lastslash')
-		}
-		else {
-			noi di as error	"{phang}You have not specified a folder path to the duplicates report. An absolute folder path is required.{p_end}"
-			noi di as error `"{phang}This command will not work if you are trying to use {inp:cd} to set the directory and open or save files. To know more about why this practice is not allowed, {browse "https://dimewiki.worldbank.org/wiki/Stata_Coding_Practices#File_paths":see this article in the DIME Wiki}.{p_end}"'
-			noi di as error	""
-			error 198
-			exit // It is necessary to put exist?
-		}
+		local folder = substr(`"`using'"',1,`r_lastslash')
 
-	/***********************************************************************
-			Get the file and ext name
-	************************************************************************/
-		
+
 		* Everything that comes after the folder path is the file name and format
 		local file	 	 = substr("`using'", `r_lastslash' + 2, .)
 
@@ -36,25 +31,44 @@ cap program drop ieaux_filename
 
 			* Get index of separation between file name and file format
 			local r_lastsdot = strlen(`"`file'"') - strpos(strreverse(  `"`file'"'),".")
+			
 			local fileext    = substr(`"`file'"',`r_lastsdot'+1,.) // File format starts at the last period and ends at the end of the 
+			if  "`fileext'" == "" local fileext 1
+			
 			local filename		= substr("`file'", 1, `r_lastsdot') // File name starts at the beginning and ends at the last period
 
 		}
-		if  "`fileext'" == "" local fileext 1
 		
+         * If a format was not specified, the name is everything that follows the folder path
+		else {
+			local filename 	`file'
+		}
+		
+		* Check that a folder name was specified and through an error if it wasn't
+		if ("`file'" == "" | ("`filename'" == "")) {
+			noi di as error "{phang}`using' not a valid filename.{p_end}"
+			noi di ""
+			error 198
+		}
 		
 		return local folder    `folder'
+		return local file      `file'
 		return local filename  `filename'
 		return local fileext   `fileext'
-		return local file      `file'
 		return local using     `using'
 end	
 
 
-cap program drop ieaux_testfolder
-    program      ieaux_testfolder 
+/*******************************************************************************
+TEST IF A FOLDER ALREADY EXISTS
+- option "folderpath" is the path to the directory
+- option "description" will be used in the error message to explain where this folder path was referenced
+
+********************************************************************************/
+cap program drop ieaux_folderpath
+    program      ieaux_folderpath
 	
-	syntax, folderpath(string) [description(string)]
+	syntax, [description(string) folderpath(string)]
 	
 	* Test that the folder for the report file exists
 	 mata : st_numscalar("r(dirExist)", direxists("`folderpath'"))
@@ -66,64 +80,45 @@ cap program drop ieaux_testfolder
 end 
 
 
+/*******************************************************************************
+TEST IF THE FILE EXTENSION IS THE CORRECT 
+- option "fileext" is a namelist of the correct extensions that the file may only have
+- option "testfileext" is the current file extension
+
+********************************************************************************/
+
 cap program drop ieaux_fileext
-	program 	 ieaux_fileext
+	program 	 ieaux_fileext, rclass
 	
-	syntax using/ , fileext(namelist) testfileext(string)     // sometimes we want to validate more than 1 extention format
+	syntax using/ , fileext(namelist) testfileext(string) 
 	
     * Check if the file extension is the correct 
 	local ext ""
 	foreach value in `fileext' {
-		if (".`val'" == "`testfileext'")  local errorfile 1
-		local ext `".`val' `ext'"' 		
+		if (".`value'" == "`testfileext'")  local errorfile 1
+		local ext `".`value' `ext'"' 		
 	}	
 	
 	local wcount = `: word count `fileext''
 	if ("`errorfile'" != "1") & ("`testfileext'" != "1") {
 	   if `wcount' > 1 local pluralms= "s"
-	   noi di as error `"{phang}The file {bf:`using'} may only have the extension format`pluralms' [`ext']. The format [`fileext'] is not allowed.{p_end}"'
+	   noi di as error `"{phang}The file {bf:`using'} may only have the extension format`pluralms' [`ext']. The format [`testfileext'] is not allowed.{p_end}"'
 	   error 198
 	}
 	
 	
 	* If no file extension was used, then add the extension
 	if  "`testfileext'" == "1" { 
-		local ext = word("`valfileext'",1) // If there are more than one extension, get first 
-		local using  "`using'`ext'"
+		local ext = word("`fileext'",1) // If there are more than one extension, get first 
+		di "aqui con ext"
+		di "`ext'"
+		local using  "`using'.`ext'"
+		
 	}	
+	return local using `using'
 end
 
-
-/* 2 types of error when we want to test file 
-   - If the file already exist
-   - if the file doesn't exist
-   typeerror option validate it*/
-
-/* When replace option is available for the comand,
-   replace_ms add an aditional description to show that the
-   user can used replace option to overwrite the file*/
-   
-cap program drop ieaux_testfile
-	program      ieaux_testfile
-	
-	syntax using/ , typeerror(string) [replace(string) description(string) replace_ms(string)]
-  
-	* Error message if file already exists a
-	cap confirm file "`using'"
-    if (_rc == 0) & missing("`replace'") & ("`typeerror'" == "fileexist" ) {
-		
-		if !missing("`replace_ms'") {
-		   local replace_ms = " Use [replace] option if yo want to overwrite it."
-		}
-	    noi di as error `"{phang}The file used [`using'] `description' already exists.`replace_ms' {p_end}"'
-	    error 602	
-	}
-	 if (_rc == 601)  & ("`typeerror'" == "filenoexist" ) {
-	    noi di as error `"{phang}The template is not found. The template must be created before the apply subcommand can be used. {p_end}"'
-		error 601 
-	 }
-	
-end 
+ 
  
 
 
