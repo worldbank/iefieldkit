@@ -28,39 +28,20 @@ cap program drop iecodebook
   // Select subcommand
   noi di " "
   gettoken subcommand anything : anything
+  
+  // Get the foldername, filename and the file extension
+	ieaux_filename using  `using'
 
-  // Check folder exists
-
-  // Start by standardize all slashes to forward slashes, and get the position of the last slash
-  local using = subinstr("`using'","\","/",.)
-  local r_lastslash = strlen(`"`using'"') - strpos(strreverse(`"`using'"'),"/")
-  if strpos(strreverse(`"`using'"'),"/") == 0 local r_lastslash -1 // Set to -1 if there is no slash
-
-  // Get the full folder path and the file name
-  local r_folder = substr(`"`using'"',1,`r_lastslash')
-  local r_file = substr(`"`using'"',`r_lastslash'+2,.)
-
-  // Test that the folder for the report file exists
-  mata : st_numscalar("r(dirExist)", direxists("`r_folder'"))
-  if `r(dirExist)' == 0  {
-    noi di as error `"{phang}The folder [`r_folder'/] does not exist.{p_end}"'
-    error 601
-  }
-
-  // Find the position of the last dot in the file name and get the file format extension
-  local r_lastsdot = strlen(`"`r_file'"') - strpos(strreverse(`"`r_file'"'),".")
-  local r_fileextension = substr(`"`r_file'"',`r_lastsdot'+1,.)
-
-  // If no fileextension was used, then add .xslx to "`using'"
-  if "`r_fileextension'" == "" {
-    local using  "`using'.xlsx"
-  }
-  // Throw an error if user input uses any extension other than the allowed
-  else if !inlist("`r_fileextension'",".xlsx",".xls") & !regexm(`"`options'"',"tempfile") {
-    di as error "The codebook may only have the file extension [.xslx] or [.xls]. The format [`r_fileextension'] is not allowed."
-    error 601
-  }
-
+  //Standarize path
+	local using "`r(using)'"
+	
+  // Test that the folder exists
+	ieaux_folderpath, folderpath("`r(folder)'") 
+	
+	
+  // Test the form file: xls or xlsx
+	ieaux_fileext using `using', fileext(xlsx xls) testfileext("`r(fileext)'")
+	local using  "`r(using)'"	
 
   // Throw error on [template] if codebook cannot be created
    if inlist("`subcommand'","template","export") & !regexm(`"`options'"',"replace") & !regexm(`"`options'"',"verify") {
