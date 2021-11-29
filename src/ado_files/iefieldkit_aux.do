@@ -22,7 +22,6 @@ cap program drop ieaux_filename
 		* If a folder was not specified, get the folder path
 		local folder = substr(`"`using'"',1,`r_lastslash')
 
-
 		* Everything that comes after the folder path is the file name and format
 		local file	 	 = substr("`using'", `r_lastslash' + 2, .)
 
@@ -37,18 +36,6 @@ cap program drop ieaux_filename
 			
 			local filename		= substr("`file'", 1, `r_lastsdot') // File name starts at the beginning and ends at the last period
 
-		}
-		
-         * If a format was not specified, the name is everything that follows the folder path
-		else {
-			local filename 	`file'
-		}
-		
-		* Check that a folder name was specified and through an error if it wasn't
-		if ("`file'" == "" | ("`filename'" == "")) {
-			noi di as error "{phang}`using' not a valid filename.{p_end}"
-			noi di ""
-			error 198
 		}
 		
 		return local folder    `folder'
