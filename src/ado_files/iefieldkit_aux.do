@@ -37,7 +37,7 @@ cap program drop ieaux_filename
 			local filename		= substr("`file'", 1, `r_lastsdot') // File name starts at the beginning and ends at the last period
 
 		}
-		
+
 		return local folder    `folder'
 		return local file      `file'
 		return local filename  `filename'
@@ -55,12 +55,12 @@ TEST IF A FOLDER ALREADY EXISTS
 cap program drop ieaux_folderpath
     program      ieaux_folderpath
 	
-	syntax, [description(string) folderpath(string)]
+	syntax using/,  [description(string)]
 	
 	* Test that the folder for the report file exists
-	 mata : st_numscalar("r(dirExist)", direxists("`folderpath'"))
+	 mata : st_numscalar("r(dirExist)", direxists("`using'"))
 	 if `r(dirExist)' == 0  {
-	 	noi di as error `"{phang}The folder path [`folderpath'/] used `description' does not exist.{p_end}"'
+	 	noi di as error `"{phang}The folder path [`using'/] used `description' does not exist.{p_end}"'
 		error 601
 	 }	
 	
