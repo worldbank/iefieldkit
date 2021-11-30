@@ -813,7 +813,7 @@ cap program drop donumeric
 
     * If there's a current value, write that in the line
     if "`valuecurrent'" != "" {
-      local line  `"`line'`var' == `valuecurrent'"'                    
+      local line  `"`line'`var' == float(`valuecurrent')"'                    
     }
 
     ** Write the line to the do file
