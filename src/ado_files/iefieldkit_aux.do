@@ -23,7 +23,7 @@ cap program drop ieaux_filename
 		local folder = substr(`"`using'"',1,`r_lastslash')
 
 		* Everything that comes after the folder path is the file name and format
-		local file	 	 = substr("`using'", `r_lastslash' + 2, .)
+		local file	 = substr("`using'", `r_lastslash' + 2, .)
 
 		* If a filename was specified, separate the file name from the file format
 		if "`file'" != "" {
@@ -63,47 +63,49 @@ cap program drop ieaux_folderpath
     program      ieaux_folderpath
 	
 	syntax using/,  [description(string)]
+	ieaux_filename using  `using'
 	
 	* Test that the folder for the report file exists
-	 mata : st_numscalar("r(dirExist)", direxists("`using'"))
-	 if `r(dirExist)' == 0  {
-	 	noi di as error `"{phang}The folder path [`using'/] used `description' does not exist.{p_end}"'
-		error 601
-	 }	
+	if !missing("`r(folder)'"){
+			 mata : st_numscalar("r(dirExist)", direxists("`r(folder)'"))
+	         if `r(dirExist)' == 0  {
+	 	     noi di as error `"{phang}The folder path [`r(folder)'/] used `description' does not exist.{p_end}"'
+		     error 601
+	         }			
+	}
 	
 end 
 
 
 /*******************************************************************************
 TEST IF THE FILE EXTENSION IS THE CORRECT 
-- option "fileext" is a namelist of the correct extensions that the file may only have
-- option "testfileext" is the current file extension
+- option "testfileext" is a namelist of the correct extensions that the file may only have
 
 ********************************************************************************/
 
 cap program drop ieaux_fileext
 	program 	 ieaux_fileext, rclass
 	
-	syntax using/ , fileext(namelist) testfileext(string) 
+	syntax using/, testfileext(string) 
+	ieaux_filename using  `using'
 	
     * Check if the file extension is the correct 
 	local ext ""
-	foreach value in `fileext' {
-		if (".`value'" == "`testfileext'")  local errorfile 1
-		local ext `".`value' `ext'"' 		
+	foreach value in `testfileext' {
+		if (".`value'" == "`r(fileext)'")  local errorfile 1
+		local ext `".`value' `ext'"' 
 	}	
 	
-	local wcount = `: word count `fileext''
-	if ("`errorfile'" != "1") & ("`testfileext'" != "1") {
+	local wcount = `: word count `testfileext''
+	if ("`errorfile'" != "1") & ("`r(fileext)'" != "1") {
 	   if `wcount' > 1 local pluralms= "s"
-	   noi di as error `"{phang}The file {bf:`using'} may only have the extension format`pluralms' [`ext']. The format [`testfileext'] is not allowed.{p_end}"'
+	   noi di as error `"{phang}The file {bf:`using'} may only have the extension format`pluralms' [`ext']. The format [`r(fileext)'] is not allowed.{p_end}"'
 	   error 198
 	}
 	
-	
 	* If no file extension was used, then add the extension
-	if  "`testfileext'" == "1" { 
-		local ext = word("`fileext'",1) // If there are more than one extension, get first 
+	if  "`r(fileext)'" == "1" { 
+		local ext = word("`testfileext'",1) // If there are more than one extension, get first 
 		local using  "`using'.`ext'"
 		
 	}	
