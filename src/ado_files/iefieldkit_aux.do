@@ -38,13 +38,6 @@ cap program drop ieaux_filename
 
 		}
 		
-		* Check that a filename was specified and through an error if it wasn't
-		if  "`file'" == ""  {
-			noi di as error "{phang}`using' not a valid filename.{p_end}"
-			noi di ""
-			error 198
-		}
-
 		return local folder    `folder'
 		return local file      `file'
 		return local filename  `filename'
