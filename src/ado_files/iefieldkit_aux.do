@@ -82,26 +82,27 @@ cap program drop ieaux_fileext
 	syntax using/, testfileext(string) 
 	ieaux_filename using  `using'
 	
-    * Check if the file extension is the correct 
-	local ext ""
-	foreach value in `testfileext' {
-		if (".`value'" == "`r(fileext)'")  local errorfile 1
-		local ext `".`value' `ext'"' 
-	}	
-	
-	local wcount = `: word count `testfileext''
-	if ("`errorfile'" != "1") & ("`r(fileext)'" != "1") {
-	   if `wcount' > 1 local pluralms= "s"
-	   noi di as error `"{phang}The file {bf:`using'} may only have the extension format`pluralms' [`ext']. The format [`r(fileext)'] is not allowed.{p_end}"'
-	   error 198
-	}
-	
-	* If no file extension was used, then add the extension
-	if  "`r(fileext)'" == "1" { 
-		local ext = word("`testfileext'",1) // If there are more than one extension, get first 
-		local using  "`using'.`ext'"
+	if !missing("`r(file)'") {
+		* Check if the file extension is the correct 
+		local ext ""
+		foreach value in `testfileext' {
+			if (".`value'" == "`r(fileext)'")  local errorfile 1
+			local ext `".`value' `ext'"' 
+		}	
 		
-	}	
+		local wcount = `: word count `testfileext''
+		if ("`errorfile'" != "1") & ("`r(fileext)'" != "1") {
+		   if `wcount' > 1 local pluralms= "s"
+		   noi di as error `"{phang}The file {bf:`using'} may only have the extension format`pluralms' [`ext']. The format [`r(fileext)'] is not allowed.{p_end}"'
+		   error 198
+		}
+		
+		* If no file extension was used, then add the extension
+		if  "`r(fileext)'" == "1" { 
+			local ext = word("`testfileext'",1) // If there are more than one extension, get first 
+			local using  "`using'.`ext'"	
+		}
+	}
 	return local using `using'
 end
 
