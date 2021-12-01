@@ -12,7 +12,7 @@ cap program drop ieaux_filename
 
 	syntax using/
 	
-        * Standardize file path
+        * Standardize file path so Mac and Linux systems handle this path correctly
 		local using = subinstr("`using'", "\", "/", .)
 		
 		* Separate the folder name from the file name
