@@ -19,7 +19,7 @@ cap program drop ieaux_filename
         local r_lastslash = strlen(`"`using'"') - strpos(strreverse(`"`using'"'),"/")
         if strpos(strreverse(`"`using'"'),"/") == 0 local r_lastslash -1 // Set to -1 if there is no slash
 
-		* If a folder was not specified, get the folder path
+		* If a folder was specified, get the folder path
 		local folder = substr(`"`using'"',1,`r_lastslash')
 
 		* Everything that comes after the folder path is the file name and format
