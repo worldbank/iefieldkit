@@ -7,8 +7,8 @@
  - Folder path
  - File extension and file name
 ********************************************************************************/
-cap program drop ieaux_filename
-	program		 ieaux_filename, rclass
+cap program drop ieutil_parse_filepath
+	program		 ieutil_parse_filepath, rclass
 
 	syntax using/
 	
@@ -51,11 +51,11 @@ TEST IF A FOLDER ALREADY EXISTS
 - option "description" will be used in the error message to explain where this folder path was referenced
 
 ********************************************************************************/
-cap program drop ieaux_folderpath
-    program      ieaux_folderpath
+cap program drop ieutil__folderpath
+    program      ieutil__folderpath
 	
 	syntax using/,  [description(string)]
-	ieaux_filename using  `using'
+	ieutil_parse_filepath using  `using'
 
 	* Test that the folder for the report file exists
 	if !missing("`r(folder)'"){
@@ -75,13 +75,13 @@ TEST IF THE FILE EXTENSION IS THE CORRECT
 
 ********************************************************************************/
 
-cap program drop ieaux_fileext
-	program 	 ieaux_fileext, rclass
+cap program drop ieutil_fileext
+	program 	 ieutil_fileext, rclass
 	
 	syntax using/, allowed_exts(string) [default_ext(string)]
 	
 	*Parse the input
-	ieaux_filename using  `using'
+	ieutil_parse_filepath using  `using'
 	local this_filename "`r(filename)'"
 	local this_ext      "`r(fileext)'" 
 	
