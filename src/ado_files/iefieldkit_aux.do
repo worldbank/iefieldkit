@@ -51,8 +51,8 @@ TEST IF A FOLDER ALREADY EXISTS
 - option "description" will be used in the error message to explain where this folder path was referenced
 
 ********************************************************************************/
-cap program drop ieutil__folderpath
-    program      ieutil__folderpath
+cap program drop ieutil_folderpath
+    program      ieutil_folderpath
 	
 	syntax using/,  [description(string)]
 	ieutil_parse_filepath using  `using'
