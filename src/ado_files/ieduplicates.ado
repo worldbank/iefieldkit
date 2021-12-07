@@ -4,7 +4,7 @@
 	program ieduplicates , rclass
 
 
-	qui {
+	qui {	
 
 		syntax  varname [using/] , UNIQUEvars(varlist) ///
             [force ///
@@ -30,7 +30,6 @@
 		* message to this that is more informative.
 
 		preserve
-
 			/***********************************************************************
 			************************************************************************
 				Section 1 - Set up locals needed in data
@@ -854,7 +853,7 @@
 		*  the orignal data set in case of error.
 		use `dataToReturn', clear
 
-	}
+	}	
 end
 
 
@@ -920,16 +919,10 @@ cap program drop testpath
 *******************************************************************************/
 
 	else if "`using'" != "" {
-		*get the folder path, the name of the report and, the format selected
-	    ieaux_filename using  `using'
-		local folder	      `r(folder)'/
-		local name            `r(filename)'
-		local ext             `r(fileext)'
-		
-		* Standarize path
-	    local using           "`r(using)'"
 		
 		* Check if the folder exist
+		ieaux_filename using  `using'
+		local folder	      `r(folder)'
 		if missing("`folder'") {
 			noi di as error	"{phang}You have not specified a folder path to the duplicates report. An absolute folder path is required.{p_end}"
 			noi di as error `"{phang}This command will not work if you are trying to use {inp:cd} to set the directory and open or save files. To know more about why this practice is not allowed, {browse "https://dimewiki.worldbank.org/wiki/Stata_Coding_Practices#File_paths":see this article in the DIME Wiki}.{p_end}"'
@@ -938,8 +931,17 @@ cap program drop testpath
 		}
 		
 		* Check if the file extension is the correct. 
-		ieaux_fileext using `using', fileext(xlsx xls) testfileext(`ext')
-		local using "`r(using)'"
+		ieaux_fileext using `using', allowed_exts(.xlsx .xls) default_ext(.xlsx)
+		local using "`r(filename)'"
+		
+		* Test that the folder exists
+		ieaux_folderpath using `using'
+	
+        * Get the folder path, the name of the report and, the format selected
+	    ieaux_filename using  `using'
+		local folder	      `r(folder)'/
+		local name            `r(filename)'
+		local ext             `r(fileext)'
 		
 	}
 
@@ -952,12 +954,11 @@ cap program drop testpath
 								local ext		.xlsx
 	}
 	
-	* Test that the folder exists
-	ieaux_folderpath, folderpath("`folder'")
-
+	
 	return local name 	`name'
 	return local ext	`ext'
-	return local folder	`folder'
+	return local folder	`folder' 
+	
 end
 
 /*******************************************************************************
