@@ -32,7 +32,6 @@ cap program drop ieaux_filename
 			local r_lastsdot = strlen(`"`file'"') - strpos(strreverse(  `"`file'"'),".")
 			
 			local fileext    = substr(`"`file'"',`r_lastsdot'+1,.) // File format starts at the last period and ends at the end of the 
-			if  "`fileext'" == "" local fileext 1
 			
 			local filename		= substr("`file'", 1, `r_lastsdot') // File name starts at the beginning and ends at the last period
 
@@ -57,7 +56,7 @@ cap program drop ieaux_folderpath
 	
 	syntax using/,  [description(string)]
 	ieaux_filename using  `using'
-	
+
 	* Test that the folder for the report file exists
 	if !missing("`r(folder)'"){
 			 mata : st_numscalar("r(dirExist)", direxists("`r(folder)'"))
@@ -79,31 +78,53 @@ TEST IF THE FILE EXTENSION IS THE CORRECT
 cap program drop ieaux_fileext
 	program 	 ieaux_fileext, rclass
 	
-	syntax using/, testfileext(string) 
-	ieaux_filename using  `using'
+	syntax using/, allowed_exts(string) [default_ext(string)]
 	
-	if !missing("`r(file)'") {
-		* Check if the file extension is the correct 
-		local ext ""
-		foreach value in `testfileext' {
-			if (".`value'" == "`r(fileext)'")  local errorfile 1
-			local ext `".`value' `ext'"' 
-		}	
+	*Parse the input
+	ieaux_filename using  `using'
+	local this_filename "`r(filename)'"
+	local this_ext      "`r(fileext)'" 
+	
+	*Test if using has no file
+	if missing("`this_filename'") {
+		noi di as error `"{phang}The path {bf:`using'} does not have a file name for which extension can be tested.{p_end}"'
+		error 198
+	}	
+	*Test is using has no file extension
+	else if missing("`this_ext'") {
 		
-		local wcount = `: word count `testfileext''
-		if ("`errorfile'" != "1") & ("`r(fileext)'" != "1") {
-		   if `wcount' > 1 local pluralms= "s"
-		   noi di as error `"{phang}The file {bf:`using'} may only have the extension format`pluralms' [`ext']. The format [`r(fileext)'] is not allowed.{p_end}"'
-		   error 198
+		*Test if no deafult ext was provided
+		if missing("`default_ext'") {
+			noi di as error `"{phang}The file in {bf:`using'} does not have a file extension and no default was provided.{p_end}"'
+		error 198
 		}
 		
-		* If no file extension was used, then add the extension
-		if  "`r(fileext)'" == "1" { 
-			local ext = word("`testfileext'",1) // If there are more than one extension, get first 
-			local using  "`using'.`ext'"	
+		*Apply the deafult extension
+		else {
+			
+			local return_file  "`using'`default_ext'"
+			
 		}
 	}
-	return local using `using'
+	
+	* Using has both file and extension
+	else {
+		
+		* Test if extension is among the allowed extensions
+		if `: list this_ext in allowed_exts' == 1 {
+			*Extension is allowed, return file name as is
+			local return_file  "`using'"	
+		}
+		
+		* File extension used is not allowed
+		else {
+		   noi di as error `"{phang}The file extension [`this_ext'] in file {bf:`using'} is not allowed. Allowed extensions: [`allowed_exts'].{p_end}"'
+		   error 198
+		}
+	}
+	
+	*Return checked filename
+	return local filename `return_file'
 end
 
 
