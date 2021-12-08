@@ -3,7 +3,11 @@
 	global codebook "C:\Users\Inspiron\Desktop\GitHub\codebooks"
 
 	 qui do "${GitHub}/iefieldkit/src/ado_files/iecodebook.ado"
-
+     
+	 * Just run this 
+	iecodebook template using "$codebook/auto.xlsx", replace
+	
+	
 	
 /*******************************************************************************
 	Folder and format testing

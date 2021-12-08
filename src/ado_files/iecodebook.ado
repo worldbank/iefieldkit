@@ -24,7 +24,7 @@ cap program drop iecodebook
   else if _rc != 0 {
     syntax [anything] using/ , [*]
   }
-
+   di "1. Select subcommand"
   // Select subcommand
   noi di " "
   gettoken subcommand anything : anything
@@ -50,7 +50,8 @@ cap program drop iecodebook
   // Find the position of the last dot in the file name and get the file format extension
   local r_lastsdot = strlen(`"`r_file'"') - strpos(strreverse(`"`r_file'"'),".")
   local r_fileextension = substr(`"`r_file'"',`r_lastsdot'+1,.)
-
+  
+   di "2. Checking no fileextension"
   // If no fileextension was used, then add .xslx to "`using'"
   if "`r_fileextension'" == "" {
     local using  "`using'.xlsx"
@@ -61,7 +62,7 @@ cap program drop iecodebook
     error 601
   }
 
-
+   di "3. Throw error on [template] if codebook cannot be created"
   // Throw error on [template] if codebook cannot be created
    if inlist("`subcommand'","template","export") & !regexm(`"`options'"',"replace") & !regexm(`"`options'"',"verify") {
 
@@ -70,13 +71,14 @@ cap program drop iecodebook
       di as err "That codebook already exists. {bf:iecodebook} will only overwrite it if you specify the [replace] option."
       error 602
     }
-
+     di "3. could not created file"
     cap confirm new file "`using'"
     if (_rc != 0) & (!strpos(`"`options'"',"replace")) {
       di as error "{bf:iecodebook} could not create file `using'. Check that the file path is correctly specified."
       error 601
     }
   }
+  di "4. Make sure some subcommand is specified"
 
   // Make sure some subcommand is specified
   if !inlist("`subcommand'","template","apply","append","export") {
@@ -89,7 +91,7 @@ cap program drop iecodebook
   iecodebook_`subcommand' `anything' using "`using'" , `options'
   iecodebook_labclean // Do this again to clean up after apply or append
   if inlist("`subcommand'","apply","append") qui cap compress // Clean up after apply or append
-
+ di"5. Final"
 end
 
 // Label cleaning ------------------------------------------------------------------------------
