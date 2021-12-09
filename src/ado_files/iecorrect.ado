@@ -554,7 +554,7 @@ cap program drop checkcolstring
     foreach var in strvar idvalue valuecurrent value {
       cap confirm var `var'
       if _rc {
-        noi di as error `"{phang}Column `var' not found in `type' sheet. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
+        noi di as error `"{phang}Column `var' not found in sheet [string]. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
       }
     }
     
@@ -604,7 +604,7 @@ cap program drop checkcolother
     foreach var in strvar strvaluecurrent strvalue catvar catvalue {
       cap confirm var `var'
       if _rc {
-        noi di as error `"{phang}Column `var' not found in `type' sheet. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
+        noi di as error `"{phang}Column `var' not found in sheet [other]. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
         local errorfill 1
       }
     }
