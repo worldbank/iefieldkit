@@ -37,11 +37,11 @@ cap program drop ieutil_parse_filepath
 
 		}
 		
-		return local folder    `folder'
-		return local file      `file'
-		return local filename  `filename'
-		return local fileext   `fileext'
-		return local using     `using'
+		return local folderpath       `folder'
+		return local file             `file'
+		return local filename         `filename'
+		return local fileext          `fileext'
+		return local filepath         `using'
 end	
 
 
@@ -58,10 +58,10 @@ cap program drop ieutil_folderpath
 	ieutil_parse_filepath using  `using'
 
 	* Test that the folder for the report file exists
-	if !missing("`r(folder)'"){
-			 mata : st_numscalar("r(dirExist)", direxists("`r(folder)'"))
+	if !missing("`r(folderpath)'"){
+			 mata : st_numscalar("r(dirExist)", direxists("`r(folderpath)'"))
 	         if `r(dirExist)' == 0  {
-	 	     noi di as error `"{phang}The folder path [`r(folder)'/] used `description' does not exist.{p_end}"'
+	 	     noi di as error `"{phang}The folder path [`r(folderpath)'/] used `description' does not exist.{p_end}"'
 		     error 601
 	         }			
 	}
@@ -124,7 +124,7 @@ cap program drop ieutil_fileext
 	}
 	
 	*Return checked filename
-	return local filename `return_file'
+	return local file_path `return_file'
 end
 
 
