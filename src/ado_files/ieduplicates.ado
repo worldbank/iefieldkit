@@ -17,7 +17,9 @@
             duplistid(string) datelisted(string) datefixed(string) correct(string) drop(string) newid(string) initials(string) notes(string) listofdiffs(string)]
 
 		version 11.0
-
+		
+		qui do "${GitHub}\iefieldkit\src\ado_files/iefieldkit_aux.do"
+		
 		*Add version of Stata fix
 		//Make sure that keepvars are still saved if saved if the duplicates file
 		*	is generated on a subset of the data. For example, duplicates from
@@ -853,7 +855,7 @@
 		*  the orignal data set in case of error.
 		use `dataToReturn', clear
 
-	}	
+	}			
 end
 
 
@@ -921,8 +923,8 @@ cap program drop testpath
 	else if "`using'" != "" {
 		
 		* Check if the folder exist
-		ieaux_filename using  `using'
-		local folder	      `r(folder)'
+		ieutil_parse_filepath using  `using'
+		local folder	             `r(folderpath)'
 		if missing("`folder'") {
 			noi di as error	"{phang}You have not specified a folder path to the duplicates report. An absolute folder path is required.{p_end}"
 			noi di as error `"{phang}This command will not work if you are trying to use {inp:cd} to set the directory and open or save files. To know more about why this practice is not allowed, {browse "https://dimewiki.worldbank.org/wiki/Stata_Coding_Practices#File_paths":see this article in the DIME Wiki}.{p_end}"'
@@ -931,17 +933,17 @@ cap program drop testpath
 		}
 		
 		* Check if the file extension is the correct. 
-		ieaux_fileext using `using', allowed_exts(.xlsx .xls) default_ext(.xlsx)
-		local using "`r(filename)'"
+		ieutil_fileext using `using', allowed_exts(.xlsx .xls) default_ext(.xlsx)
+		local using "`r(file_path)'"
 		
 		* Test that the folder exists
-		ieaux_folderpath using `using'
+		ieutil_folderpath using `using'
 	
         * Get the folder path, the name of the report and, the format selected
-	    ieaux_filename using  `using'
-		local folder	      `r(folder)'/
-		local name            `r(filename)'
-		local ext             `r(fileext)'
+	    ieutil_parse_filepath using  `using'
+		local folder	             `r(folderpath)'/
+		local name                   `r(filename)'
+		local ext                    `r(fileext)'
 		
 	}
 
@@ -953,7 +955,6 @@ cap program drop testpath
 		if "`suffix'" != "" 	local name		`name'_`suffix'
 								local ext		.xlsx
 	}
-	
 	
 	return local name 	`name'
 	return local ext	`ext'
