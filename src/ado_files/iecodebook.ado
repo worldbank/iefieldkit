@@ -4,6 +4,8 @@
 
 cap program drop iecodebook
   program def  iecodebook
+  
+  qui do "${GitHub}\iefieldkit\src\ado_files/iefieldkit_aux.do"
 
   version 13 // Requires 13.0 due to use of long macros
 
@@ -29,29 +31,23 @@ cap program drop iecodebook
   noi di " "
   gettoken subcommand anything : anything
   
-  // Get the foldername, filename and the file extension
-	ieaux_filename using  `using'
-
-  //Standarize path
-	local using "`r(using)'"
-	
   // Test that the folder exists
-	ieaux_folderpath, folderpath("`r(folder)'") 
+	ieutil_folderpath using `using',  description("in the file")
 	
 	
   // Test the form file: xls or xlsx
-	ieaux_fileext using `using', fileext(xlsx xls) testfileext("`r(fileext)'")
-	local using  "`r(using)'"	
+	ieutil_fileext using `using', allowed_exts(.xlsx .xls) default_ext(.xlsx)
+	local using  "`r(file_path)'"	
 
+	
   // Throw error on [template] if codebook cannot be created
    if inlist("`subcommand'","template","export") & !regexm(`"`options'"',"replace") & !regexm(`"`options'"',"verify") {
-
+     
     cap confirm file "`using'"
     if (_rc == 0) & (!strpos(`"`options'"',"replace")) {
       di as err "That codebook already exists. {bf:iecodebook} will only overwrite it if you specify the [replace] option."
       error 602
     }
-
     cap confirm new file "`using'"
     if (_rc != 0) & (!strpos(`"`options'"',"replace")) {
       di as error "{bf:iecodebook} could not create file `using'. Check that the file path is correctly specified."
