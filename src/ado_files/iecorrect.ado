@@ -173,21 +173,42 @@ cap program drop iecorrect
 // Check dataset variables to be corrected -------------------------------------
 
     qui use `data', clear
-    
-    foreach type of local corrSheets {
-        
-      * Check if the string variables to be corrected don't have extra white spaces and special characters
-      foreach var of local `type'vars {
-        
-        qui destring `var', replace
-        qui cap confirm string var `var' 
-        
-        if !_rc {
-          valstrings `var', location(Variable)          
-        } 
-      }
-    }    
-    
+ 
+    foreach type in string other numeric {
+
+		if inlist("`type'","string", "other" ) &  "``type'corr'"== "1" {
+			cap confirm string var ``type'vars'
+			if _rc local errortype 1
+		}
+		
+		if "`type'" == "numeric" &  "``type'corr'"== "1"{
+			qui cap confirm string var `type'vars
+			if !_rc local errortype 1
+		}
+
+		* Check if the string variables to be corrected don't have extra white spaces and special characters
+		foreach var of local `type'vars { 
+			qui destring `var', replace
+			qui cap confirm string var `var' 
+			if !_rc {
+				valstrings `var', location(Variable)
+			}	
+		}
+		
+		if "`errortype'" == "1" {
+			
+			if inlist("`type'", "string", "numeric") {
+				noi di as error `"{phang} At least one variable for column varname in `type' sheet is not `type'. This column should contain `type' variables to be corrected.{p_end}"'
+				error 109	
+			}
+			if "`type'" == "other" {
+				noi di as error `"{phang} At least one variable for column varname in `type' sheet is not string. This column should contain string variables to be corrected.{p_end}"'
+				error 109				
+				
+			}
+		}				
+	}
+	   
 /*******************************************************************************  
   Create a do file containing the corrections
 *******************************************************************************/    
