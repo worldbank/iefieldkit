@@ -733,7 +733,7 @@ cap program drop valstrings
   
     cap assert `varlist' == `validation'
     if _rc {
-      strerror, var(`validation') type(whitespace) location(`location')  
+      strerror, var(`varlist') type(whitespace) location(`location')  
     }
   
     ********************
@@ -745,12 +745,14 @@ cap program drop valstrings
         & !inrange(`i', 97, 122) ///  case letters
         & !inlist(`i', 32, 33, 35, 37, 38, 40, 41, 42, 43, 44, 45, 46, 58, 59, 60, 61, 62, 63, 64, 91, 93, 95){ 
         capture assert index(`validation', char(`i')) == 0 
-        if _rc {
-          strerror, var(`validation') type(specialchar) location(`location')  
-            }
+		if _rc local errorspecialcharac 1	
       }
     }
-    
+	
+	if "`errorspecialcharac'" == "1" {
+			strerror, var(`varlist') type(specialchar) location(`location')
+	}
+	
 end  
 
 cap program drop strerror
