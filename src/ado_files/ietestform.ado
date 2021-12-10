@@ -10,10 +10,14 @@ qui{
 
 	syntax [using/] ,  Reportsave(string) [Surveyform(string) STATAlanguage(string) date replace]
 
+	
 	/***********************************************
 		Test input
 	***********************************************/
 
+	* ieutil commands 
+	qui do "${GitHub}\iefieldkit\src\ado_files/iefieldkit_aux.do"
+	
 	/*********
 		Test survey file input
 	*********/
@@ -29,18 +33,13 @@ qui{
 	}
 	local surveyform `"`using'`surveyform'"'
 
-    *Get the foldername, filename and the file extension for the survey file input
-	ieaux_filename using  `surveyform'
-
-	* Standarize path
-	local surveyform  "`r(using)'"
 	
-	*Test that the folder exists
-	ieaux_folderpath, folderpath("`r(folder)'") description("in surveyform ") 
+	*Test that the folder exists 
+	ieutil_folderpath using `surveyform', description("in surveyform ") 
 	
 	* Test if the form file is xls or xlsx
-	ieaux_fileext using `surveyform', fileext(xlsx xls) testfileext("`r(fileext)'")
-	local surveyform  "`r(using)'"
+	ieutil_fileext using `surveyform', allowed_exts(.xlsx .xls) default_ext(.xlsx) 
+	local surveyform  "`r(file_path)'"
 
 	*Test if the form file exists
 	cap confirm file "`surveyform'"
@@ -55,18 +54,13 @@ qui{
 	*********/
 
 	*********
-	*Get the foldername,  filename and the file extension for the report file
-	ieaux_filename using  `using'
-	
-	* Standarize path
-	local using  "`r(using)'"
 
     *Test that the folder for the report file exists
-	ieaux_folderpath, folderpath("`r(folder)'") description("in [`reportsave'] ")
+	ieutil_folderpath using `using', description("in [`reportsave'] ")
 	
 	*Test if the file extension type from the report file is csv
-	ieaux_fileext `using', fileext(csv) testfileext(`r_fileext')
-	local using  "`r(using)'"
+	ieutil_fileext `using', allowed_exts(.csv) default_ext(.csv) 
+	local using  "`r(file_path)'"
 
 	*Tempfile that will be used to write the report
 	tempfile report_tempfile
