@@ -198,14 +198,14 @@ qui {
     foreach dofile in `trim' {
       
       // Check for dofile
-      if (`"`=substr("`dofile'",-3,.)'"' != ".do") {
+      if !strpos(`"`dofile'"',".do") {
         di as err "The specified file does not include a .do extension." ///
           "Make sure it is a Stata .do-file and you include the file extension."
         error 610
       }
       
       // Load dofile contents as data
-      import delimited "`dofile'" , clear varnames(nonames)
+      import delimited `dofile' , clear varnames(nonames)
 
       unab allv : *
       gen v = ""
