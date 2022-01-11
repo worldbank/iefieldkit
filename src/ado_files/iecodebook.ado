@@ -907,6 +907,21 @@ qui {
     use "`dataset'" , clear
 
     iecodebook apply using "`using'" , survey(`survey') `drop' `options'
+    
+    cap confirm variable `generate'
+      if _rc==0 {
+        di as err "There is a variable called `generate' in your dataset."
+        di as err "This conflicts with using that name to identify the data source."
+        di as err "Please specify a different name for the new variable in the [generate()] option."
+        error 110
+      }
+    cap labelbook `generate'
+      if _rc==0 {
+        di as err "There is a value label called `generate' in your dataset."
+        di as err "This conflicts with using that name to identify the data source."
+        di as err "Please specify a different name for the new variable in the [generate()] option."
+        error 110
+      }
 
     gen `generate' = `x'
     tempfile next_data
