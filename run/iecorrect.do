@@ -127,7 +127,8 @@
 	gen length_check = length
 	
 	iecorrect apply using "${testouput}/iecorrect-simple-num-id.xlsx", ///
-	idvar(id) sheet(numeric)
+		idvar(id) sheet(numeric)
+		
 	assert length == 0 if length_check == 184
 	assert price  == 1 if id == 74
 	
@@ -153,7 +154,6 @@
 	********
 	* Save *
 	********	
-exit
 	* Save, Wrong file extension
 	iecorrect apply using "${testouput}/iecorrect-simple-num-id.xlsx", idvar(id) save("${testouput}/iecorrect-simple-num-id") replace
 

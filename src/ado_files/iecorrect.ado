@@ -1,28 +1,39 @@
 *! version 0 - NOT READY FOR DISTRIBUTION
 
 cap program drop iecorrect
-  program    iecorrect
-    
-  syntax [anything] using/, [GENerate idvar(varlist) NOIsily save(string) replace sheet(string) debug]
-    
-  gettoken subcommand anything : anything
-  
-  if !inlist("`subcommand'","template","apply") {
-    di as err "{bf:iecorrect} requires [template] or [apply] to be specified with a target [using] file. Type {bf:help iecorrect} for details."
-  }
-  
-  preserve
-  
+	program 	 iecorrect
+		
+	syntax [anything] using/, [GENerate idvar(varlist) NOIsily save(string) replace other sheet(string) debug]
+		
+	gettoken subcommand anything : anything
+	
+	if !inlist("`subcommand'","template","apply") {
+		di as err "{bf:iecorrect} requires [template] or [apply] to be specified with a target [using] file. Type {bf:help iecorrect} for details."
+	}
+
+	preserve
+	
+/*==============================================================================
+								Save data
+==============================================================================*/
+
+	tempfile 	 data
+	qui save	`data'
+
 /*==============================================================================
                 PROCESS OPTIONS
 ==============================================================================*/
-  
-  if "`sheet'" == "" {
-    local corrSheets  numeric string other drop 
-  }
-  else {
-    local corrSheets  `sheet'
-  }
+	
+	if "`sheet'" == "" {
+		local corrSheets	numeric string drop 
+		
+		if "`other'" != "" {
+			local corrSheets "`corrSheets' other"
+		}
+	}
+	else {
+		local corrSheets	`sheet'
+	}
 
 /*==============================================================================
                 Test File
@@ -60,24 +71,32 @@ cap program drop iecorrect
   Creates a blank excel file to be filled with the corrections.
 ==============================================================================*/
 
-  if "`subcommand'" == "template" {
-    
-    if !missing("`debug'") noi di "Entering template subcommand"
-  
-    // Check if file already exists
-    cap confirm new file `using'
-    if (_rc == 602) {
-      noi di as error `"{phang}File [`using'] already exists. Template was not created.{p_end}"'
-      error 602
-    }  
-        
-    // Create the template -----------------------------------------------------
-    templateworkbook using "`using'" 
-      
-    if !missing("`debug'") noi di "Exiting template subcommand"
+	if "`subcommand'" == "template" {
+		
+		if !missing("`debug'") noi di "Entering template subcommand"
 	
-  }
-  
+		// Check if file already exists and check if the "other" tab is included
+		cap confirm new file `using'
+		if (_rc == 602) {
+			if "`other'" != "" {
+				cap import excel "`using'", sheet("other") clear
+				if _rc == 601 local addother "1"
+				else local errorfile "1"
+				
+			}
+			if ("`other'" == "") | ("`errorfile'" == "1") {
+				noi di as error `"{phang}File [`using'] already exists. Template was not created.{p_end}"'
+			error 602 
+				
+			}
+		}		
+		
+		// Create the template -----------------------------------------------------
+		templateworkbook using "`using'" , `other' addother(`addother')
+			
+		if !missing("`debug'") noi di "Exiting template subcommand"
+	}																			// End of template subcommand
+	
 /*==============================================================================
                 APPLY SUBCOMMAND
 ==============================================================================*/
@@ -89,10 +108,9 @@ cap program drop iecorrect
 /*******************************************************************************  
   Tests
 *******************************************************************************/
-    
-    tempfile    data
-    qui save  `data'
-  
+		
+	qui use `data', clear
+	
 // Crete a list of variables in the data ---------------------------------------
 
   qui ds
@@ -292,9 +310,10 @@ cap program drop iecorrect
 /*******************************************************************************  
   Save the do file containing the corrections if "save" was selected
 *******************************************************************************/
-    if "`save'" != "" {
-      * Standardize do file path
-      local save= subinstr(`"`save'"',"\","/",.)
+
+		if "`save'" != "" {
+			* Standardize do file path
+			local save= subinstr(`"`save'"',"\","/",.)
          
       * Get the file extension       
       local save_fileext = substr(`"`save'"',strlen(`"`save'"')-strpos(strreverse(`"`save'"'),".")+1,.)
@@ -361,58 +380,58 @@ end
 **********************************************************************
 
 cap program drop prepdata
-  program    prepdata, rclass
-  
-  syntax anything using/, stringid(numlist) [debug]
+	program 	 prepdata, rclass
+	
+	syntax anything using/, stringid(numlist) [debug]
 
-    if !missing("`debug'") noi di as result "Entering prepdata subcommand"
-  
-    ** Load the sheet that was filled
-    cap import excel "`using'", sheet("`anything'") firstrow allstring clear
+		if !missing("`debug'") noi di as result "Entering prepdata subcommand"
+	
+		** Load the sheet that was filled
+		cap import excel "`using'", sheet("`anything'") firstrow allstring clear
 
-    * If the sheet does not exist, throw an error
-    if _rc == 601 {
-      noi di as error `"{phang}No sheet called "`anything'" was found. Do not delete this sheet. If no `anything' corrections are needed, leave this sheet empty.{p_end}"'
-      error 601
-    }
-    
-    ** Specify the main column for each type of correction -- this column
-    ** indicates the name of the variable to be corrected
-    if !`stringid' & "`anything'" != "other" {
-      qui destring idvalue, replace
-      qui count if !missing(idvalue)
-      if r(N) > 0 {
-        cap confirm string var idvalue
-        if !_rc {
-          noi di as error `"{phang}Column idvalue in sheet [`anything'] is not numeric. This column should contain the unique identifier of the observations to be corrected.{p_end}"'
-          error 198
-        }
-      }
-    }
-    
-    if "`anything'" == "numeric"   {
-      qui destring valuecurrent value, replace
-      local mainvar  numvar
-    }
-    if "`anything'" == "string"   local mainvar  strvar
-    if "`anything'" == "other"     {
-      qui destring catvalue, replace
-      local mainvar  strvar
-    }
-    if "`anything'" == "drop"     local mainvar   idvalue
+		* If the sheet does not exist, throw an error
+		if _rc == 601 {
+			noi di as error `"{phang}No sheet called "`anything'" was found. Do not delete this sheet. If no `anything' corrections are needed, leave this sheet empty.{p_end}"'
+			error 601
+		}
+		
+		** Specify the main column for each type of correction -- this column
+		** indicates the name of the variable to be corrected
+		if !`stringid' & "`anything'" != "other" {
+			qui destring idvalue, replace
+			qui count if !missing(idvalue)
+			if r(N) > 0 {
+				cap confirm string var idvalue
+				if !_rc {
+					noi di as error `"{phang}Column idvalue in sheet [`anything'] is not numeric. This column should contain the unique identifier of the observations to be corrected.{p_end}"'
+					local errorfill 1
+				}
+			}
+		}
+		
+		if "`anything'" == "numeric" 	{
+			qui destring valuecurrent value, replace
+			local mainvar	varname
+		}
+		if "`anything'" == "string" 	local mainvar	varname
+		if "`anything'" == "other" 		{
+			qui destring catvalue, replace
+			local mainvar	strvar
+		}
+		if "`anything'" == "drop" 		local mainvar 	idvalue
 
-    * Drop blank lines that were imported by mistake
-    qui drop if missing(`mainvar')
-    
-    ** Return the name of the main variable to be used in the next steps
-    return local mainvar `mainvar'
-    
-    if !missing("`debug'") noi di as result "Exiting prepdata subcommand"
-    
-  end
-  
-/*******************************************************************************  
-  Initial checks
+		* Drop blank lines that were imported by mistake
+		qui drop if missing(`mainvar')
+	
+		** Return the name of the main variable to be used in the next steps
+		return local mainvar `mainvar'
+		
+		if !missing("`debug'") noi di as result "Exiting prepdata subcommand"
+		
+	end
+	
+/*******************************************************************************	
+	Initial checks
 *******************************************************************************/
 
 ****************************************
@@ -507,116 +526,109 @@ cap program drop checksheets
 ***********************************
 
 cap program drop checkcolnumeric
-  program    checkcolnumeric, rclass
-  
-  syntax [anything], type(string)
-  
-    * Are all the necessary variables there?
-    foreach var in numvar idvalue valuecurrent value {
-      cap confirm var `var'
-      if _rc {
-        noi di as error `"{phang}Column `var' not found in `type' sheet. This column must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
-        local errorfill 1
-      }
-    }
-    
-    * Keep only those variables in the data set -- the user may have added notes
-    * that are not relevant for the command
-    keep numvar idvalue valuecurrent value 
-    
-    ** Check that variables have the correct format
-    qui destring numvar, replace
-    cap confirm string var numvar
-    if _rc {
-      noi di as error `"{phang}Column numvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
-      local errorfill 1
-    }
-        
-    * valuecurrent col may not have been filled, so only check if it was
-    qui count if !missing(valuecurrent)
-    if r(N) > 0 {
-      cap confirm string var valuecurrent
-      if !_rc {
-        noi di as error `"{phang}Column valuecurrent in `type' sheet is not numeric. This column should contain the values of the `type' variables to be corrected.{p_end}"'
-        local errorfill 1
-      }
-    }
-    
-    cap confirm string var value
-    if !_rc {
-      noi di as error `"{phang}Column value in `type' sheet is not numeric. This column should contain the correct values of the `type' variables to be corrected.{p_end}"'
-      local errorfill 1
-    }
-    
-    cap assert !missing(value)
-    if _rc {
-      noi di as error `"{phang}At least one entry for column value in `type' sheet is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
-      local errorfill 1
-    }
-    
-    ** Either idvalue or valuecurrent need to be specified
-    qui count if missing(idvalue) & missing(valuecurrent)
-    
-    if r(N) > 0 {
-      noi di as error `"{phang}There are `r(N)' lines in `type' sheet where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for numeric corrections to be made correctly.{p_end}"'
-      local errorfill 1
-    }
-    
-    return local errorfill `errorfill'
-      
-  end    
+	program 	 checkcolnumeric, rclass
+	
+	syntax [anything]
+	
+		* Are all the necessary variables there?
+		foreach var in varname idvalue valuecurrent value {
+			cap confirm var `var'
+			if _rc {
+				noi di as error `"{phang}Column `var' not found in sheet [numeric]. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
+				local errorfill 1
+			}
+		}
+		
+		* Keep only those variables in the data set -- the user may have added notes
+		* that are not relevant for the command
+		keep varname idvalue valuecurrent value 
+		
+		** Check that variables have the correct format
+		cap confirm string var varname
+		if _rc {
+			noi di as error `"{phang}Column varname in sheet [numeric] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
+			local errorfill 1
+		}
+				
+		* valuecurrent col may not have been filled, so only check if it was
+		qui count if !missing(valuecurrent)
+		if r(N) > 0 {
+			cap confirm string var valuecurrent
+			if !_rc {
+				noi di as error `"{phang}Column valuecurrent in sheet [numeric] is not numeric. This column should contain the values of the `type' variables to be corrected.{p_end}"'
+				local errorfill 1
+			}
+		}
+		
+		cap confirm string var value
+		if !_rc {
+			noi di as error `"{phang}Column value in sheet [numeric] is not numeric. This column should contain the correct values of the `type' variables to be corrected.{p_end}"'
+			local errorfill 1
+		}
+		
+		cap assert !missing(value)
+		if _rc {
+			noi di as error `"{phang}At least one entry for column value in sheet [numeric] is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
+			local errorfill 1
+		}
+		
+		** Either idvalue or valuecurrent need to be specified
+		qui count if missing(idvalue) & missing(valuecurrent)
+		
+		if r(N) > 0 {
+			noi di as error `"{phang}There are `r(N)' lines in sheet [numeric] where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for numeric corrections to be made correctly.{p_end}"'
+			local errorfill 1
+		}
+		
+		return local errorfill `errorfill'
+			
+	end		
 
 ***********************************
 * Check variables in string sheet
 ***********************************
 
 cap program drop checkcolstring
-  program    checkcolstring, rclass
-  
-  syntax [anything], type(string)
-  
-    * Are all the necessary variables there?
-    foreach var in strvar idvalue valuecurrent value {
-      cap confirm var `var'
-      if _rc {
-        noi di as error `"{phang}Column `var' not found in `type' sheet. This column must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
-		local errorfill 1
-      }
-    }
-    
-    * Keep only those variables in the data set -- the user may have added notes
-    * that are not relevant for the command
-    keep strvar idvalue valuecurrent value 
-    
-    ** Check that variables have the correct format
-    qui destring strvar, replace
-    cap confirm string var strvar
-    if _rc {
-      noi di as error `"{phang}Column strvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
-      local errorfill 1
-    }
+	program 	 checkcolstring, rclass
 	
-    cap assert !missing(value)
-    if _rc {
-      noi di as error `"{phang}At least one entry for column value in `type' sheet is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
-      local errorfill 1
-    }
-          
-    ** Either idvalue or valuecurrent need to be specified
-    qui count if missing(idvalue) & missing(valuecurrent)
-    if r(N) > 0 {
-      noi di as error `"{phang}There are `r(N)' lines in the `type' sheet where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for string corrections to be made correctly.{p_end}"'
-      local errorfill 1
-    }
-    
-    ** Check if the string columns have extra whitespaces and special characters
-    foreach var in strvar valuecurrent value {
-        valstrings `var', location(Column)
-    }
-     
-    return local errorfill `errorfill'
-end    
-  
+	syntax [anything]
+	
+		* Are all the necessary variables there?
+		foreach var in varname idvalue valuecurrent value {
+			cap confirm var `var'
+			if _rc {
+				noi di as error `"{phang}Column `var' not found in `type' sheet. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
+			}
+		}
+		
+		* Keep only those variables in the data set -- the user may have added notes
+		* that are not relevant for the command
+		keep varname idvalue valuecurrent value 
+		
+		** Check that variables have the correct format
+		cap confirm string var varname
+		if _rc {
+			noi di as error `"{phang}Column varname in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
+			local errorfill 1
+		}
+		
+		cap assert !missing(value)
+		if _rc {
+			noi di as error `"{phang}At least one entry for column value in `type' sheet is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
+			local errorfill 1
+		}
+					
+		** Either idvalue or valuecurrent need to be specified
+		qui count if missing(idvalue) & missing(valuecurrent)
+		if r(N) > 0 {
+			noi di as error `"{phang}There are `r(N)' lines in the `type' sheet where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for numeric corrections to be made correctly.{p_end}"'
+			local errorfill 1
+		}
+		
+		return local errorfill `errorfill'
+		
+end		
+	
 ***********************************
 * Check variables in other sheet
 ***********************************
@@ -801,104 +813,103 @@ cap program drop doheader
 * Write numeric corrections
 ***************************
 cap program drop donumeric
-  program    donumeric
-  
-  syntax , doname(string) idvar(string) stringid(numlist) [debug]
-    
-  if !missing("`debug'") noi di as result "Entering donumeric subcommand"
-  
-  file write  `doname' "** Correct entries in numeric variables " _n                // <---- Writing in do file here
-  
-  * Count the number of lines in the current data set: each line will be one
-  * line in the do-file
-  qui count
-  
-  * Write one line of correction for each line in the data set
-  forvalues row = 1/`r(N)' {
+	program 	 donumeric
+	
+	syntax , doname(string) idvar(string) stringid(numlist) [debug]
+		
+	if !missing("`debug'") noi di as result "Entering donumeric subcommand"
+	
+	file write  `doname' "** Correct entries in numeric variables " _n								// <---- Writing in do file here
+	
+	* Count the number of lines in the current data set: each line will be one
+	* line in the do-file
+	qui count
+	
+	* Write one line of correction for each line in the data set
+	forvalues row = 1/`r(N)' {
 
-    * Calculate the user-specified inputs for this line
-    local var      = numvar[`row']
-    local valuecurrent   = valuecurrent[`row']
-    local value       = value[`row']
-    local idvalue    = idvalue[`row']
+		* Calculate the user-specified inputs for this line
+		local var			= varname[`row']
+		local valuecurrent 	= valuecurrent[`row']
+		local value		 	= value[`row']
+		local idvalue		= idvalue[`row']
 
-    ** Prepare a local with the line to be written in the do-file
+		** Prepare a local with the line to be written in the do-file
 
-    * The main variable will be corrected to new value, but a condition needs to be specified.
-    * The condition can be one ID variable and/or one current value.
-    local line  `"replace `var' = `value' if "'                        
+		* The main variable will be corrected to new value, but a condition needs to be specified.
+		* The condition can be one ID variable and/or one current value.
+		local line	`"replace `var' = `value' if "'												
 
-    * If it's an ID variables, write that in the line
-    if `"`idvalue'"' != "" {
-      if `stringid'  local idvalue = `" "`idvalue'" "'
-      local line  `" `line' `idvar' == `idvalue' "'                      
+		* If it's an ID variables, write that in the line
+		if `"`idvalue'"' != "" {
+			if `stringid'	local idvalue = `" "`idvalue'" "'
+			local line	`" `line' `idvar' == `idvalue' "'											
 
-      * If it's both, add an "and"
-      if "`valuecurrent'" != "" {
-        local line  `"`line' & "'                            
-      }
-    }
+			* If it's both, add an "and"
+			if "`valuecurrent'" != "" {
+				local line	`"`line' & "'														
+			}
+		}
 
-    * If there's a current value, write that in the line
-    if "`valuecurrent'" != "" {
-      local line  `"`line'`var' == float(`valuecurrent')"'                    
-    }
+		* If there's a current value, write that in the line
+		if "`valuecurrent'" != "" {
+			local line	`"`line'`var' == `valuecurrent'"'										
+		}
 
-    ** Write the line to the do file
-    file write  `doname' `"`line'"' _n                              // <---- Writing in do file here
-  }  
+		** Write the line to the do file
+		file write  `doname' `"`line'"' _n															// <---- Writing in do file here
+	}	
 
-  if !missing("`debug'") noi di as result "Exiting donumeric subcommand"
-
+	if !missing("`debug'") noi di as result "Exiting donumeric subcommand"
 end
 
 ***************************
 * Write string corrections
 ***************************
 cap program drop dostring
-  program    dostring
-  
-  syntax , doname(string) idvar(string) stringid(numlist) [debug]
-  
-  if !missing("`debug'") noi di as result "Entering dostring subcommand"
-  
-  file write  `doname'      "** Correct entries in string variables " _n                // <---- Writing in do file here
+	program 	 dostring
+	
+	syntax , doname(string) idvar(string) stringid(numlist) [debug]
+	
+	if !missing("`debug'") noi di as result "Entering dostring subcommand"
+	
+	file write  `doname'		  "** Correct entries in string variables " _n								// <---- Writing in do file here
 
-  * Count the number of lines in the current data set: each line will be one
-  * line in the do-file
-  qui count 
-  
-  * Write one line of correction for each line in the data set
-  forvalues row = 1/`r(N)' {
-    
-    * Identify the user-specified input in that line
-    local var      = strvar[`row']            
-    local valuecurrent   = valuecurrent[`row']
-    local value       = value[`row']
-    local idvalue    = idvalue[`row']
+	* Count the number of lines in the current data set: each line will be one
+	* line in the do-file
+	qui count 
+	
+	* Write one line of correction for each line in the data set
+	forvalues row = 1/`r(N)' {
+		
+		* Identify the user-specified input in that line
+		local var			= varname[`row']						
+		local valuecurrent 	= valuecurrent[`row']
+		local value		 	= value[`row']
+		local idvalue		= idvalue[`row']
 
-    local line    `"replace `var' = "`value'" if"'
-    
-    if `"`idvalue'"' != "" {
-      
-      if `stringid'   local line `"`line' `idvar' == "`idvalue'""'
-      else      local line `"`line' `idvar' == `idvalue'"'
-      
-      if "`valuecurrent'" != "" {
-        local line  `"`line' &"'
-      }
-    }
-    
-    if "`valuecurrent'" != "" {
-      local line  `"`line' `var' == "`valuecurrent'" "'
-    }
-    
-    ** Write the line to the do file
-    file write `doname'  `"`line'"' _n                                    // <---- Writing in do file here
-  }
-  
-  if !missing("`debug'") noi di as result "Exiting dostring subcommand"
-  
+		local line		`"replace `var' = "`value'" if"'
+		
+		if `"`idvalue'"' != "" {
+			
+			if `stringid' 	local line `"`line' `idvar' == "`idvalue'""'
+			else			local line `"`line' `idvar' == `idvalue'"'
+			
+			if "`valuecurrent'" != "" {
+				local line	`"`line' &"'
+			}
+		}
+		
+		if "`valuecurrent'" != "" {
+			local line	`"`line' `var' == "`valuecurrent'" "'
+		}
+		
+		** Write the line to the do file
+		file write `doname'	`"`line'"' _n																		// <---- Writing in do file here
+	}
+	
+	if !missing("`debug'") noi di as result "Exiting dostring subcommand"
+	
 end
 
 ***********************
@@ -1020,39 +1031,43 @@ end
 *******************************************************************************/
 
 cap program drop templateworkbook
-  program     templateworkbook
-  
-  syntax using/
-  
-  preserve
-  
-    * String variables
-    templatesheet using "`using'", ///
-      varlist("strvar idvalue valuecurrent value initials notes") ///
-      sheetname("string") ///
-      current("value")
-          
-    * Numeric variables
-    templatesheet using "`using'", ///
-      varlist("numvar idvalue valuecurrent value initials notes") ///
-      sheetname("numeric") ///
-      current("value")
+	program		 templateworkbook
+	
+	syntax using/ , [other addother(string)]
+	
+	preserve
+	    if "`addother'" == "" { 
+		* String variables
+		templatesheet using "`using'", ///
+			varlist("varname idvalue value valuecurrent initials notes") ///
+			sheetname("string") ///
+			current("value")
+					
+		* Numeric variables
+		templatesheet using "`using'", ///
+			varlist("varname idvalue value valuecurrent initials notes") ///
+			sheetname("numeric") ///
+			current("value")
 
-    * Other variables
-    templatesheet using "`using'", ///
-      varlist("strvar strvaluecurrent catvar catvalue initials notes") ///
-      sheetname("other") ///
-      current("strvalue")
+		* Drop observations
+		templatesheet using "`using'", ///
+			varlist("idvalue initials notes") ///
+			sheetname("drop")
+		}	
 
-    * Drop observations
-    templatesheet using "`using'", ///
-      varlist("idvalue n_obs initials notes") ///
-      sheetname("drop")
+		* Other variables
+		if "`other'" != "" {
+			templatesheet using "`using'", ///
+				varlist("strvar strvaluecurrent strvalue catvar catvalue initials notes") ///
+				sheetname("other") ///
+				current("strvalue")
+		}
+			
 
-    noi di as result `"{phang}Template spreadsheet saved to: {browse "`using'":`using'}{p_end}"'
-      
-  restore
-  
+		noi di as result `"{phang}Template spreadsheet saved to: {browse "`using'":`using'}{p_end}"'
+			
+	restore
+	
 end
 
 cap program drop templatesheet
