@@ -164,7 +164,7 @@ If this variable does not yet exist, the option {cmdab:gen:erate} can be used to
 {phang2}{it:catvalue}, which should be filled with the {bf:correct value} of the categorical variable.
 This value will replace the current value of the categorical variable
 once {cmd:iecorrect apply} is run. 
-Filling this column is not required for this type of correction to run properly.{p_end}
+Filling this column is {bf:required} for this type of correction to run properly.{p_end}
 
 
 {pstd}{it:If the variable listed under the {bf:catvar} column does not exist, then the command will return an error indicating so. To override this error and create the specified variable, use the option {cmdab:gen:erate}.}{p_end}

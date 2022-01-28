@@ -173,21 +173,42 @@ cap program drop iecorrect
 // Check dataset variables to be corrected -------------------------------------
 
     qui use `data', clear
-    
-    foreach type of local corrSheets {
-        
-      * Check if the string variables to be corrected don't have extra white spaces and special characters
-      foreach var of local `type'vars {
-        
-        qui destring `var', replace
-        qui cap confirm string var `var' 
-        
-        if !_rc {
-          valstrings `var', location(Variable)          
-        } 
-      }
-    }    
-    
+ 
+    foreach type in string other numeric {
+
+		if inlist("`type'","string", "other" ) &  "``type'corr'"== "1" {
+			cap confirm string var ``type'vars'
+			if _rc local errortype 1
+		}
+		
+		if "`type'" == "numeric" &  "``type'corr'"== "1"{
+			qui cap confirm string var `type'vars
+			if !_rc local errortype 1
+		}
+
+		* Check if the string variables to be corrected don't have extra white spaces and special characters
+		foreach var of local `type'vars { 
+			qui destring `var', replace
+			qui cap confirm string var `var' 
+			if !_rc {
+				valstrings `var', location(Variable)
+			}	
+		}
+		
+		if "`errortype'" == "1" {
+			
+			if inlist("`type'", "string", "numeric") {
+				noi di as error `"{phang} At least one variable for column varname in `type' sheet is not `type'. This column should contain `type' variables to be corrected.{p_end}"'
+				error 109	
+			}
+			if "`type'" == "other" {
+				noi di as error `"{phang} At least one variable for column varname in `type' sheet is not string. This column should contain string variables to be corrected.{p_end}"'
+				error 109				
+				
+			}
+		}				
+	}
+	   
 /*******************************************************************************  
   Create a do file containing the corrections
 *******************************************************************************/    
@@ -415,7 +436,7 @@ cap program drop checksheets
         
       * Check that the sheet is filled correctly
       if !missing("`debug'") noi di as result "Entering checkcol`type' subcommand"
-      checkcol`type'
+      checkcol`type', type(`type')
       if "`r(errorfill)'" == "1" {
         error 198
       }
@@ -484,13 +505,13 @@ cap program drop checksheets
 cap program drop checkcolnumeric
   program    checkcolnumeric, rclass
   
-  syntax [anything]
+  syntax [anything], type(string)
   
     * Are all the necessary variables there?
     foreach var in numvar idvalue valuecurrent value {
       cap confirm var `var'
       if _rc {
-        noi di as error `"{phang}Column `var' not found in sheet [numeric]. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
+        noi di as error `"{phang}Column `var' not found in `type' sheet. This column must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
         local errorfill 1
       }
     }
@@ -503,7 +524,7 @@ cap program drop checkcolnumeric
     qui destring numvar, replace
     cap confirm string var numvar
     if _rc {
-      noi di as error `"{phang}Column numvar in sheet [numeric] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
+      noi di as error `"{phang}Column numvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
       local errorfill 1
     }
         
@@ -512,20 +533,20 @@ cap program drop checkcolnumeric
     if r(N) > 0 {
       cap confirm string var valuecurrent
       if !_rc {
-        noi di as error `"{phang}Column valuecurrent in sheet [numeric] is not numeric. This column should contain the values of the `type' variables to be corrected.{p_end}"'
+        noi di as error `"{phang}Column valuecurrent in `type' sheet is not numeric. This column should contain the values of the `type' variables to be corrected.{p_end}"'
         local errorfill 1
       }
     }
     
     cap confirm string var value
     if !_rc {
-      noi di as error `"{phang}Column value in sheet [numeric] is not numeric. This column should contain the correct values of the `type' variables to be corrected.{p_end}"'
+      noi di as error `"{phang}Column value in `type' sheet is not numeric. This column should contain the correct values of the `type' variables to be corrected.{p_end}"'
       local errorfill 1
     }
     
     cap assert !missing(value)
     if _rc {
-      noi di as error `"{phang}At least one entry for column value in sheet [numeric] is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
+      noi di as error `"{phang}At least one entry for column value in `type' sheet is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
       local errorfill 1
     }
     
@@ -533,7 +554,7 @@ cap program drop checkcolnumeric
     qui count if missing(idvalue) & missing(valuecurrent)
     
     if r(N) > 0 {
-      noi di as error `"{phang}There are `r(N)' lines in sheet [numeric] where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for numeric corrections to be made correctly.{p_end}"'
+      noi di as error `"{phang}There are `r(N)' lines in `type' sheet where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for numeric corrections to be made correctly.{p_end}"'
       local errorfill 1
     }
     
@@ -548,13 +569,14 @@ cap program drop checkcolnumeric
 cap program drop checkcolstring
   program    checkcolstring, rclass
   
-  syntax [anything]
+  syntax [anything], type(string)
   
     * Are all the necessary variables there?
     foreach var in strvar idvalue valuecurrent value {
       cap confirm var `var'
       if _rc {
-        noi di as error `"{phang}Column `var' not found in `type' sheet. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
+        noi di as error `"{phang}Column `var' not found in `type' sheet. This column must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
+		local errorfill 1
       }
     }
     
@@ -569,7 +591,7 @@ cap program drop checkcolstring
       noi di as error `"{phang}Column strvar in `type' sheet is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
       local errorfill 1
     }
-    
+	
     cap assert !missing(value)
     if _rc {
       noi di as error `"{phang}At least one entry for column value in `type' sheet is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
@@ -598,13 +620,13 @@ end
 cap program drop checkcolother
   program    checkcolother, rclass
   
-  syntax [anything]
+  syntax [anything], type(string)
   
     * Are all the necessary variables there?
     foreach var in strvar strvaluecurrent strvalue catvar catvalue {
       cap confirm var `var'
       if _rc {
-        noi di as error `"{phang}Column `var' not found in `type' sheet. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
+        noi di as error `"{phang}Column `var' not found in `type' sheet. This column must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
         local errorfill 1
       }
     }
@@ -618,21 +640,21 @@ cap program drop checkcolother
       qui destring `var', replace
       cap confirm string var `var'
       if _rc {
-        noi di as error `"{phang}Column `var' in [other] sheet is not a string. This column needs to be filled for corrections of categorical variable to be made.{p_end}"'
+        noi di as error `"{phang}Column `var' in `type' sheet is not a string. This column needs to be filled for corrections of categorical variable to be made.{p_end}"'
         local errorfill 1
       }
     }
     
     cap assert !missing(catvalue)
     if _rc {
-      noi di as error `"{phang}At least one entry for column value in sheet [other] is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
+      noi di as error `"{phang}At least one entry for column catvalue in `type' sheet is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
       local errorfill 1
     }
     
     ** Either strvaluecurrent need to be specified
     qui count if missing(strvaluecurrent)    
     if r(N) > 0 {
-      noi di as error `"{phang}There are `r(N)' lines in sheet [other] where strvaluecurrent column is not filled. This column should be filled for categorical corrections to be made correctly.{p_end}"'
+      noi di as error `"{phang}There are `r(N)' lines in `type' sheet where strvaluecurrent column is not filled. This column should be filled for categorical corrections to be made correctly.{p_end}"'
       local errorfill 1
     }
 
@@ -652,33 +674,33 @@ end
 cap program drop checkcoldrop
   program    checkcoldrop, rclass
   
-  syntax [anything]
+  syntax [anything], type(string)
   
     * Are all the necessary variables there?
     foreach var in idvalue n_obs {
       cap confirm var `var'
       if _rc {
-        noi di as error `"{phang}Column `var' not found in sheet [drop]. This column must not be erased from the template.{p_end}"'
+        noi di as error `"{phang}Column `var' not found in `type' sheet. This column must not be erased from the template.{p_end}"'
         local errorfill 1
       }
     }
     
     cap assert !missing(idvalue)
     if _rc {
-      noi di as error `"{phang}At least one entry for column idvalue in sheet [drop] is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
+      noi di as error `"{phang}At least one entry for column idvalue in `type' sheet is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
       local errorfill 1
     }
     
     cap assert !missing(n_obs)
     if _rc {
-      noi di as error `"{phang}At least one entry for column n_obs in sheet [drop] is blank. Dropping observations without confirming the number of rows to be deleted is a risky practice that is not allowed by iecorrect. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
+      noi di as error `"{phang}At least one entry for column n_obs in `type' sheet is blank. Dropping observations without confirming the number of rows to be deleted is a risky practice that is not allowed by iecorrect. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
       local errorfill 1
     }
         
     qui destring n_obs, replace
     cap confirm string var n_obs
     if !_rc {
-      noi di as error `"{phang}Column n_obs in sheet [drop] is not numeric. This column should contain the number of observations to be dropped.{p_end}"'
+      noi di as error `"{phang}Column n_obs in `type' sheet is not numeric. This column should contain the number of observations to be dropped.{p_end}"'
       local errorfill 1
     }
     
@@ -711,7 +733,7 @@ cap program drop valstrings
   
     cap assert `varlist' == `validation'
     if _rc {
-      strerror, var(`validation') type(whitespace) location(`location')  
+      strerror, var(`varlist') type(whitespace) location(`location')  
     }
   
     ********************
@@ -723,12 +745,14 @@ cap program drop valstrings
         & !inrange(`i', 97, 122) ///  case letters
         & !inlist(`i', 32, 33, 35, 37, 38, 40, 41, 42, 43, 44, 45, 46, 58, 59, 60, 61, 62, 63, 64, 91, 93, 95){ 
         capture assert index(`validation', char(`i')) == 0 
-        if _rc {
-          strerror, var(`validation') type(specialchar) location(`location')  
-            }
+		if _rc local errorspecialcharac 1	
       }
     }
-    
+	
+	if "`errorspecialcharac'" == "1" {
+			strerror, var(`varlist') type(specialchar) location(`location')
+	}
+	
 end  
 
 cap program drop strerror
