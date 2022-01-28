@@ -22,7 +22,7 @@ qui {
 	global form			"${AnalyticsDB}/Data Coordinator/iefieldkit/ietestform"
 	global codebook		"${AnalyticsDB}/Data Coordinator/iefieldkit/iecodebook"
 	global correct		"${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect"
-	global testouput	"${iefieldkit}/run/output"
+	global testouput	"${correct}"
 	
 	** Test if output folder exists, if not create it
 	mata : st_numscalar("r(dirExist)", direxists("${testouput}"))

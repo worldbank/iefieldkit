@@ -9,19 +9,20 @@ help for {hi:iecorrect}
 {phang2}{cmdab:iecorrect} {hline 2} Modify data points in a dataset and
 create accompanying documentation to clarify why the changes were made.
 
-{phang2} {cmdab:iecorrect} creates a workflow to make changes (corrections) to individual data points in a dataset,
-while documenting who and why changes were madeFor a more descriptive discussion on the intended usage and workflow of this
-command please see the {browse "https://dimewiki.worldbank.org/wiki/Iecorrect":DIME Wiki}.
+{phang2} {cmdab:iecorrect} provides a workflow to make changes (corrections) to individual data points in a dataset,
+while documenting who and why changes were made. For a more descriptive discussion on the intended usage and workflow of this
+command please see the {browse "https://dimewiki.worldbank.org/wiki/iecorrect":DIME Wiki}.
 
 {title:Functions}
 
-{p 2 4}iecorrect consists of two separate subcommands. See section {help iecorrect##IntendedWokflow:Intended workflow} for a full description of how to use the command. {p_end}
+{p 2 4}{cmdab:iecorrect} consists of two separate subcommands. See section {help iecorrect##IntendedWokflow:Intended workflow} for a full description of how to use the command. {p_end}
 {break}
-{p 2 4}{cmdab:iecorrect template}{break} creates an Excel template
-with empty columns for you to specify the modification to be made when using {bf:iecorrect apply}.{p_end}
+{p 2 4}{cmdab:iecorrect template} creates an Excel template
+with empty columns for you to specify the modifications to be made by {bf:iecorrect apply}.{p_end}
 {break}
-{p 2 4}{cmdab:iecorrect apply}{break} reads an Excel file created
-by iecorrect template and filled by the user to specify which changes should be made to the dataset and applies them to the current dataset.{p_end}
+{p 2 4}{cmdab:iecorrect apply} reads an Excel file created
+by {bf:iecorrect template} and filled by the user, 
+then applies them to the current dataset.{p_end}
 {break}
 
 {title:Syntax}
@@ -33,7 +34,7 @@ by iecorrect template and filled by the user to specify which changes should be 
 
 {phang2}
 {cmdab:iecorrect apply}
-{help using} {it:"/path/to/corrections/file.xlsx"},
+{help using} {it:"/path/to/corrections_file.xlsx"}, {break}
 [
 {cmdab:idvar(}{it:varlist}{cmd:)}
 {cmdab:replace}
@@ -60,9 +61,18 @@ This is an advanced option. See {help iecorrect##CatCorrections:corrections to c
 {marker IntendedWokflow}{...}
 {title:Intended workflow}
 
-{pstd}When starting the data correction process for any dataset, first run {cmd:iecorrect template} to create an empty Excel form. This form should only be created once, and then filled to indicate the changes that will be made to the data. Once the form is filled, run {cmd:iecorrect apply} to apply the changed indicated in the form to the dataset that is currently in memory.{p_end}
+{pstd}When starting the data correction process for any dataset,
+first run {cmd:iecorrect template} to create an empty Excel form.
+This form should only be created once,
+and then filled to indicate the changes that will be made to the data.
+Once the form is filled, run {cmd:iecorrect apply} to apply the changes 
+indicated in the form to the dataset that is currently in memory.{p_end}
 
-{pstd}The Excel report includes four sheets, called {it:categorical}, {it:string}, {it:numeric}, and {it:drop}. Each of these sheets indicates one type of correction. Each type of correction requires slightly different input from the user, discussed below. Do not delete the sheets and headers in the template form, or the command will not run properly. {p_end}
+{pstd}The Excel report includes four sheets, 
+called {it:categorical}, {it:string}, {it:numeric}, and {it:drop}.
+Each of these sheets indicates one type of correction.
+Each type of correction requires slightly different input from the user, discussed below.
+Do not delete the sheets and headers in the template form, or the command will not run properly. {p_end}
 
 {marker TypeCorrections}{...}
 {title:Types of corrections}
@@ -85,7 +95,7 @@ issue and the correct value were identified.{p_end}
 Filling this column is {bf:required} for this type of correction to run properly.{p_end}
 
 {phang2}{it:idvalue}, which should be filled with the value of the ID variable in the observation 
-o be corrected. Filling this column is not required for this type of correction 
+to be corrected. Filling this column is not required for this type of correction 
 to run properly, but {bf:either this column or the {it:valuecurrent} column must be filled}.
 {p_end}
 
@@ -170,7 +180,7 @@ If this variable does not yet exist, the option {cmdab:gen:erate} can be used to
 {phang2}{it:catvalue}, which should be filled with the {bf:correct value} of the categorical variable.
 This value will replace the current value of the categorical variable
 once {cmd:iecorrect apply} is run. 
-Filling this column is not required for this type of correction to run properly.{p_end}
+Filling this column is {bf:required} for this type of correction to run properly.{p_end}
 
 
 {pstd}If the variable listed under the {bf:catvar} column does not exist, then the command will return an error indicating so. To override this error and create the specified variable, use the option {cmdab:gen:erate}.{p_end}
