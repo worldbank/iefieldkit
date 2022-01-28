@@ -108,13 +108,17 @@ cap program drop iecorrect
 /*******************************************************************************  
   Tests
 *******************************************************************************/
-		
-	qui use `data', clear
-	
+			
 // Crete a list of variables in the data ---------------------------------------
 
-  qui ds
-  local original_vars `" `r(varlist)' "'
+	qui ds, has(type double)
+	local 	double_vars		`r(varlist)'
+	
+	qui ds, has(type float)
+	local 	float_vars		`r(varlist)'
+	
+	qui ds
+	local 	original_vars	`r(varlist)'
 
 // Check ID format -------------------------------------------------------------
 
@@ -246,7 +250,7 @@ cap program drop iecorrect
   
   foreach var in `stringvars' {
   
-    cap assert regex("`original_vars'", "`var'")
+    cap assert regex(" `original_vars' ", " `var' ")
     if _rc &  "`generate'" != "" {
       qui {
         cap  file close   `doname'
@@ -259,7 +263,7 @@ cap program drop iecorrect
 
   foreach var in `numericvars' `categoricalvars' {
 
-    cap assert regex("`original_vars'", "`var'")  
+    cap assert regex(" `original_vars' ", " `var' ")  
     if _rc &  "`generate'" != "" {
       qui {
         cap  file close   `doname'
@@ -277,27 +281,30 @@ cap program drop iecorrect
 
 // Read correction sheet -------------------------------------------------------
 
+	local numericopts "floatvars(`float_vars') doublevars(`double_vars')"
+	
     foreach type of local corrSheets {
 
       if ``type'corr' {
-        * Open the data set with the numeric corrections
+        
+		* Open the data set with the numeric corrections
         cap import excel "`using'", sheet("`type'") firstrow allstring clear
         
         * Drop observations with all missing variables
-        tempvar    allmiss
-        egen     `allmiss' = rownonmiss(*), strok
+        tempvar      allmiss
+        egen        `allmiss' = rownonmiss(*), strok
         qui keep if `allmiss' > 0
-        drop     `allmiss'
+        drop        `allmiss'
 
         * Open the placeholder do file and write the corrections to be made
         cap  file close   `doname'
         qui  file open    `doname' using "`dofile'", text write append
               
-          do`type',    doname("`doname'") idvar("`idvar'") stringid(`stringid') `debug'
+        do`type',    doname("`doname'") idvar("`idvar'") stringid(`stringid') `debug' ``type'opts'
 
         * Add an extra space before the next set of corrections
-          file write  `doname'      _n _n          
-          file close   `doname'
+        file write   `doname'      _n _n          
+        file close   `doname'
 
       }
     }
@@ -815,8 +822,8 @@ cap program drop doheader
 cap program drop donumeric
 	program 	 donumeric
 	
-	syntax , doname(string) idvar(string) stringid(numlist) [debug]
-		
+	syntax , doname(string) idvar(string) stringid(numlist) [floatvars(string) doublevars(string) debug] 
+				
 	if !missing("`debug'") noi di as result "Entering donumeric subcommand"
 	
 	file write  `doname' "** Correct entries in numeric variables " _n								// <---- Writing in do file here
@@ -853,7 +860,10 @@ cap program drop donumeric
 
 		* If there's a current value, write that in the line
 		if "`valuecurrent'" != "" {
-			local line	`"`line'`var' == `valuecurrent'"'										
+		    if 		regex(" `floatvars' ", " `var' ")  local line	`"`line'`var' == float(`valuecurrent')"'
+			else if regex(" `doublevars' ", " `var' ") local line	`"`line'`var' == double(`valuecurrent')"'
+			else 									   local line	`"`line'`var' == `valuecurrent'"'
+													
 		}
 
 		** Write the line to the do file
