@@ -75,7 +75,8 @@ cap program drop iecorrect
     templateworkbook using "`using'" 
       
     if !missing("`debug'") noi di "Exiting template subcommand"
-  }                                      // End of template subcommand
+	
+  }
   
 /*==============================================================================
                 APPLY SUBCOMMAND
@@ -166,7 +167,7 @@ cap program drop iecorrect
       }
 
       else if _rc {
-        noi di as error `"{phang} `obs' observations with ID value [`id'] will be removed from the data. {p_end}"'
+        noi di as result `"{phang}`obs' observations with ID value [`id'] will be removed from the data.{p_end}"'
       }
     }
 
@@ -340,6 +341,9 @@ cap program drop iecorrect
   
 end
 
+
+
+
 /*==============================================================================
 ================================================================================
 
@@ -460,10 +464,10 @@ cap program drop checksheets
       }
       
       if inlist("`type'", "string", "numeric", "other") {
-        noi di as result `"{phang}Variables for corrections of type `type': ``type'vars'{p_end}"'
+        noi di as text `"{phang}Variables for corrections of type `type': ``type'vars'{p_end}"'
       }
       else {
-        noi di as result `"{phang}IDs of observations to be dropped: ``type'vars'{p_end}"'
+        noi di as text `"{phang}IDs of observations to be dropped: ``type'vars'{p_end}"'
       }    
     }
     
@@ -471,10 +475,10 @@ cap program drop checksheets
     else if `r(N)' == 0 {
       local  `type'corr  0
       if inlist("`type'", "string", "numeric", "other") {
-        noi di as result `"{phang}No corrections of type `type'.{p_end}"'
+        noi di as text `"{phang}No corrections of type `type'.{p_end}"'
       }
       else {
-        noi di as result `"{phang}No observations to be dropped.{p_end}"'
+        noi di as text `"{phang}No observations to be dropped.{p_end}"'
       }
     }
     
@@ -952,17 +956,11 @@ cap program drop doother
     local strvaluecurrent   = strvaluecurrent[`row']
     local strvaluecurrent  = `""`strvaluecurrent'""'
     
-    local strvalue       = strvalue[`row']
-    local strvalue      = `""`strvalue'""'
-
     local catvar       = catvar[`row']
     local catvalue       = catvalue[`row']
 
     if "`catvar'" != ""  {
       file write `doname'    `"replace `catvar' = `catvalue' if `strvar' == `strvaluecurrent'"' _n
-    }
-    if !(`"`strvalue'"' == `"`strvaluecurrent'"') | (`"`strvalue'"' == "")  {
-      file write `doname'    `"replace `strvar' = `strvalue' if `strvar' == `strvaluecurrent'"' _n
     }
   }
 
@@ -1042,7 +1040,7 @@ cap program drop templateworkbook
 
     * Other variables
     templatesheet using "`using'", ///
-      varlist("strvar strvaluecurrent strvalue catvar catvalue initials notes") ///
+      varlist("strvar strvaluecurrent catvar catvalue initials notes") ///
       sheetname("other") ///
       current("strvalue")
 
