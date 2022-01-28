@@ -639,7 +639,7 @@ cap program drop checkcolother
   syntax [anything]
   
     * Are all the necessary variables there?
-    foreach var in strvar strvaluecurrent strvalue catvar catvalue {
+    foreach var in strvar strvaluecurrent catvar catvalue {
       cap confirm var `var'
       if _rc {
         noi di as error `"{phang}Column `var' not found in sheet [other]. This column must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
@@ -649,7 +649,7 @@ cap program drop checkcolother
     
     * Keep only those variables in the data set -- the user may have added notes
     * that are not relevant for the command
-    keep strvar strvaluecurrent strvalue catvar catvalue
+    keep strvar strvaluecurrent catvar catvalue
     
     ** Check that variables have the correct format
     foreach var in strvar catvar {
@@ -675,7 +675,7 @@ cap program drop checkcolother
     }
 
     ** Check if the string columns have extra whitespaces and special characters
-    foreach var in strvar strvaluecurrent strvalue catvar {
+    foreach var in strvar strvaluecurrent catvar {
       valstrings `var', location(Column)         
     }
     
@@ -1058,7 +1058,7 @@ cap program drop templateworkbook
 		* Other variables
 		if "`other'" != "" {
 			templatesheet using "`using'", ///
-				varlist("strvar strvaluecurrent strvalue catvar catvalue initials notes") ///
+				varlist("strvar strvaluecurrent catvar catvalue initials notes") ///
 				sheetname("other") ///
 				current("strvalue")
 		}
