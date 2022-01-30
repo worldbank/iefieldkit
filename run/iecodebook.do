@@ -1,13 +1,11 @@
-	global GitHub  "C:\Users\Inspiron\Desktop\GitHub"
-	global iefieldkit "${GitHub}/iefieldkit"
-	global codebook "C:\Users\Inspiron\Desktop\GitHub\codebooks"
 
-	 qui do "${GitHub}/iefieldkit/src/ado_files/iecodebook.ado"
-
+	qui do "${GitHub}/iefieldkit/src/ado_files/iecodebook.ado"
 	
 /*******************************************************************************
 	Folder and format testing
 *******************************************************************************/
+	
+	sysuse auto, clear
 
 	* Folder does not exist	
 	cap iecodebook template using "folder/auto.xlsx"
