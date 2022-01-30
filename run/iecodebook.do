@@ -153,15 +153,15 @@
 	sysuse auto, clear
 	iecodebook apply using "${codebook}/auto_addlabel.xlsx"	
 		local f0: label foreign 0
-		assert "`f0'"== "Domestic car"
+		assert "`f0'"== "False"
 		local f1: label foreign 1
-		assert "`f1'"== "Foreign car"
+		assert "`f1'"== "True"
 
 	* Rename variables
 	sysuse auto, clear 	
-	iecodebook apply using "${codebook}/auto_rename.xlsx"
+	iecodebook apply using "${codebook}/auto_renaming.xlsx"
 	
-	foreach var in cost car_mpg {
+	foreach var in cost car_mpg rep78 {
 		confirm variable `var'
 		assert !_rc
 	}
@@ -171,7 +171,9 @@
 		assert _rc == 111
 	}
 			
-		
+	tempfile auto2
+	save 	`auto2'
+	
 	**************************
 	*        Label          *
 	**************************			
@@ -221,11 +223,15 @@
 /*------------------------------------------------------------------------------
 	Template subcommand
 ------------------------------------------------------------------------------*/
+
+	sysuse auto, clear
+	tempfile auto1
+	save 	`auto1'
 	
 	* Simple run
 	cap erase "${codebook}/template_apply1.xlsx"
 	iecodebook template  `auto1' `auto2' using "${codebook}/template_apply1.xlsx", ///
-	surveys(one two) 
+		surveys(one two) 
 
 	* Run with replace
 	iecodebook template `auto1' `auto2'  using "${codebook}/template_apply1.xlsx", ///
@@ -244,93 +250,94 @@
 	* Incorrect uses : error messages expected *
 	********************************************	
 	* Survey option 
-	cap iecodebook template `auto1' `auto2'  ///
-	using "${codebook}/template_error.xlsx", replace
+	cap iecodebook template `auto1' `auto2' using "${codebook}/template_error.xlsx", replace
 	assert _rc == 198
 	
 	
 	* Non-template options
-	iecodebook template `auto1' `auto2' ///
-	using "${codebook}/template_error.xlsx", ///
-	surveys(First Second)  keepall replace                                      
+	iecodebook template `auto1' `auto2' using "${codebook}/template_error.xlsx", ///
+		surveys(First Second) ///
+		keepall replace                                      
 	
-	iecodebook template `auto1' `auto2' ///
-	using "${codebook}/template_error.xlsx", ///
-	surveys(First Second)  report replace                                       
+	iecodebook template `auto1' `auto2' using "${codebook}/template_error.xlsx", ///
+		surveys(First Second) ///
+		report replace                                       
 			
 	
 /*------------------------------------------------------------------------------
 	Append subcommand
 ------------------------------------------------------------------------------*/
     
-	* Clear: requiered option
-	cap iecodebook append `auto1' `auto2' ///
-	using "${codebook}/harmonization.xlsx", ///
-	surveys(First Second) generate(survey_name)
+	sysuse auto, clear
+	tempfile auto1
+	save 	`auto1'
+	
+	* Clear: required option
+	cap iecodebook append `auto1' `auto2' using "${codebook}/harmonization.xlsx", ///
+		surveys(First Second) generate(survey_name)
 	assert _rc == 4
 
 	* Survey: requiered option
-	cap iecodebook append `auto1' `auto2' ///
-	using "${codebook}/harmonization.xlsx", /// 
-	clear replace 
+	cap iecodebook append `auto1' `auto2' using "${codebook}/harmonization.xlsx", /// 
+		clear replace 
 	assert _rc == 198	
 		
-	
 	* Generate option
-	iecodebook append `auto1' `auto2' /// 
-	using "${codebook}/harmonization.xlsx", ///
-	clear surveys(First Second) generate(survey_name) report replace
+	iecodebook append `auto1' `auto2' using "${codebook}/harmonization.xlsx", ///
+		clear ///
+		surveys(First Second) ///
+		generate(survey_name) ///
+		report replace
 		
-   		
 	* Report option 
 	cap erase "${codebook}/harmonization_report.xlsx"
-	iecodebook append `auto1' `auto2' /// 
-	using "${codebook}/harmonization.xlsx", ///
-	clear surveys(First Second) report 
+	iecodebook append `auto1' `auto2' using "${codebook}/harmonization.xlsx", ///
+		clear surveys(First Second) report 
 	
 	* Replace option 
-	cap iecodebook append `auto1' `auto2' /// 
-	using "${codebook}/harmonization.xlsx", ///
-	clear surveys(First Second)  report 
+	cap iecodebook append `auto1' `auto2' using "${codebook}/harmonization.xlsx", ///
+		clear surveys(First Second)  report 
 	assert _rc == 602
 
-	iecodebook append `auto1' `auto2' /// 
-	using "${codebook}/harmonization.xlsx", ///
-	clear surveys(First Second)  report replace 
+	iecodebook append `auto1' `auto2' using "${codebook}/harmonization.xlsx", ///
+		clear surveys(First Second)  report replace 
 	
 	
 	* missingvalues option
 	iecodebook append `auto1' `auto2' ///
-	"${codebook}/data3.dta" using "${codebook}/harmonization_missing.xlsx", /// 
-	clear surveys(First Second Third)  miss(.d "Don't know" .n "Not applicable")
-	
+		using "${codebook}/harmonization_missing.xlsx", /// 
+		clear ///
+		surveys(First Second Third)  ///
+		miss(.d "Don't know" .n "Not applicable")
+
 	* keepall
-	iecodebook append `auto1' `auto2' `auto3' ///
-	using "${codebook}/harmonization_keep.xlsx", /// 
-	clear surveys(First Second Third) keepall replace 
+	iecodebook append `auto1' `auto2' ///
+		using "${codebook}/harmonization_keep.xlsx", /// 
+		clear surveys(First Second) ///
+		keepall replace 
 	
-		
+	
 	********************************************
 	* Incorrect uses : error messages expected *
 	********************************************
 	
 	* Survey option incorrect names                                                                                    
 	cap iecodebook append `auto1' `auto2' ///
-	using "${codebook}/template_survey.xlsx", /// 
-	clear surveys(Second name_incorrect) replace 
+		using "${codebook}/template_survey.xlsx", /// 
+		clear surveys(Second name_incorrect) replace 
 	assert _rc == 111
 	
 	* Survey option just one of the names                                          
 	cap iecodebook append `auto1' `auto2' ///
-	using "${codebook}/template_survey.xlsx", /// 
-	clear surveys(one) replace 
+		using "${codebook}/template_survey.xlsx", /// 
+		clear surveys(First) replace 
 	assert _rc == 111
 	
 	
 	* Survey incorrect name order	                                            
 	cap iecodebook append `auto1' `auto2' ///
-	using "${codebook}/harmonization.xlsx", /// 
-	clear surveys(two one) replace 
+		using "${codebook}/harmonization.xlsx", /// 
+		clear surveys(Second First) replace 
 	assert _rc == 111
 	
 /*******************************************************************************
@@ -347,30 +354,9 @@
 	**************************		
 	iecodebook export using "${codebook}/auto_export.xlsx", replace
 	
-	
-	**************************
-	*        Trim          *
-	**************************		
-	sysuse auto, clear
-	iecodebook export using "${codebook}\auto_export_trim.xlsx", ///
-							replace ///
-							trim("${iefieldkit}\run\iecodebook_trim1.do" ///
-								 "${iefieldkit}\run\iecodebook_trim2.do")
-	sysuse auto, clear
-	iecodebook export using "${codebook}/auto_export_trim.xlsx", ///			
-							replace ///
-							trim("${iefieldkit}/run/iecodebook_trim1.do")
-							
-	* Check for dofile correct extension
-	sysuse auto, clear
-	cap iecodebook export using "${codebook}/auto_export_trim.xlsx", replace ///
-							trim("${iefieldkit}/run/iecodebook_trim1.xlm")
-	assert _rc == 610
-
-	
 	**************************
 	*    Signature option    *
-	**************************			
+	**************************		
 
 	* Should not work if there's no file and [reset] was not specified
 	cap erase  "${codebook}/auto_export-sig.txt"
@@ -407,19 +393,19 @@
 	**************************		
 	
 	iecodebook export using "${codebook}/auto_export.xlsx", ///
-	plain(detailed) replace 
+		plain(detailed) replace 
 		
 	* Compact output of codebook
 	iecodebook export using "${codebook}/auto_export.xlsx", ///                 // check values foreign variable
-	plain(compact) 	replace 
+		plain(compact) 	replace 
 	
 	* Detaild output of codebook
 	iecodebook export using "${codebook}/auto_export.xlsx", ///
-	plain(detailed) replace
+		plain(detailed) replace
 	
     * Should not work if an incorrect argument is used	
 	cap iecodebook export using "${codebook}/auto_export.xlsx", ///
-	plain(dalk) replace
+		plain(dalk) replace
 	assert _rc == 198
 
 	
@@ -428,11 +414,11 @@
 	**************************	
 	
 	iecodebook export using "${codebook}/auto_export.xlsx", /// 
-	plain(compact) replace noexcel			
+		plain(compact) replace noexcel			
 	
 	* Should not work if [plaintext] was not specified
 	cap iecodebook export using "${codebook}/auto_export.xlsx", ///
-	replace noexcel
+		replace noexcel
 	assert _rc == 198
 
 	* Should not work if [noexcel] and [verify] options are combined
@@ -473,26 +459,10 @@
 		
 	restore
 
-	
-	**************************
-	*        use             *                                                  // This is not in the help files 
-	**************************		
-	sysuse auto, clear
-	clear
-	iecodebook export "${codebook}/auto1.dta" using "${codebook}/auto_export.xlsx", replace
-	
-	
-	* Should not work if data doesnt exist
-	clear
-	cap iecodebook export "${codebook}/dat.dta" using  /// 
-	"${codebook}/auto_export.xslx", replace
-	assert _rc == 601
 
-	
-	
 	**************************
 	*        Save            *                                                  
-	**************************		
+	**************************
 	
 	sysuse auto, clear
 	tempfile auto
@@ -502,18 +472,17 @@
 	* The data should be saved at the same location as the codebook, with the same name as the codebook
 	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace save 
 	
-	
+	* Should not work if data already exists and [replace] option was not specified
+	cap erase "${codebook}/auto_export.xlsx"
+	cap iecodebook export "${codebook}/auto3" using "${codebook}/auto_export.xlsx", save
+	assert _rc == 602
+
 	* The data should be saved at the specified location, overwriting the codebook name.
 	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace saveas("auto_data")
 	
 	iecodebook export `auto' using "${codebook}/auto_export.xlsx", replace saveas("${codebook}/auto_new")
 	
 	
-	* Should not work if data already exists and [replace] option was not specified
-	cap erase "${codebook}/auto_export.xlsx"
-	cap iecodebook export "${codebook}/data3" using "${codebook}/auto_export.xlsx", save
-	assert _rc == 602
-
 	
 	**************************
 	*  Special characters    *                                                  
@@ -523,6 +492,59 @@
 	lab def origin  0 "ã & @" 1 "ã" , replace
 	iecodebook export using "${codebook}/auto_export.xlsx", replace          
 	
+	************************
+	*        Trim          *
+	************************		
+	sysuse auto, clear
+	iecodebook export using "${codebook}\auto_export_trim.xlsx", ///
+							replace ///
+							trim("${codebook}/iecodebook_trim1.do" ///
+								 "${codebook}/iecodebook_trim2.do")
+								 
+	sysuse auto, clear
+	iecodebook export using "${codebook}\auto_export_trim.xlsx", ///
+							replace ///
+							trim("${codebook}/iecodebook_trim1.do" ///
+								 "${codebook}/iecodebook_trim2.do") ///
+							save
+							
+	use "${codebook}\auto_export_trim.dta", clear
+	qui ds
+	assert r(varlist) == "price mpg weight length gear_ratio foreign"
+																 
+	sysuse auto, clear
+	iecodebook export using "${codebook}/auto_export_trim.xlsx", ///			
+							replace ///
+							trim("${codebook}/iecodebook_trim1.do") ///
+							save
+							
+	use "${codebook}\auto_export_trim.dta", clear
+	qui ds
+	assert r(varlist) == "price mpg weight length foreign"
+							
+	* Check for dofile correct extension
+	sysuse auto, clear
+	cap iecodebook export using "${codebook}/auto_export_trim.xlsx", replace ///
+							trim("${codebook}/iecodebook_trim1.xlm")
+	assert _rc == 610
+	
+
+	**************************
+	*        use             *                                                  // This is not in the help files 
+	**************************		
+	clear
+	iecodebook export "${codebook}/auto1.dta" ///
+		using "${codebook}/auto_export.xlsx", ///
+		replace
+	
+	
+	* Should not work if data doesnt exist
+	clear
+	cap iecodebook export "${codebook}/dat.dta" using  /// 
+		"${codebook}/auto_export.xslx", ///
+		replace
+	assert _rc == 601
+
 	
 ***************************************************************** End of do-file
 
