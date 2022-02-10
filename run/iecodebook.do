@@ -184,6 +184,9 @@
 		local p: var label price
 	    assert "`p'" == "Cost"
 
+	* What if labels have weird blanks spaces?
+	sysuse auto, clear 	
+	iecodebook apply using "${codebook}/auto_label_space.xlsx"
 		
 	**************************
 	*        Recode          *
