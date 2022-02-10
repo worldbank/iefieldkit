@@ -677,6 +677,11 @@ qui {
         replace `var' = subinstr(`var', char(10), "", .) // Remove line end
       }
     }
+    
+    // Remove leading/trailing spaces
+    replace choices = trim(choices)
+    replace name    = trim(name)
+    replace label   = trim(label)
 
     // Check for duplicate names and return informative error
     local theNameList ""
@@ -735,7 +740,16 @@ qui {
 
       // Prepare list of values for each value label.
       import excel "`using'" , first clear sheet(choices) allstring
-
+        replace list_name = trim(list_name)
+      // Catch undefined levels
+      count if missing(value)
+      if r(N) > 0 {
+        di as err "You have specified the following value labels without corresponding values:"
+        di as err "{bf:iecodebook} will exit. Complete the following value labels and re-run the command to continue:"
+        noi li list_name label if missing(value), table noh
+        di as err " "
+        error 100
+      }
       // Catch any labels called on choices that are not defined in choice sheet
       levelsof list_name , local(theListedLabels)
       local period "."
@@ -746,7 +760,7 @@ qui {
         di as err "{bf:iecodebook} will exit. Define the following value labels and re-run the command to continue:"
         di as err " "
         foreach element in `leftovers' {
-          di as err "  `element'"
+          di as err "  [`element']"
         }
         di as err " "
         error 100
