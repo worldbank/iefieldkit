@@ -741,6 +741,7 @@ qui {
       // Prepare list of values for each value label.
       import excel "`using'" , first clear sheet(choices) allstring
         replace list_name = trim(list_name)
+        drop if list_name == ""
       // Catch undefined levels
       count if missing(value)
       if r(N) > 0 {
