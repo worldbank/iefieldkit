@@ -543,7 +543,7 @@
 	*        use             *                                                  // This is not in the help files 
 	**************************		
 	clear
-	iecodebook export "${codebook}/auto1.dta" ///
+	iecodebook export "${codebook}/auto3.dta" ///
 		using "${codebook}/auto_export.xlsx", ///
 		replace
 	

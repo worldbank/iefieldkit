@@ -27,11 +27,11 @@ qui {
 	global codebook		"${iefieldkit}/run/output/iecodebook"
 	
 	* Select commands to test
-	local ieduplicates	0
-	local iecompdup		0
+	local ieduplicates	1
+	local iecompdup		1
 	local ietestform	1
-	local iecodebook	0
-	local iefieldkit	0
+	local iecodebook	1
+	local iefieldkit	1
 	
 /*******************************************************************************
 	Part II: Test inputs
