@@ -484,7 +484,7 @@
 	
 	* Should not work if data already exists and [replace] option was not specified
 	cap erase "${codebook}/auto_export.xlsx"
-	cap iecodebook export "${codebook}/auto3" using "${codebook}/auto_export.xlsx", save
+	cap iecodebook export "${codebook}/auto" using "${codebook}/auto_export.xlsx", save
 	assert _rc == 602
 
 	* The data should be saved at the specified location, overwriting the codebook name.
@@ -543,7 +543,7 @@
 	*        use             *                                                  // This is not in the help files 
 	**************************		
 	clear
-	iecodebook export "${codebook}/auto3.dta" ///
+	iecodebook export "${codebook}/auto.dta" ///
 		using "${codebook}/auto_export.xlsx", ///
 		replace
 	
