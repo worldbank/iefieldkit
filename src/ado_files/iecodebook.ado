@@ -497,7 +497,7 @@ qui {
         
    			  cap confirm variable `theName'
           if _rc {
-            di as error "Error: variable [`theName'] on line `i' was not found"
+            di as error "Error: You requested changes to variable [`theName'] on line `I', but it was not found in the data."
             error 111
           }
 
