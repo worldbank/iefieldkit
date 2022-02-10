@@ -186,7 +186,14 @@
 
 	* What if labels have weird blanks spaces?
 	sysuse auto, clear 	
+	lab drop origin
 	iecodebook apply using "${codebook}/auto_label_space.xlsx"
+	
+	* What if value labels are missing
+	sysuse auto, clear 	
+	lab drop origin
+	cap iecodebook apply using "${codebook}/auto_label_missing.xlsx"
+	assert _rc == 100	
 		
 	**************************
 	*        Recode          *

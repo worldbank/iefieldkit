@@ -744,7 +744,7 @@ qui {
       // Catch undefined levels
       count if missing(value)
       if r(N) > 0 {
-        di as err "You have specified the following value labels without corresponding values:"
+        di as err "You have specified the value labels without a corresponding values."
         di as err "{bf:iecodebook} will exit. Complete the following value labels and re-run the command to continue:"
         noi li list_name label if missing(value), table noh
         di as err " "
