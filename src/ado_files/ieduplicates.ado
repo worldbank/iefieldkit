@@ -61,6 +61,15 @@
 				exit
 			}
 
+			* Test that the idvar does not contain the character `
+			cap assert !strpos(`idvar', "`")
+			if _rc {
+				noi di as error "{phang}The data set contains one or more observations that has the character `=char(96)' in the ID variable [`idvar']. This is the only character {inp:ieduplicates} cannot handle that is otherwise allowed in a variable in your version of Stata.{p_end}"
+				noi di ""
+				error 198
+				exit
+			}
+
 			** Making one macro with all variables that will be
 			*  imported and exported from the Excel file
 			local argumentVars `idvar' `uniquevars' `keepvars'
@@ -559,8 +568,9 @@
 				*Add list of variables that are different between the two duplicated id value in excel report in 'listofdiffs' variable
 				levelsof `idvar', local(list_dup_ids)
 				foreach id of local list_dup_ids {
-					*ID might have spaces, create local without spaces to use in macro names
-					local nospaceid = subinstr("`id'"," ", "",.)
+
+					*reset list of differing vars between each loop
+					local difflist ""
 
 					*Count differently if string or numeric var
 					cap confirm numeric variable `idvar'
@@ -569,7 +579,7 @@
 
 					*Check if duplicated id has more than 2 duplicates, as iecompdup must be run manually to check difference when there is more than 2 observations with same ID
 					if `r(N)' > 2 {
-						local difflist_`id'	"Cannot list differences for duplicates for which 3 or more observations has the same ID, use command iecompdup instead."
+						local difflist	"Cannot list differences for duplicates for which 3 or more observations has the same ID, use command iecompdup instead."
 					}
 					else {
 						*Get the list of variables that are different between the two duplicated id value
@@ -580,14 +590,14 @@
 						local diffvars: list diffvars - excelVars
 
 						*Truncate list when longer than 250 to look better in report
-						if strlen("`diffvars'") > 250 local difflist_`nospaceid'  = substr("`r(diffvars)'" ,1 ,200) + " ||| List truncated, use iecompdup for full list"
-						else local difflist_`nospaceid' "`diffvars'" //List of diff is short enough to show in its entirety
+						if strlen("`diffvars'") > 250 local difflist  = substr("`r(diffvars)'" ,1 ,200) + " ||| List truncated, use iecompdup for full list"
+						else local difflist "`diffvars'" //List of diff is short enough to show in its entirety
 					}
 
 					*Count differently if string or numeric var
 					cap confirm numeric variable `idvar'
-					if !_rc replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == `id'
-					else replace `listofdiffs' = "`difflist_`nospaceid''" if `idvar' == "`id'"
+					if !_rc replace `listofdiffs' = "`difflist'" if `idvar' == `id'
+					else replace `listofdiffs' = "`difflist'" if `idvar' == "`id'"
 				}
 
 				* Delete all variables that is not supposed to be exported

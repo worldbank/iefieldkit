@@ -56,20 +56,18 @@ cap program drop iecodebook
     local using  "`using'.xlsx"
   }
   // Throw an error if user input uses any extension other than the allowed
-  else if !inlist("`r_fileextension'",".xlsx",".xls") & !regexm("`options'","tempfile") {
+  else if !inlist("`r_fileextension'",".xlsx",".xls") & !regexm(`"`options'"',"tempfile") {
     di as error "The codebook may only have the file extension [.xslx] or [.xls]. The format [`r_fileextension'] is not allowed."
     error 601
   }
-  local tempopt = "tempfile"
-  local options : list options - tempopt
 
 
   // Throw error on [template] if codebook cannot be created
-   if ("`subcommand'" == "export") & !strpos(`"`options'"',"replace") {
+   if inlist("`subcommand'","template","export") & !regexm(`"`options'"',"replace") & !regexm(`"`options'"',"verify") {
 
     cap confirm file "`using'"
     if (_rc == 0) & (!strpos(`"`options'"',"replace")) {
-      di as err "That codebook already exists. {bf:iecodebook export} will only overwrite it if you specify the [replace] option."
+      di as err "That codebook already exists. {bf:iecodebook} will only overwrite it if you specify the [replace] option."
       error 602
     }
 
@@ -90,7 +88,7 @@ cap program drop iecodebook
   iecodebook_labclean // Do this first in case export or template syntax
   iecodebook_`subcommand' `anything' using "`using'" , `options'
   iecodebook_labclean // Do this again to clean up after apply or append
-  qui cap compress
+  if inlist("`subcommand'","apply","append") qui cap compress // Clean up after apply or append
 
 end
 
@@ -117,12 +115,39 @@ program iecodebook_template
   // Select the right syntax and pass through to templating options
   if `"`anything'"' == `""' {
     // [apply] template if no arguments
-    iecodebook apply using "`using'" , `options' template
+    noi iecodebook apply using "`using'" , `options' template
   }
   else {
     // [append] template if arguments
-    iecodebook append `anything' using "`using'" , `options' template
+    noi iecodebook append `anything' using "`using'" , `options' template
   }
+
+end
+
+// signdata subroutine for export --------------------------------------------------------------
+
+cap prog drop iecodebook_signdata
+prog def iecodebook_signdata
+
+  syntax ///
+    using/     /// Location of the desired datafile placement
+  , ///
+    [reset]    /// reset dtasig if sign fails
+
+  // Check existing sign, if any
+  cap datasignature confirm  using "`using'" , strict
+    // If not found OR altered and no reset
+    if ("`reset'" == "") {
+      if _rc == 601 {
+        di as err "There is no datasignature created yet." ///
+          " Specify the [reset] option to initialize one."
+      }
+      datasignature confirm using "`using'" , strict
+    }
+    // If altered OR missing
+    else {
+      datasignature set , saving("`using'" , replace) reset
+    }
 
 end
 
@@ -131,15 +156,20 @@ end
 cap program drop iecodebook_export
   program    iecodebook_export
 
-  syntax [anything] [using/] [if] [in]  ///
-    , [replace] [trim(string asis)]     /// User-specified options
-      [match] [template(string asis)]   // Programming options
+  syntax [anything] [using/]  ///
+    , [replace] [save] [saveas(string asis)] [trim(string asis)]     /// User-specified options
+      [SIGNature] [reset] [PLAINtext(string)] [noexcel] [verify]      /// Signature and verify options
+      [match] [template(string asis)] [tempfile]    // Programming options
 
 qui {
 
   // Return a warning if there are lots of variables
   if `c(k)' >= 1000 noi di "This dataset has `c(k)' variables. This may take a long time! Consider subsetting your variables first."
 
+  // Store current data
+  tempfile allData
+    save `allData' , emptyok replace
+      
   // Template Setup
     // Load dataset if argument
     if `"`anything'"' != "" {
@@ -154,24 +184,6 @@ qui {
     }
     else local TEMPLATE = 0
 
-   // Store current data and apply if/in via [marksample]
-     tempfile allData
-     save `allData' , emptyok replace
-
-     marksample touse
-     keep if `touse'
-       drop `touse'
-
-  // Set up temps
-  preserve
-    clear
-
-    tempfile theLabels
-
-    tempfile theCommands
-      save `theCommands' , replace emptyok
-  restore
-
   // Option to [trim] variable set to variables specified in selected dofiles
   if `"`trim'"' != `""' {
     // Initialize datafile of variable names
@@ -184,7 +196,16 @@ qui {
 
     // Stack up all the lines of code from all the dofiles in a dataset
     foreach dofile in `trim' {
-      import delimited "`dofile'" , clear varnames(nonames)
+      
+      // Check for dofile
+      if !strpos(`"`dofile'"',".do") {
+        di as err "The specified file does not include a .do extension." ///
+          "Make sure it is a Stata .do-file and you include the file extension."
+        error 610
+      }
+      
+      // Load dofile contents as data
+      import delimited `dofile' , clear varnames(nonames)
 
       unab allv : *
       gen v = ""
@@ -203,9 +224,13 @@ qui {
     }
 
     // Clean up common characters
-    foreach character in , . < > / ? [ ] | & ! ^ + - : * = ( ) "{" "}" "`" "'" {
+    foreach character in , . < > / [ ] | & ! ^ + - : = ( ) # "{" "}" "`" "'" {
       replace v1 = subinstr(v1,"`character'"," ",.)
     }
+      replace v1 = subinstr(v1, char(34), "", .) // Remove " sign
+      replace v1 = subinstr(v1, char(96), "", .) // Remove ` sign
+      replace v1 = subinstr(v1, char(36), "", .) // Remove $ sign
+      replace v1 = subinstr(v1, char(10), "", .) // Remove line end
 
     // Reshape one word per line
       split v1
@@ -217,6 +242,14 @@ qui {
       drop i j v1
       drop if `v' == ""
       duplicates drop
+
+    // Make sure there are no hanging *
+      local length = substr("`: type `v''",4,.)
+      local stars = "*"
+      forv i = 1/`length' {
+        replace `v' = "" if `v' == "`stars'"
+        local stars "`stars'*"
+      }
 
     // Cheat to get all the variables in the dataset
     foreach item in `theVarlist' {
@@ -241,15 +274,75 @@ qui {
         error 198
       }
       keep `theKeepList' // Keep only variables mentioned in the dofiles
-      compress
-      local savedta = subinstr(`"`using'"',".xls",".dta",.)
-      local savedta = subinstr(`"`using'"',".dtax",".dta",.)
-      save "`savedta'" , replace
   } // End [trim] option
 
-  // Create XLSX file with all current/remaining variable names and labels
-  preserve
+  // Prepare to save and sign
+  compress
+    local savedta = subinstr(`"`using'"',".xls",".dta",.)
+    local savedta = subinstr(`"`savedta'"',".dtax",".dta",.)
+    local signloc = subinstr(`"`savedta'"',".dta","-sig.txt",.)
 
+  // Check signature if requested
+  if "`signature'" != "" {
+    noisily : iecodebook_signdata using `"`signloc'"' , `reset'
+    noi di `"Data signature can be found at at {browse `"`signloc'"':`signloc'}"'
+  }
+
+  // Save data copy if requested
+  if ("`save'" != "") | (`"`saveas'"' != "") {
+	if `"`saveas'"' != ""  local savedta = `saveas'
+  
+    save "`savedta'", `replace'
+    noi di `"Copy of data saved at {browse `"`savedta'"':`savedta'}"'
+  }
+
+	if !missing("`verify'") & !missing("`excel'") { 
+		di as err "The [noexcel] and [verify] options cannot be combined."
+		err 184
+	}
+	
+  // Write text codebook ONLY if requested
+  if !missing("`plaintext'") {
+
+	noisily {
+
+		if "`plaintext'" == "compact" { 
+			local compact 	 , compact
+		}
+		else if "`plaintext'" == "detailed" {
+		}
+		else {
+			di as err "Option [plaintext] was incorrectly specified. Please select one of the following formats: [compact] or [detailed]."
+			err 198
+		}
+		
+		local theTextFile = subinstr(`"`using'"',".xls",".txt",.)
+		local theTextFile = subinstr(`"`using'"',".xlsx",".txt",.)	
+				
+		local old_linesize `c(linesize)'
+		set linesize 75
+		
+		cap log close signdata
+			log using "`theTextFile'" , nomsg text `replace' name(signdata)
+			noisily : codebook `compact'
+		log close signdata
+		
+		set linesize `old_linesize'
+		noi di `"Codebook in plaintext created using {browse "`theTextFile'":`theTextFile'}
+		
+		if !missing("`excel'") exit
+	}
+  }
+  else {
+	if !missing("`excel'") {
+		noi di as err "Option [noexcel] can only be used in combination with option [plaintext()]."
+		noi error 198
+	}
+  }
+ 
+
+
+  // Otherwise, write XLSX file and VERIFY if requested
     // Record dataset info
 
       local allVariables
@@ -262,15 +355,136 @@ qui {
         local theChoices  : val label `var'
         local theType     : type `var'
 
-        local allVariables   `"`allVariables'   "`theVariable'" "'
+        local allVariables   `"`allVariables'   `theVariable'   "'
         local allLabels      `"`allLabels'      "`theLabel'"    "'
         local allChoices     `"`allChoices'     "`theChoices'"  "'
         local allTypes       `"`allTypes'       "`theType'"     "'
       }
 
-    // Write to new dataset
+    // Get all value labels for export
+    uselabel _all, clear
+      // Handle if no labels in dataset
+      if c(k) == 0 {
+        gen trunc = ""
+        gen lname = ""
+        gen value = ""
+        gen label = ""
+      }
 
-      clear
+      ren lname list_name
+      drop trunc
+      tostring value , replace
+
+      count
+      if `r(N)' == 0 {
+        set obs 1
+      }
+
+      tempfile theVallabs
+        save `theVallabs' , replace
+
+    // Get existing codebook if VERIFY option and check variable lists
+    if "`verify'" != "" {
+    local QUITFLAG = 0
+      import excel "`using'", clear first sheet("survey")
+      levelsof name , local(oldVars) clean
+      local both : list allVariables & oldVars
+
+      // Check excess variables in data
+      local extra : list allVariables - oldVars
+      if "`extra'" != "" {
+        local QUITFLAG = 1
+        noi di as err "The following variables are in this data but not the codebook:"
+        foreach item in `extra' {
+          noi di "  `item'"
+        }
+      }
+
+      // Check excess variables in codebook
+      local missing : list oldVars - allVariables
+      if "`missing'" != "" {
+        local QUITFLAG = 1
+        noi di as err "The following variables are in the codebook but not the data:"
+        foreach item in `missing' {
+          noi di "  `item'"
+        }
+      }
+
+      // Check attributes of all overlapping variables
+      local theN : word count `allVariables'
+      forvalues i = 1/`theN' {
+        local theVariable : word `i' of `allVariables'
+        local theLabel    : word `i' of `allLabels'
+        local theChoices  : word `i' of `allChoices'
+        local theType     : word `i' of `allTypes'
+
+        // Proceed to all checks if variable is in both locations
+        if strpos("`both'"," `theVariable' ") {
+        preserve
+          keep if name == "`theVariable'"
+
+          local theOldType = type[1]
+          if "`theOldType'" != "`theType'" {
+            local QUITFLAG = 1
+            di as err "The type of {bf:`theVariable'} has changed:"
+            di as err `"  it was `theOldType' and is now `theType'."'
+          }
+          local theOldLabel = label[1]
+          if "`theOldLabel'" != "`theLabel'" {
+            local QUITFLAG = 1
+            di as err "The label of {bf:`theVariable'} has changed:"
+            di as err `"  it was `theOldLabel' and is now `theLabel'."'
+          }
+          local theOldChoices = choices[1]
+          if "`theOldChoices'" == "." local theOldChoices ""
+          if "`theOldChoices'" != "`theChoices'" {
+            local QUITFLAG = 1
+            di as err "The value label of {bf:`theVariable'} has changed:"
+            di as err `"  it was `theOldChoices' and is now `theChoices'."'
+          }
+        restore
+        }
+      }
+
+      // Check all value labels
+      import excel "`using'", clear first sheet("choices")
+        ren label label_old
+        merge 1:1 list_name value using `theVallabs'
+
+        qui count
+        forv i = 1/`r(N)' {
+          local list = list_name[`i']
+          local value = value[`i']
+          local oldlab = label_old[`i']
+          local lab = label[`i']
+          local merge = _merge[`i']
+
+          if `merge' == 1 {
+          local QUITFLAG = 1
+            di as err `"Choice list `list' = `value' (`oldlab') was found in the existing codebook but not the data."'
+          }
+          else if `merge' == 2 {
+          local QUITFLAG = 1
+            di as err `"Choice list `list' = `value' (`lab') was found in the data but not the existing codebook."'
+          }
+          else if `"`oldlab'"' != `"`lab'"' {
+          local QUITFLAG = 1
+            di as err `"Choice list `list' = `value' is (`oldlab') in the codebook but (`lab') in the data."'
+          }
+        }
+
+      // Throw error if any differences found
+      if `QUITFLAG' == 1 {
+        di as err ""
+        di as err "Differences were encountered between the existing data and the codebook."
+        di as err "{bf:iecodebook} will now exit."
+        use `allData', clear
+        error 7
+      }
+    } // end VERIFY option for variable characteristics
+
+    // Create XLSX file with all current/remaining variable names and labels
+    clear
 
       local theN : word count `allVariables'
 
@@ -307,16 +521,16 @@ qui {
         replace choices`template' = `"`theChoices'"'   in `=`i'`templateN''
       }
 
-    if `TEMPLATE' & "`match'" != "" {
-      tempfile newdata
+      if `TEMPLATE' & "`match'" != "" {
+        tempfile newdata
         save `newdata' , replace
 
-      import excel "`using'", clear first sheet("survey")
+        import excel "`using'", clear first sheet("survey")
 
-      qui lookfor name
-      clonevar name`template' = `: word 2 of `r(varlist)''
-        local theNames = "`r(varlist)'"
-        label var name`template' "name`template_colon'"
+        qui lookfor name
+        clonevar name`template' = `: word 2 of `r(varlist)''
+          local theNames = "`r(varlist)'"
+          label var name`template' "name`template_colon'"
 
         // Allow matching for more rounds
         local nNames : list sizeof theNames
@@ -329,86 +543,85 @@ qui {
         tempvar order
         gen `order' = _n
 
-      merge m:1 name`template' using `newdata' , nogen
-      replace name`template' = "" if type`template' == ""
+        merge m:1 name`template' using `newdata' , nogen
+        replace name`template' = "" if type`template' == ""
 
         sort `order'
         drop `order'
-    }
+      }
 
-    // Export variable information to "survey" sheet
-    cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
-    local rc = _rc
-    forvalues i = 1/10 {
-      if `rc' != 0 {
-        sleep `i'000
+      // Export variable information to "survey" sheet
+      if "`verify'" == "" {
         cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
         local rc = _rc
-      }
-    }
-    if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by file syncing the file or having the file open."
-    if `rc' != 0 di as err "If the file is not currently open, consider turning file syncing off or using a non-synced location. You may need to delete the file and try again."
-    if `rc' != 0 error 603
-  restore
+        if `rc' == 9901 {
+          di as err "There are invalid variable labels in your data. Correct the following:"
+          tempfile test
+          forv i = 1/`c(N)' {
+            preserve
+            keep in `i'
+            local faultLab  = label[1]
+            local faultName = name[1]
+            
+            cap export excel label using `test'  , replace
+              if _rc != 0 di as err `"  `faultName' {tab} [`faultLab']"'
+            restore
+          }
+        } 
+        else forvalues i = 1/10 {
+          if `rc' != 0 {
+            sleep `i'000
+            cap export excel "`using'" , sheet("survey") sheetreplace first(varl)
+            local rc = _rc
+          }
+        }
+        if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by file syncing the file or having the file open."
+        if `rc' != 0 di as err "If the file is not currently open, consider turning file syncing off or using a non-synced location. You may need to delete the file and try again."
+        if `rc' != 0 error 603
 
-  // Create value labels sheet
+        // Export value labels to "choices" sheet
+        use `theVallabs' , clear
+          cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
+          local rc = _rc
+          if `rc' == 9901 {
+            di as err "There are invalid value labels in your data. Correct the following:"
+            tempfile test
+            forv i = 1/`c(N)' {
+              preserve
+              keep in `i'
+              local faultLab  = label[1]
+              local faultName = lname[1]
+              
+              cap export excel label using `test'  , replace
+                if _rc != 0 di as err `"  `faultName' {tab} [`faultLab']"'
+              restore
+            }
+          } 
+          else forvalues i = 1/10 {
+            if `rc' != 0 {
+              sleep `i'000
+              cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
+              local rc = _rc
+            }
+          }
+          if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
+          if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
+          if `rc' != 0 error 603
 
-    // Fill temp dataset with value labels
-    foreach var of varlist * {
-      use `var' using `allData' in 1 , clear
-      local theLabel : value label `var'
-      if "`theLabel'" != "" {
-        cap label save `theLabel' using `theLabels' ,replace
-        if _rc==0 {
-          import delimited using `theLabels' , clear delimit(", modify", asstring)
-          append using `theCommands'
-            save `theCommands' , replace emptyok
+        // Reload original data
+        use "`allData'" , clear
+
+        // Success message
+        if `c(N)' > 1 & "`tempfile'" == "" {
+          noi di `"Codebook for data created using {browse "`using'":`using'}
         }
       }
-    }
-
-    // Clean up value labels for export - use SurveyCTO syntax for sheet names and column names
-    use `theCommands' , clear
-    count
-    if `r(N)' > 0 {
-      duplicates drop
-      drop v2
-      replace v1 = trim(subinstr(v1,"label define","",.))
-      split v1 , parse(`"""')
-      split v11 , parse(`" "')
-      keep v111 v112 v12
-      order v111 v112 v12
-
-      rename (v111 v112 v12)(list_name value label)
-    }
-    else {
-      set obs 1
-      gen list_name = ""
-      gen value = ""
-      gen label = ""
-    }
-
-    // Export value labels to "choices" sheet
-    cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
-    local rc = _rc
-    forvalues i = 1/10 {
-      if `rc' != 0 {
-        sleep `i'000
-        cap export excel "`using'" , sheet("choices`template_us'") sheetreplace first(var)
-        local rc = _rc
+      else {
+        noi di "Existing codebook and data structure verified to match."
       }
-    }
-    if `rc' != 0 di as err "A codebook didn't write properly. This can be caused by Dropbox syncing the file or having the file open."
-    if `rc' != 0 di as err "Consider turning Dropbox syncing off or using a non-Dropbox location. You may need to delete the file and try again."
-    if `rc' != 0 error 603
-
-  // Reload original data
-  use "`allData'" , clear
-  // Success message
-  if "`template'" == "" local template "current"
-  if `c(N)' > 1 di `"Codebook for `template' data created using {browse "`using'": `using'}"'
-
+  use `allData' , clear
 } // end qui
+
 end
 
 // Apply subroutine ----------------------------------------------------------------------------
@@ -417,7 +630,7 @@ cap program drop iecodebook_apply
   program    iecodebook_apply
 
   syntax [anything] [using/] , [template] [replace] [drop] ///
-    [survey(string asis)] [MISSingvalues(string asis)]
+    [survey(string asis)] [MISSingvalues(string asis)] [tempfile]
 
 qui {
   // Setups
@@ -434,12 +647,12 @@ qui {
         label var _template "(Ignore this placeholder, but do not delete it. Thanks!)"
         label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
         label val _template yesno
-      iecodebook export using "`using'" , `replace'
+      noi iecodebook export using "`using'" , `replace'
     restore
     // Append the codebook for the current dataset to the placeholder codebook
     tempfile current
     save `current' , replace
-    iecodebook export `current' using "`using'" , template(`survey') replace
+    noi iecodebook export `current' using "`using'" , template(`survey') replace
   exit
   }
 
@@ -447,6 +660,13 @@ qui {
   preserve
   import excel "`using'" , clear first sheet(survey) allstring
 
+  // Confirm survey names match codebook 
+  cap confirm variable name`survey'
+    if _rc {
+      di as err "The survey name `survey' does not appear in the codebook."
+      error 111
+    }
+  
     // Check for broken things, namely quotation marks
     foreach var of varlist name`survey' name label choices recode`survey' {
       cap confirm string variable `var'
@@ -457,6 +677,11 @@ qui {
         replace `var' = subinstr(`var', char(10), "", .) // Remove line end
       }
     }
+    
+    // Remove leading/trailing spaces
+    replace choices = trim(choices)
+    replace name    = trim(name)
+    replace label   = trim(label)
 
     // Check for duplicate names and return informative error
     local theNameList ""
@@ -515,7 +740,16 @@ qui {
 
       // Prepare list of values for each value label.
       import excel "`using'" , first clear sheet(choices) allstring
-
+        replace list_name = trim(list_name)
+      // Catch undefined levels
+      count if missing(value)
+      if r(N) > 0 {
+        di as err "You have specified the following value labels without corresponding values:"
+        di as err "{bf:iecodebook} will exit. Complete the following value labels and re-run the command to continue:"
+        noi li list_name label if missing(value), table noh
+        di as err " "
+        error 100
+      }
       // Catch any labels called on choices that are not defined in choice sheet
       levelsof list_name , local(theListedLabels)
       local period "."
@@ -526,7 +760,7 @@ qui {
         di as err "{bf:iecodebook} will exit. Define the following value labels and re-run the command to continue:"
         di as err " "
         foreach element in `leftovers' {
-          di as err "  `element'"
+          di as err "  [`element']"
         }
         di as err " "
         error 100
@@ -657,7 +891,7 @@ qui {
         label var `generate' "Data Source (do not edit this row)"
         label def yesno 0 "No" 1 "Yes" .d "Don't Know" .r "Refused" .n "Not Applicable"
         label val `generate' yesno
-      iecodebook export using "`codebook'" , `replace' tempfile
+      noi iecodebook export using "`codebook'" , `replace' tempfile
     restore
 
     // Append or merge one codebook per survey
@@ -666,12 +900,13 @@ qui {
       if `x' == 1 local matchopt "`match'"
       local ++x
       local filepath : word `x' of `anything'
-      iecodebook export "`filepath'" using "`codebook'" ///
+      noi iecodebook export "`filepath'" using "`codebook'" ///
         , template(`survey') `matchopt' replace tempfile
     }
 
     // On success copy to final location
     copy "`codebook'" `"`using'"' , `replace'
+    noi di `"Codebook for data created using {browse "`using'":`using'}"'
 
   use `raw_data' , clear
   exit
@@ -686,6 +921,21 @@ qui {
     use "`dataset'" , clear
 
     iecodebook apply using "`using'" , survey(`survey') `drop' `options'
+    
+    cap confirm variable `generate'
+      if _rc==0 {
+        di as err "There is a variable called `generate' in your dataset."
+        di as err "This conflicts with using that name to identify the data source."
+        di as err "Please specify a different name for the new variable in the [generate()] option."
+        error 110
+      }
+    cap labelbook `generate'
+      if _rc==0 {
+        di as err "There is a value label called `generate' in your dataset."
+        di as err "This conflicts with using that name to identify the data source."
+        di as err "Please specify a different name for the new variable in the [generate()] option."
+        error 110
+      }
 
     gen `generate' = `x'
     tempfile next_data

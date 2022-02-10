@@ -67,5 +67,5 @@
 # Julia
 !/**/*.jl
 
-#Ignore test folder
-test/
+# Binary files used for run tests
+!/run/output/**/*.xlsx

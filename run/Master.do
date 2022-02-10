@@ -23,14 +23,17 @@ qui {
 	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
 	global form			"${AnalyticsDB}/Data Coordinator/iefieldkit/ietestform"
-	global codebook		"${AnalyticsDB}/Data Coordinator/iefieldkit/iecodebook"
-	global testouput	"${iefieldkit}/run/output"
+	global codebook		"${iefieldkit}/run/output/iecodebook"
+	
+	** Test if output folder exists, if not create it
+	mata : st_numscalar("r(dirExist)", direxists("${testouput}"))
+	if `r(dirExist)' == 0  mkdir "${testouput}"
 	
 	* Select commands to test
 	local ieduplicates	0
 	local iecompdup		0
 	local ietestform	0
-	local iecodebook	1
+	local iecodebook	0
 	local iefieldkit	0
 	
 /*******************************************************************************
