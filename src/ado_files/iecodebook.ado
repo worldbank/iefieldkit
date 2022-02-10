@@ -657,6 +657,7 @@ qui {
   }
 
   // Apply codebook
+  unab allVars : *
   preserve
   import excel "`using'" , clear first sheet(survey) allstring
 
@@ -720,8 +721,7 @@ qui {
         // Drop if requested
         if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == ".") {
         
-   			  cap confirm variable `theName'
-          if _rc {
+		  if !regex(" `allVars' ", " `theName' ") {
             di as error "Error: You requested changes to variable [`theName'] on line `=`i'-1', but it was not found in the data."
             error 111
           }
@@ -811,7 +811,6 @@ qui {
       }
 
     // Drop leftovers if requested
-    unab allVars : *
     local toKeep : list allVars - allDrops
     if "`toKeep'" == "" {
       noi di as err "You are dropping all the variables in a dataset. This is not allowed. {bf:iecodebook} will exit."
