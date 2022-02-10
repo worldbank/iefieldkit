@@ -15,24 +15,21 @@ qui {
 *******************************************************************************/
 
 	* Set root paths
-	if inlist(c(username), "WB501238", "wb50123") {
+	if inlist(c(username), "WB501238", "wb501238") {
 		global GitHub		"C:\Users\wb501238\Documents\GitHub"
 		global AnalyticsDB	"C:\Users\wb501238\Dropbox\WB\Analytics\DIME Analytics"
 	}
 	
 	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
+	global output		"${iefieldkit}/run/output"
 	global form			"${AnalyticsDB}/Data Coordinator/iefieldkit/ietestform"
 	global codebook		"${iefieldkit}/run/output/iecodebook"
-	
-	** Test if output folder exists, if not create it
-	mata : st_numscalar("r(dirExist)", direxists("${testouput}"))
-	if `r(dirExist)' == 0  mkdir "${testouput}"
 	
 	* Select commands to test
 	local ieduplicates	0
 	local iecompdup		0
-	local ietestform	0
+	local ietestform	1
 	local iecodebook	0
 	local iefieldkit	0
 	
@@ -49,9 +46,6 @@ qui {
 		exit
 	}
 	
-	** Test if output folder exists, if not create it
-	mata : st_numscalar("r(dirExist)", direxists("${testouput}"))
-	if `r(dirExist)' == 0  mkdir "${testouput}"
 }	
 
 /*******************************************************************************
