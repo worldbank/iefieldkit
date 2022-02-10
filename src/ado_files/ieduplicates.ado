@@ -62,13 +62,17 @@
 			}
 
 			* Test that the idvar does not contain the character `
-			cap assert !strpos(`idvar', "`")
-			if _rc {
-				noi di as error "{phang}The data set contains one or more observations that has the character `=char(96)' in the ID variable [`idvar']. This is the only character {inp:ieduplicates} cannot handle that is otherwise allowed in a variable in your version of Stata.{p_end}"
-				noi di ""
-				error 198
-				exit
+			cap confirm string variable `idvar'
+			if !_rc {
+				cap assert !strpos(`idvar', "`")
+				if _rc {
+					noi di as error "{phang}The data set contains one or more observations that has the character `=char(96)' in the ID variable [`idvar']. This is the only character {inp:ieduplicates} cannot handle that is otherwise allowed in a variable in your version of Stata.{p_end}"
+					noi di ""
+					error 198
+					exit
+				}
 			}
+
 
 			** Making one macro with all variables that will be
 			*  imported and exported from the Excel file
