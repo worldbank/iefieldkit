@@ -705,13 +705,13 @@ qui {
         local theRename   = name[`i']
         local theRename = trim("`theRename'")
         if strtoname("`theRename'") != "`theRename'" & "`theRename'" != "." {
-          di as err "Error: [`theRename'] on line `i' is not a valid Stata variable name."
+          di as err "Error: [`theRename'] on line `=`i'-1' is not a valid Stata variable name."
           local QUITFLAG = 1
         }
       local theLabel    = label[`i']
       local theChoices  = choices[`i']
         if strtoname("`theChoices'") != "`theChoices'" & "`theChoices'" != "." {
-          di as err "Error: [`theChoices'] on line `i' is not a valid Stata choice list name."
+          di as err "Error: [`theChoices'] on line `=`i'-1' is not a valid Stata choice list name."
           local QUITFLAG = 1
         }
       local theRecode   = recode`survey'[`i']
@@ -722,7 +722,7 @@ qui {
         
    			  cap confirm variable `theName'
           if _rc {
-            di as error "Error: You requested changes to variable [`theName'] on line `I', but it was not found in the data."
+            di as error "Error: You requested changes to variable [`theName'] on line `=`i'-1', but it was not found in the data."
             error 111
           }
 
