@@ -266,10 +266,10 @@ cap program drop iecorrect
     cap assert regex(" `original_vars' ", " `var' ")
     if _rc &  "`generate'" != "" {
       qui {
-        cap  file close   `doname'
-          file open    `doname' using   "`dofile'", text write append
-          file write  `doname'    `"gen `var' = "" "' _n      // <---- Writing in do file here
-          file close  `doname'  
+		cap file close  `doname'
+			file open   `doname' using   "`dofile'", text write append
+			file write  `doname'   		 `"gen `var' = "" "' _n      // <---- Writing in do file here
+			file close  `doname'  
       }  
     }
   }
@@ -279,10 +279,10 @@ cap program drop iecorrect
     cap assert regex(" `original_vars' ", " `var' ")  
     if _rc &  "`generate'" != "" {
       qui {
-        cap  file close   `doname'
-          file open    `doname' using   "`dofile'", text write append
-          file write  `doname'    "gen `var' = . " _n      // <---- Writing in do file here
-          file close  `doname'
+        cap file close  `doname'
+			file open   `doname' using   "`dofile'", text write append
+			file write  `doname'   		 "gen `var' = . " _n      // <---- Writing in do file here
+			file close  `doname'
       }
     }
     
