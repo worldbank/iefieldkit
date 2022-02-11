@@ -571,15 +571,10 @@ cap program drop checkcolnumeric
 	
 	syntax, idvar(varlist)
 	
-		* Are all the necessary variables there?
-		foreach var in `idvar' varname valuecurrent value {
-			cap confirm var `var'
-			if _rc {
-				noi di as error `"{phang}Column `var' not found in sheet [numeric]. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
-				local errorfill 1
-			}
-		}
-		
+		* Check that all relevant variables are in the sheet
+		_fillmisssingcol, columns(`idvar' varname valuecurrent value) type(numeric)
+		if r(errorfill) == 1 local errorfill 1
+
 		* Keep only those variables in the data set -- the user may have added notes
 		* that are not relevant for the command
 		keep varname `idvar' valuecurrent value 
@@ -633,13 +628,9 @@ cap program drop checkcolstring
 	
 	syntax, idvar(varlist)
 	
-		* Are all the necessary variables there?
-		foreach var in `idvar' varname valuecurrent value {
-			cap confirm var `var'
-			if _rc {
-				noi di as error `"{phang}Column `var' not found in sheet [string]. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
-			}
-		}
+		* Check that all relevant variables are in the sheet
+		_fillmisssingcol, columns( `idvar' valuecurrent value) type(string)
+		if r(errorfill) == 1 local errorfill 1
 		
 		* Keep only those variables in the data set -- the user may have added notes
 		* that are not relevant for the command
@@ -678,14 +669,9 @@ cap program drop checkcolother
   
   syntax [anything]
   
-    * Are all the necessary variables there?
-    foreach var in strvar strvaluecurrent catvar catvalue {
-      cap confirm var `var'
-      if _rc {
-        noi di as error `"{phang}Column `var' not found in sheet [other]. This column must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
-        local errorfill 1
-      }
-    }
+    * Check that all relevant variables are in the sheet
+	_fillmisssingcol, columns(strvar strvaluecurrent catvar catvalue) type(string)
+	if r(errorfill) == 1 local errorfill 1
     
     * Keep only those variables in the data set -- the user may have added notes
     * that are not relevant for the command
@@ -727,25 +713,22 @@ end
 * Check variables in drop sheet
 ********************************
   
-cap program drop checkcoldrop
-  program    checkcoldrop, rclass
+cap program drop 	checkcoldrop
+	program    		checkcoldrop, rclass
   
   syntax, idvar(varlist)
-  
-    * Are all the necessary variables there?
-    foreach var in `idvar' n_obs {
-      cap confirm var `var'
-      if _rc {
-        noi di as error `"{phang}Column `var' not found in sheet [drop]. This column must not be erased from the template.{p_end}"'
-        local errorfill 1
-      }
-    }
+ 
+ 
+	* Check that all relevant variables are in the sheet
+	_fillmisssingcol, columns(`idvar' n_obs) type(string)
+	if r(errorfill) == 1 local errorfill 1
+    
   
 * Checks -----------------------------------------------------------------------
 
-		* Check id variables
-		_fillid, type(drop)
-		if r(errorfill) == 1 local errorfill 
+	* Check id variables
+	_fillid, type(drop)
+	if r(errorfill) == 1 local errorfill 
 
     cap assert !missing(idvalue)
     if _rc {
@@ -837,6 +820,27 @@ cap program drop _fillvarname
 		noi di as error `"{phang}Column varname in sheet [`type'] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
 		local errorfill 1
 	}
+	
+	return local errorfill `errorfill'
+	
+ end
+ 
+ ***********************************************
+* Check that no column was deleted from template
+************************************************
+
+cap program drop _fillmisssingcol
+	program    	 _fillmisssingcol, rclass
+	
+	syntax, columns(string) type(string)
+	
+	foreach col in `columns' {
+      cap confirm var `col'
+      if _rc {
+        noi di as error `"{phang}Column `col' not found in sheet [`type']. This column must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
+        local errorfill 1
+      }
+    }
 	
 	return local errorfill `errorfill'
 	
