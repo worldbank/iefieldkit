@@ -590,15 +590,14 @@ cap program drop checkcolnumeric
 		_fillid, type(numeric)
 		if r(errorfill) == 1 local errorfill 1
 		
-		cap confirm string var varname
-		if _rc {
-			noi di as error `"{phang}Column varname in sheet [numeric] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
-			local errorfill 1
-		}
-				
 		* If none id values were filled, valuecurrent must be filled
 		_fillidorvalue, type(numeric)
 		if r(errorfill) == 1 local errorfill 1
+		
+		** Check that varname column is string
+		_fillvarname, type(numeric)
+		if r(errorfill) == 1 local errorfill 1
+						
 		* valuecurrent col may not have been filled, so only check if it was
 		qui count if !missing(valuecurrent)
 		if r(N) > 0 {
@@ -656,12 +655,9 @@ cap program drop checkcolstring
 		_fillidorvalue, type(string)
 		if r(errorfill) == 1 local errorfill 
 
-		** Check that variables have the correct format
-		cap confirm string var varname
-		if _rc {
-			noi di as error `"{phang}Column varname in sheet [string] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
-			local errorfill 1
-		}
+		** Check that varname column is string
+		_fillvarname, type(string)
+		if r(errorfill) == 1 local errorfill 1
 		
 		cap assert !missing(value)
 		if _rc {
@@ -826,6 +822,21 @@ cap program drop _fillidorvalue
 	
  end
  
+***********************************************
+* Check that varname column is filled with text
+***********************************************
+
+cap program drop _fillvarname
+	program    	 _fillvarname, rclass
+	
+	syntax, type(string)
+	
+	cap confirm string var varname
+	if r(N) > 0 {
+		noi di as error `"{phang}Column varname in sheet [`type'] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
+		local errorfill 1
+	}
+	
 	return local errorfill `errorfill'
 	
  end
