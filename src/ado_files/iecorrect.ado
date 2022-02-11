@@ -650,7 +650,12 @@ cap program drop checkcolstring
 		* Keep only those variables in the data set -- the user may have added notes
 		* that are not relevant for the command
 		keep varname `idvar' valuecurrent value 
-		
+
+* Checks -----------------------------------------------------------------------
+
+		* Check id variables
+		_fillid, type(numeric)
+
 		** Check that variables have the correct format
 		cap confirm string var varname
 		if _rc {
