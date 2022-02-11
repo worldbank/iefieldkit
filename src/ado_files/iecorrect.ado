@@ -586,16 +586,19 @@ cap program drop checkcolnumeric
 		
 * Checks -----------------------------------------------------------------------
 
-		* Check id variables
+		* Check if id variables are filled correctly (either all or none are filled)
 		_fillid, type(numeric)
+		if r(errorfill) == 1 local errorfill 1
 		
-		** Check that variables have the correct format
 		cap confirm string var varname
 		if _rc {
 			noi di as error `"{phang}Column varname in sheet [numeric] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
 			local errorfill 1
 		}
 				
+		* If none id values were filled, valuecurrent must be filled
+		_fillidorvalue, type(numeric)
+		if r(errorfill) == 1 local errorfill 1
 		* valuecurrent col may not have been filled, so only check if it was
 		qui count if !missing(valuecurrent)
 		if r(N) > 0 {
@@ -616,15 +619,7 @@ cap program drop checkcolnumeric
 		if _rc {
 			noi di as error `"{phang}At least one entry for column value in sheet [numeric] is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
 			local errorfill 1
-		}
-		
-		** Either idvalue or valuecurrent need to be specified
-		qui count if missing(idvalue) & missing(valuecurrent)
-		
-		if r(N) > 0 {
-			noi di as error `"{phang}There are `r(N)' lines in sheet [numeric] where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for numeric corrections to be made correctly.{p_end}"'
-			local errorfill 1
-		}
+		}		
 		
 		return local errorfill `errorfill'
 			
@@ -653,8 +648,13 @@ cap program drop checkcolstring
 
 * Checks -----------------------------------------------------------------------
 
-		* Check id variables
-		_fillid, type(numeric)
+		* Check if id variables are filled correctly (either all or none are filled)
+		_fillid, type(string)
+		if r(errorfill) == 1 local errorfill 1
+		
+		* If none id values were filled, valuecurrent must be filled
+		_fillidorvalue, type(string)
+		if r(errorfill) == 1 local errorfill 
 
 		** Check that variables have the correct format
 		cap confirm string var varname
@@ -669,13 +669,6 @@ cap program drop checkcolstring
 			local errorfill 1
 		}
 					
-		** Either idvalue or valuecurrent need to be specified
-		qui count if missing(idvalue) & missing(valuecurrent)
-		if r(N) > 0 {
-			noi di as error `"{phang}There are `r(N)' lines in sheet [string] where neither the idvalue or the valuecurrent columns are specified. At least one of these columns should be filled for numeric corrections to be made correctly.{p_end}"'
-			local errorfill 1
-		}
-		
 		return local errorfill `errorfill'
 		
 end		
@@ -755,7 +748,8 @@ cap program drop checkcoldrop
 * Checks -----------------------------------------------------------------------
 
 		* Check id variables
-		_fillid, type(numeric)
+		_fillid, type(drop)
+		if r(errorfill) == 1 local errorfill 
 
     cap assert !missing(idvalue)
     if _rc {
@@ -780,31 +774,58 @@ cap program drop checkcoldrop
       
 end  
 
-*************************************************************
-* Check that ID vars were filled correctly
-*************************************************************
-
+/*******************************************************************************
+ 							Sheet filling checks
+*******************************************************************************/
+***********************************************
+* Check that all IDs were filled (or non was)
+***********************************************
 cap program drop _fillid
 	program    	 _fillid, rclass
 	
 	syntax varlist, type(string)
 	
-* Check that all IDs were filled -----------------------------------------------
-
 	local n_vars = wordcount("`varlist'")
 	
 	* Three options: all filled, none filled, some filled
 	tempvar   blank_ids
 	qui egen `blank_ids' = rowmiss(`varlist')
 
+	* Mark all observations where the IDs where not filled (valuecurrent must be filled in these cases)
+	qui gen   blank_ids = `blank_ids' == `n_vars'
+	
 	qui count if (`blank_ids' > 0) & (`blank_ids' != `n_vars')
 	if r(N) > 0 {
 		noi di as error `"{phang}There are `r(N)' lines in sheet [`type'] where the  ID variable columns were not filled correctly: the value for at least one of the ID variables was left blank. If you wish to apply corrections to obsevartions regardless of the value they take for one of the ID variables, fill the column that corresponds to this variable with the wildcard sign (*).{p_end}"'
       local errorfill 1
 	}
   
-  * Return an error if something was filled incorrectly ------------------------
-  
+	* Return an error if something was filled incorrectly
+	return local errorfill `errorfill'
+	
+ end
+ 
+
+****************************************************
+* Check that valuecurrent is filled when IDs are not
+****************************************************
+cap program drop _fillidorvalue
+	program    	 _fillidorvalue, rclass
+	
+	syntax, type(string)
+	
+	qui count if blank_ids & missing(valuecurrent)		
+	if r(N) > 0 {
+		noi di as error `"{phang}There are `r(N)' lines in sheet [`type'] where neither the ID variable values or the [valuecurrent] column were filled. At least one of these columns should be filled for numeric corrections to be made correctly.{p_end}"'
+		local errorfill 1
+	}
+	
+	qui drop blank_ids
+	
+	return local errorfill `errorfill'
+	
+ end
+ 
 	return local errorfill `errorfill'
 	
  end
