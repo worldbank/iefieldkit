@@ -155,7 +155,7 @@ cap program drop iecorrect
     foreach type of local corrSheets {
     
       * Check that template was correctly filled
-      checksheets using "`using'", type("`type'") stringid(`stringid') `debug'
+      checksheets using "`using'", type("`type'") stringid(`stringid') idvar(`idvar') `debug'
       
       * The result indicates if there are corrections of this type
         local `type'corr   `r(`type'corr)'
@@ -478,9 +478,9 @@ cap program drop prepdata
 ****************************************
   
 cap program drop checksheets
-  program    checksheets, rclass
+	program    	 checksheets, rclass
   
-  syntax using/, type(string) stringid(numlist) [debug]
+  syntax using/, type(string) stringid(numlist) idvar(varlist)  [debug]
   
     if !missing("`debug'") noi di as result "Entering checksheets subcommand"
     
@@ -498,11 +498,13 @@ cap program drop checksheets
         
       * Check that the sheet is filled correctly
       if !missing("`debug'") noi di as result "Entering checkcol`type' subcommand"
-      checkcol`type'
+      
+	  checkcol`type', idvar(`idvar') 
       if "`r(errorfill)'" == "1" {
         error 198
       }
-      if !missing("`debug'") noi di as result "Exiting checkcol`type' subcommand"
+      
+	  if !missing("`debug'") noi di as result "Exiting checkcol`type' subcommand"
       
       *If everything works, save the sheet in a tempfile and create a local saying to run the next command
       local  `type'corr  1 
@@ -567,10 +569,10 @@ cap program drop checksheets
 cap program drop checkcolnumeric
 	program 	 checkcolnumeric, rclass
 	
-	syntax [anything]
+	syntax, idvar(varlist)
 	
 		* Are all the necessary variables there?
-		foreach var in varname idvalue valuecurrent value {
+		foreach var in `idvar' varname valuecurrent value {
 			cap confirm var `var'
 			if _rc {
 				noi di as error `"{phang}Column `var' not found in sheet [numeric]. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
@@ -630,10 +632,10 @@ cap program drop checkcolnumeric
 cap program drop checkcolstring
 	program 	 checkcolstring, rclass
 	
-	syntax [anything]
+	syntax, idvar(varlist)
 	
 		* Are all the necessary variables there?
-		foreach var in varname idvalue valuecurrent value {
+		foreach var in `idvar' varname valuecurrent value {
 			cap confirm var `var'
 			if _rc {
 				noi di as error `"{phang}Column `var' not found in sheet [string]. This variable must not be erased from the template. If you do not wish to use it, leave it blank.{p_end}"'
@@ -729,10 +731,10 @@ end
 cap program drop checkcoldrop
   program    checkcoldrop, rclass
   
-  syntax [anything]
+  syntax, idvar(varlist)
   
     * Are all the necessary variables there?
-    foreach var in idvalue n_obs {
+    foreach var in `idvar' n_obs {
       cap confirm var `var'
       if _rc {
         noi di as error `"{phang}Column `var' not found in sheet [drop]. This column must not be erased from the template.{p_end}"'
