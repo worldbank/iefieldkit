@@ -506,19 +506,19 @@
 	*        Trim          *
 	************************		
 	sysuse auto, clear
-	iecodebook export using "${codebook}\auto_export_trim.xlsx", ///
+	iecodebook export using "${codebook}/auto_export_trim.xlsx", ///
 							replace ///
 							trim("${codebook}/iecodebook_trim1.do" ///
 								 "${codebook}/iecodebook_trim2.do")
 								 
 	sysuse auto, clear
-	iecodebook export using "${codebook}\auto_export_trim.xlsx", ///
+	iecodebook export using "${codebook}/auto_export_trim.xlsx", ///
 							replace ///
 							trim("${codebook}/iecodebook_trim1.do" ///
 								 "${codebook}/iecodebook_trim2.do") ///
 							save
 							
-	use "${codebook}\auto_export_trim.dta", clear
+	use "${codebook}/auto_export_trim.dta", clear
 	qui ds
 	assert r(varlist) == "price mpg weight length gear_ratio foreign"
 																 
@@ -528,7 +528,7 @@
 							trim("${codebook}/iecodebook_trim1.do") ///
 							save
 							
-	use "${codebook}\auto_export_trim.dta", clear
+	use "${codebook}/auto_export_trim.dta", clear
 	qui ds
 	assert r(varlist) == "price mpg weight length foreign"
 							
@@ -557,5 +557,3 @@
 
 	
 ***************************************************************** End of do-file
-
-
