@@ -582,7 +582,7 @@ cap program drop checkcolnumeric
 		
 		* Keep only those variables in the data set -- the user may have added notes
 		* that are not relevant for the command
-		keep varname idvalue valuecurrent value 
+		keep varname `idvar' valuecurrent value 
 		
 		** Check that variables have the correct format
 		cap confirm string var varname
@@ -644,7 +644,7 @@ cap program drop checkcolstring
 		
 		* Keep only those variables in the data set -- the user may have added notes
 		* that are not relevant for the command
-		keep varname idvalue valuecurrent value 
+		keep varname `idvar' valuecurrent value 
 		
 		** Check that variables have the correct format
 		cap confirm string var varname
