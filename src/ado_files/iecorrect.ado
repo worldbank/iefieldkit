@@ -27,6 +27,9 @@ cap program drop iecorrect
 								Save data
 ==============================================================================*/
 
+	* Test if idvar uniquely identifies the dataset
+	_testid `idvar'
+		
 	tempfile 	 data
 	qui save	`data'
 
@@ -82,10 +85,6 @@ cap program drop iecorrect
 ==============================================================================*/
 
 	if "`subcommand'" == "template" {
-		
-		* Test if idvar uniquely identifies the dataset
-		
-		_testid `idvar'
 		
 		if !missing("`debug'") noi di "Entering template subcommand"
 	
