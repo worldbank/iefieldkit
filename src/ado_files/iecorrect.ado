@@ -3,7 +3,17 @@
 cap program drop iecorrect
 	program 	 iecorrect
 		
-	syntax [anything] using/, [GENerate idvar(varlist) NOIsily save(string) replace other sheet(string) debug]
+	syntax [anything] using/, ///
+		idvar(varlist) 						 ///
+		[ 									 ///
+			GENerate 						 ///
+			NOIsily 						 ///
+			save(string) 					 ///
+			replace 						 ///
+			other 							 ///
+			sheet(string) 					 ///
+			debug 							 ///
+		]
 		
 	gettoken subcommand anything : anything
 	
@@ -73,6 +83,10 @@ cap program drop iecorrect
 
 	if "`subcommand'" == "template" {
 		
+		* Test if idvar uniquely identifies the dataset
+		
+		_testid `idvar'
+		
 		if !missing("`debug'") noi di "Entering template subcommand"
 	
 		// Check if file already exists and check if the "other" tab is included
@@ -92,7 +106,7 @@ cap program drop iecorrect
 		}		
 		
 		// Create the template -----------------------------------------------------
-		templateworkbook using "`using'" , `other' addother(`addother')
+		templateworkbook using "`using'" , idvar(`idvar') `other' addother(`addother')
 			
 		if !missing("`debug'") noi di "Exiting template subcommand"
 	}																			// End of template subcommand
@@ -120,14 +134,14 @@ cap program drop iecorrect
 	qui ds
 	local 	original_vars	`r(varlist)'
 
-// Check ID format -------------------------------------------------------------
+/* Check ID format -------------------------------------------------------------
 
     cap confirm string variable `idvar'
-       if !_rc local   stringid 1
+         if !_rc local  stringid 1
     else if  _rc local  stringid 0
 
     if !missing("`debug'") noi di as result "String ID: `stringid'"
-
+*/
     
 // Check that file exists ------------------------------------------------------
 
@@ -377,6 +391,25 @@ end
   
 ================================================================================  
 ==============================================================================*/
+
+/*******************************************************************************  
+  Import data set
+*******************************************************************************/
+
+cap program drop _testid
+	program 	 _testid
+	
+	syntax varlist
+	
+	cap isid `varlist'
+		
+	if _rc == 459 {
+			noi di as error `"{phang}The ID variables listed in option [idvar] do not uniquely and fully identify the data. This may cause unintended changes to the data when applying corrections.{p_end}"'
+			noi di 			""
+	}
+	
+	
+end
 
 /*******************************************************************************  
   Import data set
@@ -1043,25 +1076,25 @@ end
 cap program drop templateworkbook
 	program		 templateworkbook
 	
-	syntax using/ , [other addother(string)]
+	syntax using/ , idvar(string) [other addother(string)]
 	
 	preserve
 	    if "`addother'" == "" { 
 		* String variables
 		templatesheet using "`using'", ///
-			varlist("varname idvalue value valuecurrent initials notes") ///
+			varlist("`idvar' varname value valuecurrent initials notes") ///
 			sheetname("string") ///
 			current("value")
 					
 		* Numeric variables
 		templatesheet using "`using'", ///
-			varlist("varname idvalue value valuecurrent initials notes") ///
+			varlist("`idvar' varname value valuecurrent initials notes") ///
 			sheetname("numeric") ///
 			current("value")
 
 		* Drop observations
 		templatesheet using "`using'", ///
-			varlist("idvalue initials notes") ///
+			varlist("`idvar' initials notes") ///
 			sheetname("drop")
 		}	
 

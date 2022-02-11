@@ -19,10 +19,8 @@ qui {
 
 	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
-	global form			"${AnalyticsDB}/Data Coordinator/iefieldkit/ietestform"
-	global codebook		"${AnalyticsDB}/Data Coordinator/iefieldkit/iecodebook"
-	global correct		"${AnalyticsDB}/Data Coordinator/iefieldkit/iecorrect"
-	global testouput	"${correct}"
+	global run 			"${iefieldkit}/run"
+	global output		"${run}/output"
 	
 	** Test if output folder exists, if not create it
 	mata : st_numscalar("r(dirExist)", direxists("${testouput}"))
@@ -59,19 +57,19 @@ qui {
 *******************************************************************************/
 	
 	* Test ieduplicates
-	if `ieduplicates' do "${iefieldkit}/run/ieduplicates.do"
+	if `ieduplicates' 	do "${run}/ieduplicates.do"
 	
 	* Test iecompdup
-	if `iecompdup' do "${iefieldkit}/run/ieduplicates.do"	
+	if `iecompdup' 		do "${run}/ieduplicates.do"	
 	
 	* Test ietestform
-	if `ietestform' do "${iefieldkit}/run/ietestform.do"	
+	if `ietestform' 	do "${run}/ietestform.do"	
 	
 	* Test iecodebook
-	if `iecodebook' do "${iefieldkit}/run/iecodebook.do"	
+	if `iecodebook' 	do "${run}/iecodebook.do"	
 
 	* Test iecorrect
-	if `iecorrect' do "${iefieldkit}/run/iecorrect.do"	
+	if `iecorrect' 		do "${run}/iecorrect.do"	
 
 	
 *************************** End of Master Do-File ******************************
