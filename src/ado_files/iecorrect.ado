@@ -773,6 +773,7 @@ end
 /*******************************************************************************
  							Sheet filling checks
 *******************************************************************************/
+{
 ***********************************************
 * Check that all IDs were filled (or non was)
 ***********************************************
@@ -845,7 +846,7 @@ cap program drop _fillvarname
 * Check if there are extra whitespaces and special characters
 *************************************************************
 cap program drop valstrings
-  program    valstrings, rclass
+	program    	 valstrings, rclass
   
   syntax varname, location(string)
 
@@ -889,7 +890,7 @@ cap program drop valstrings
 end  
 
 cap program drop strerror
-  program    strerror
+	program      strerror
   
   syntax , var(string) type(string) location(string)
   
@@ -906,16 +907,16 @@ cap program drop strerror
     
 end
   
+}
 /*******************************************************************************  
   Write the do file with corrections
-
 *******************************************************************************/
-
+{
 **********************
 * Write do file header
 **********************
 cap program drop doheader
-  program    doheader
+	program      doheader
   
   syntax , doname(string) dofile(string)
     
@@ -1035,8 +1036,8 @@ end
 ***********************
 * Dropping observations
 ***********************
-cap program drop dodrop
-  program    dodrop
+cap program drop 	dodrop
+	program    		dodrop
   
   syntax , doname(string) idvar(string) stringid(numlist) [debug]
 
@@ -1070,8 +1071,8 @@ end
 * Write 'other' corrections
 ***************************
 
-cap program drop doother
-  program    doother
+cap program drop 	doother
+	program    		doother
   
   syntax , doname(string) idvar(string) stringid(numlist) [debug]
   
@@ -1103,8 +1104,8 @@ end
 * Write do file footer
 **********************
 
-cap program drop dofooter
-  program    dofooter
+cap program drop 	dofooter
+	program    		dofooter
   
   syntax , doname(string) dofile(string) 
   
@@ -1114,11 +1115,11 @@ cap program drop dofooter
       file close  `doname'  
       
   end
-  
+}
 /*******************************************************************************  
   Run the do file with corrections
 *******************************************************************************/
-
+{
 cap program drop dorun
   program     dorun
   
@@ -1145,11 +1146,11 @@ cap program drop dorun
   if !missing("`debug'") noi di as result "Exiting dorun subcommand"
   
 end
-
+}
 /*******************************************************************************  
   Create template sheet
 *******************************************************************************/
-
+{
 cap program drop templateworkbook
 	program		 templateworkbook
 	
@@ -1190,8 +1191,8 @@ cap program drop templateworkbook
 	
 end
 
-cap program drop templatesheet
-  program     templatesheet
+cap program drop 	templatesheet
+	program     	templatesheet
   
   syntax using/, varlist(string) sheetname(string) [current(string)]
   
@@ -1211,6 +1212,6 @@ cap program drop templatesheet
     
 
     }    
-  end
-
+ end
+}
 *********************************** THE END ************************************
