@@ -584,6 +584,11 @@ cap program drop checkcolnumeric
 		* that are not relevant for the command
 		keep varname `idvar' valuecurrent value 
 		
+* Checks -----------------------------------------------------------------------
+
+		* Check id variables
+		_fillid, type(numeric)
+		
 		** Check that variables have the correct format
 		cap confirm string var varname
 		if _rc {
@@ -741,7 +746,12 @@ cap program drop checkcoldrop
         local errorfill 1
       }
     }
-    
+  
+* Checks -----------------------------------------------------------------------
+
+		* Check id variables
+		_fillid, type(numeric)
+
     cap assert !missing(idvalue)
     if _rc {
       noi di as error `"{phang}At least one entry for column idvalue in sheet [drop] is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
@@ -764,6 +774,35 @@ cap program drop checkcoldrop
     return local errorfill `errorfill'
       
 end  
+
+*************************************************************
+* Check that ID vars were filled correctly
+*************************************************************
+
+cap program drop _fillid
+	program    	 _fillid, rclass
+	
+	syntax varlist, type(string)
+	
+* Check that all IDs were filled -----------------------------------------------
+
+	local n_vars = wordcount("`varlist'")
+	
+	* Three options: all filled, none filled, some filled
+	tempvar   blank_ids
+	qui egen `blank_ids' = rowmiss(`varlist')
+
+	qui count if (`blank_ids' > 0) & (`blank_ids' != `n_vars')
+	if r(N) > 0 {
+		noi di as error `"{phang}There are `r(N)' lines in sheet [`type'] where the  ID variable columns were not filled correctly: the value for at least one of the ID variables was left blank. If you wish to apply corrections to obsevartions regardless of the value they take for one of the ID variables, fill the column that corresponds to this variable with the wildcard sign (*).{p_end}"'
+      local errorfill 1
+	}
+  
+  * Return an error if something was filled incorrectly ------------------------
+  
+	return local errorfill `errorfill'
+	
+ end
 
 *************************************************************
 * Check if there are extra whitespaces and special characters
