@@ -6,7 +6,7 @@
 	* Add the path to your local clone of the iefieldkit repo
 	do 	"${iefieldkit}/src/ado_files/ieduplicates.ado"
 
-	local iedup_output "${testouput}/ieduplicates_output"
+	local iedup_output "${output}/ieduplicates"
 
 	** Test if output folder exists, if not create it
 	mata : st_numscalar("r(dirExist)", direxists("`iedup_output'"))
@@ -16,6 +16,10 @@
 	encode make, gen(uuid)
 	replace uuid = 7 in 16
 	replace uuid = 1 in 2
+	
+	*Issue https://github.com/worldbank/iefieldkit/issues/172 - long id with space
+	gen 	make_dup = make + " abcdefghijklmnopqrstuvwxyz1234567890"
+	replace make_dup = make_dup[_n-1] if floor(_n/2)*2 == _n
 
 	tempfile duplicates
 	save	 `duplicates'
@@ -25,14 +29,14 @@
 *******************************************************************************/
 
 	* No duplicates
-	ieduplicates make using "`iedup_output'\foo", uniquevars(make)
+	ieduplicates make using "`iedup_output'/foo", uniquevars(make)
 
 	* Test file format
 	use `duplicates', clear
-	ieduplicates uuid using "`iedup_output'\foo.xlsx", uniquevars(make) force
+	ieduplicates uuid using "`iedup_output'/foo.xlsx", uniquevars(make) force
 
 	use `duplicates', clear
-	ieduplicates uuid using "`iedup_output'\foo.xls", uniquevars(make) force
+	ieduplicates uuid using "`iedup_output'/foo.xls", uniquevars(make) force
 
 	* Test folder and suffix syntax
 	use `duplicates', clear
@@ -40,7 +44,12 @@
 
 	use `duplicates', clear
 	ieduplicates uuid, uniquevars(make) folder("`iedup_output'") suffix(bar) force
-
+	
+	*Duplicates and a long id with spaces (for example a name in listing) 
+	*From issue #172
+	use `duplicates', clear
+	ieduplicates make_dup using "`iedup_output'/longdup.xls", uniquevars(make) force
+	
 /*******************************************************************************
 	Yes error
 *******************************************************************************/
@@ -77,4 +86,17 @@
 	use `duplicates', clear
 	cap ieduplicates uuid using "foo", uniquevars(make) force
 	di _rc
+	assert _rc == 198
+
+	*Weird character included in the idvar
+	sysuse auto, clear
+	encode make, gen(uuid)
+	replace make = "oi'1'" in 1/2
+	ieduplicates make using "${output}/ieduplicates/foo2.xlsx", uniquevars(uuid) force
+	
+	*invalid characters included in the idvar
+	sysuse auto, clear
+	encode make, gen(uuid)
+	replace make = "oi`1" in 1/2
+	cap ieduplicates make using "${output}/ieduplicates/foo2.xlsx", uniquevars(uuid) force
 	assert _rc == 198

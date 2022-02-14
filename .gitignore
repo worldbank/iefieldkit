@@ -43,6 +43,7 @@
 # Stata
 !/**/*.do
 !/**/*.ado
+!/**/*.dta
 
 # R
 !/**/*.R
@@ -67,5 +68,5 @@
 # Julia
 !/**/*.jl
 
-#Ignore test folder
-test/
+# Binary files used for run tests
+!/run/output/**/*.xlsx

@@ -1,5 +1,5 @@
 {smcl}
-{* 07 Jul 2020}{...}
+{* 14 Feb 2022}{...}
 {hline}
 help for {hi:iecodebook}
 {hline}
@@ -41,8 +41,9 @@ renames, recodes, variable labels, and value labels, and applies them to the cur
 {p 2 4}{cmdab:iecodebook append}{break} reads an Excel codebook that specifies how variables should be harmonized across
 two or more datasets - rename, recode, variable labels, and value labels - applies the harmonization, and appends the datasets.{p_end}
 {break}
-{p 2 4}{cmdab:iecodebook export}{break} creates an Excel codebook that describes the current dataset,
-and optionally produces an export version of the dataset with only variables used in specified dofiles.{p_end}
+{p 2 4}{cmdab:iecodebook export}{break} creates an Excel or plaintext codebook that describes the current dataset,
+optionally creates or verifies a datasignature for record-keeping, optionally re-saves the dataset in the specified location,
+and optionally reduces the dataset to only the variables used in a set of specified dofiles.{p_end}
 
 {title:Syntax}
 
@@ -64,21 +65,25 @@ and optionally produces an export version of the dataset with only variables use
 {p 2 4}{cmdab:iecodebook template} {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break}{p_end}
-{p 2 4}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} [{bf:match}] [{opth gen:erate(varname)}] [{bf:replace}]{p_end}
+{p 2 3}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}
+{break} [{bf:match}] [{bf:replace}]{p_end}
 
 {p 2 4}{cmdab:iecodebook append} {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
 {p 2 3}, {bf:clear} {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} {break}
 [{opth gen:erate(varname)} {opt miss:ingvalues(# "label" [# "label" ...])}]{break}
-[{bf:report replace keepall}] {p_end}
+[{bf:report}] [{bf:replace}] [{bf:keepall}] {p_end}
 
 
-{dlgtab 0:Export: Creating a full codebook of the current data}
+{dlgtab 0:Export: Creating codebooks and signatures for datasets}
 
-{p 2 4}{cmdab:iecodebook export} {break}
+{p 2 4}{cmdab:iecodebook export} ["/path/to/data"] {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
-{p 2 3}, [{bf:replace}] [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
+{p 2 4}, [{bf:replace}] [{opt save}] [{bf:verify}] {break}
+    [{opt sign:ature}] [{opt reset}] {break}
+	[{opt plain:text}({it:compact} | {it:detailed})] [{opt noexcel}] {break}
+    [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
 
 {hline}
 
@@ -117,8 +122,7 @@ When importing, this will also be used to create a variable identifying the sour
 If specified, it will cause any variables in later datasets with the same original name as a variable in the first dataset
 to appear in the same row of the Excel sheet.{p_end}
 {break}
-{synopt:{opt gen:erate()}}This option names the variable identifying the source of each observation. If left blank, the default is "survey".
-This must be specified during both the template and append steps.{p_end}
+{synopt:{opt gen:erate()}}This option names the variable identifying the source of each observation. If left blank, the default is "survey".{p_end}
 {break}
 {synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition in the "choices" column.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every value-labeled answer.{p_end}
@@ -140,10 +144,36 @@ For example, appending a same-named string variable to a numeric variable may ca
 {marker Options}{...}
 {synopthdr:Export Options}
 {synoptline}
-{synopt:{opt replace}}This option allows {cmdab:iecodebook export} to overwrite an existing codebook.{p_end}
+{synopt:{opt replace}}This option allows {cmdab:iecodebook export} to overwrite an existing codebook or dataset.{p_end}
 {break}
-{synopt:{opt trim()}} Takes one or more dofiles and trims the current dataset to only include variables used in those dofiles,
-and saves an identically named .dta file at the location specified in {it:"/path/to/codebook.xlsx"}.{p_end}
+{synopt:{opt save}}This option requests that a the data be saved at the same location as the codebook,
+with the same name as the codebook.{p_end}
+{break}
+{synopt:{opt saveas()}}This option requests that a the data be saved at the specified location,
+overwriting the codebook name.{p_end}
+{break}
+{synopt:{opt verify}}This option orders {cmdab:iecodebook export} to confirm that the current data precisely matches an existing codebook.
+It will break with an error and describe all changes if there are any differences between the two.
+A new codebook will not be written in this case.{p_end}
+{break}
+{synopt:{opt plain:text}({it:compact} | {it:detailed})}This option requests that the codebook be created as a plaintext file.
+This file contains the default output of {help codebook} if argument {it:detailed}} is used, 
+and the compact output of {help codebook} if argument {it:compact} is used.
+Only one of the arguments can be used}.{p_end}
+{synopt:{opt noexcel}}This option requests that the codebook be created as a plaintext file.
+It can only be used alongside option {opt plain:text()} and cannot be combined with {bf:verify}.{p_end}
+{break}
+{synopt:{opt sign:ature}}This option requests that a {help datasignature} be verified
+in the same destination folder as the codebook and/or data are saved,
+and will return an error if a datasignature file is not found or is different,
+guaranteeing data has not changed since the last {bf:reset} of the signature.{p_end}
+{break}
+{synopt:{opt reset}}Specified with {opt sign:ature},
+this option allows {cmdab:iecodebook export} to place a new datasignature
+or overwrite an existing datasignature.{p_end}
+{break}
+{synopt:{opt trim()}}This option takes one or more dofiles as inputs, and trims the current dataset to only include variables used in those dofiles,
+before executing any of the other {bf: export} tasks requested.{p_end}
 {synoptline}
 
 {marker example}

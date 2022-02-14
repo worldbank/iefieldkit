@@ -1,4 +1,4 @@
-*! version 2.0 07JUL2020  DIME Analytics dimeanalytics@worldbank.org
+*! version 2.1 14FEB2022  DIME Analytics dimeanalytics@worldbank.org
 
 capture program drop ietestform
 		program ietestform , rclass
@@ -7,7 +7,7 @@ qui {
 
 	version 13
 
-	//preserve
+	preserve
 
 	syntax [using/] ,  Reportsave(string) [Surveyform(string) STATAlanguage(string) date replace]
 
@@ -31,7 +31,7 @@ qui {
 	local surveyform `"`using'`surveyform'"'
 
 
-	* Test for form file is xls or xsls
+	* Test for form file is xls or xlsx
 	local surveyformtype = substr(`"`surveyform'"',strlen(`"`surveyform'"')-strpos(strreverse(`"`surveyform'"'),".")+1,.)
 	if !(`"`surveyformtype'"' == ".xls" | `"`surveyformtype'"' == ".xlsx") {
 		noi di as error `"{phang}The survey form file [`surveyform'] must have file extension .xls or .xlsx specified in the option.{p_end}"'
@@ -103,16 +103,8 @@ qui {
 	***********************************************/
 
 	*Get meta data on the form from the form setting sheet
-	importsettingsheet, form("`surveyform'")
+	noi importsettingsheet, form("`surveyform'") report_tempfile("`report_tempfile'")
 
-	*Load returned values in locals
-	local meta_v		= "`r(version)'"
-    local meta_id		= "`r(form_id)'"
-    local meta_title	= "`r(form_title)'"
-
-	*Setup the report tempfile where all results from all tests will be written
-	noi report_file setup , report_tempfile("`report_tempfile'") ///
-		metav("`meta_v'") metaid("`meta_id'") metatitle("`meta_title'") metafile("`surveyform'")
 
 
 	/***********************************************
@@ -123,7 +115,8 @@ qui {
 
 	*Get all choice lists actaually used
 	local all_list_names 	`r(all_list_names)'
-
+	* Convert to lower case
+	local l_all_list_names = lower("`all_list_names'")
 	*Names used in choice sheet, used if outputting unused choice lists
 	local choice_listnamevar		`r(listnamevar)'
 	local choice_valuevar			`r(valuevar)'
@@ -141,7 +134,8 @@ qui {
 
 	*Get all choice lists actaually used
 	local all_lists_used `r(all_lists_used)'
-
+	* Convert to lowercase
+	local l_all_lists_used=lower("`all_lists_used'")
 	/***********************************************
 		Tests based on info from multiple sheets
 	***********************************************/
@@ -151,7 +145,7 @@ qui {
 		Test that all lists in the choice sheet were
 		actually used in the survey sheet
 	***********************************************/
-	local unused_lists : list all_list_names - all_lists_used
+	local unused_lists : list l_all_list_names - l_all_lists_used
 	if "`unused_lists'" != "" {
 
 		*Reload the data to be able to show the unsused lists
@@ -179,7 +173,7 @@ qui {
 	*Write the file to disk
 	noi report_file write, report_tempfile("`report_tempfile'") filepath("`reportsave'") `replace'
 
-	//restore
+	restore
 
 }
 end
@@ -190,7 +184,8 @@ capture program drop importsettingsheet
 
 qui {
 
-	syntax , form(string)
+		syntax , form(string) report_tempfile(string)
+
 
 	*Import the settings sheet - This is the first time the file is imported so add one layer of custom test
 	cap import excel "`form'", sheet("settings") clear first
@@ -210,10 +205,50 @@ qui {
 		confirm variable form_title form_id version
 	}
 
-	*Return the settings in return locals
-	return local form_title = form_title[1]
-	return local form_id 	= form_id[1]
-	return local version 	= version[1]
+
+
+	/***********************************************
+		Write header for report
+	***********************************************/
+
+	*Get meta data from settings sheet
+	local form_title = form_title[1]
+	local form_id 	= form_id[1]
+	local version 	= version[1]
+
+
+	*Setup the report tempfile where all results from all tests will be written
+	  report_file setup , ///
+				report_tempfile("`report_tempfile'") ///
+				metav("`version'") ///
+				metaid("`form_id'") ///
+				metatitle("`form_title'") ///
+				metafile("`form'")
+
+
+
+
+	/***********************************************
+		TEST - Encryption key not included/errors
+	***********************************************/
+
+	*converting public_key to string to convert from numeric incase of missing public_key
+	tostring public_key, replace
+	local public_key = public_key[1]
+
+	cap assert !missing("`public_key'")
+
+	if _rc {
+	    local error_msg "The survey form is not encrypted. It is best practice to encrypt your survey form as it adds a layer of security."
+
+		noi report_file add , ///
+			report_tempfile("`report_tempfile'") ///
+			testname("ENCRYPTION KEY MISSING") ///
+			message("`error_msg'") ///
+			wikifragment("Encryption")
+
+	}
+
 
 }
 end
@@ -227,12 +262,28 @@ qui {
 
 	syntax , form(string) [statalanguage(string) report_tempfile(string)]
 
+
 	/***********************************************
 		Load choices sheet from form
 	***********************************************/
 
 	*Import the choices sheet
-	import excel "`form'", sheet("choices") clear first
+	cap import excel "`form'", sheet("choices") clear first
+
+	*Test that the choices sheet exists
+
+	if _rc == 601 {
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error occurs when your form is missing either the survey or the choices sheet. If the file {p_end}"
+		error 601
+	}
+	else if _rc == 603 {
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an earlier version of Excel.{p_end}"
+		error 603
+	}
+	else if _rc != 0 {
+		*Run the command without cap and display error message for any other error
+		import excel "`form'", sheet("choices") clear first
+	}
 
 
 	/***********************************************
@@ -316,7 +367,7 @@ qui {
 		gen trim_`nospacevar' = (`nospacevar' != trim(`nospacevar'))
 
 		*Add item to report for any row with missing label in the label vars
-		count if trim_`nospacevar' != 0
+		count if trim_`nospacevar' == 1
 		if `r(N)' > 0 {
 
 			*Write header if this is the first case found
@@ -324,7 +375,7 @@ qui {
 
 			*Prepare message and write it
 			local error_msg "The string values in [`nospacevar'] column in the choice sheet are imported as strings and has leading or trailing spaces in the Excel file in the following cases:"
-			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `nospacevar' if trim_`nospacevar' != 0")
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `nospacevar' if trim_`nospacevar' == 1")
 
 			*Indicate that a case have been found
 			local cases_found 1
@@ -536,12 +587,23 @@ qui {
 	tempvar countmissing
 
 	/***********************************************
-		Load choices sheet from file and
+		Load survey sheet from file and
 		delete empty row
 	***********************************************/
 
 	*Import the choices sheet
-	import excel "`form'", sheet("survey") clear first
+	cap import excel "`form'", sheet("survey") clear first
+
+	*Test that the survey sheet exists
+
+	if _rc == 601 {
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error occurs when your form is missing either the survey or the choices sheet. If the file {p_end}"
+		error 601
+	}
+	else if _rc == 603 {
+		noi di as error  "{phang}The file [`form'] cannot be opened. This error can occur for two reasons: either you have this file open, or it is saved in a version of Excel that is more recent than the version of Stata. If the file is not opened, try saving your file in an earlier version of Excel.{p_end}"
+		error 603
+	}
 
 	*Gen row number that corresponds to the row number in the excel file
 	gen row = _n + 1 //Plus 1 as column name is the first row in the Excel file
@@ -570,7 +632,7 @@ qui {
 	local name_vars 		"name"
 	local cmd_vars  		"type required appearance" // Include as needed eventually. "readonly"
 	local msg_vars  		"`labelvars'"
-	local code_vars 		"" // Include as needed eventually. " constraint  relevance  calculation repeat_count choice_filter"
+	local code_vars 		" constraint  relevance  calculation repeat_count choice_filter"
 
 	local surveysheetvars_required "`name_vars' `cmd_vars' `msg_vars' `code_vars'"
 
@@ -610,6 +672,15 @@ qui {
 		replace `var' = "" if `var' == "."
 	}
 
+	*make code vars strings that sometimes are not used and then loaded as numeric
+	foreach var of local code_vars  {
+
+		tostring `var', replace
+		replace `var' = lower(itrim(trim(`var')))
+		replace `var' = "" if `var' == "."
+	}
+
+
 	/***********************************************
 		Test that variables that mustn't contain special
 		charcters, like UTF-8 chars, do not contain them
@@ -641,7 +712,7 @@ qui {
 		gen trim_`nospacevar' = (`nospacevar' != trim(`nospacevar'))
 
 		*Add item to report for any row with missing label in the label vars
-		count if trim_`nospacevar' != 0
+		count if trim_`nospacevar' == 1
 		if `r(N)' > 0 {
 
 			*Write header if this is the first case found
@@ -649,7 +720,7 @@ qui {
 
 			*Prepare message and write it
 			local error_msg "The string values in [`nospacevar'] column in the survey sheet are imported as strings and has leading or trailing spaces in the Excel file"
-			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `nospacevar' if trim_`nospacevar' != 0")
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `nospacevar' if trim_`nospacevar' == 1")
 
 			*Indicate that a case have been found
 			local cases_found 1
@@ -661,6 +732,42 @@ qui {
 
 	*If any cases were found, then write link to close this section
 	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Leading_and_Trailing_Spaces")
+
+
+
+	/***********************************************
+		TEST - List names with outdated syntax
+	***********************************************/
+	*The type and name variables should not be using outdated syntax
+	local outdatedsyntaxvars relevance constraint calculation repeat_count choice_filter
+
+	*Keep track if any cases are found
+	local cases_found 0
+
+	foreach od_var of local outdatedsyntaxvars {
+		*Test that the list name does not have outdated syntax
+		gen out_`od_var' = 1 if regexm(`od_var', "position\(|jr:choice-name\(")
+		replace out_`od_var' = 0 if missing(out_`od_var')
+		*Add item to report for any row with missing label in the label vars
+		count if out_`od_var' != 0
+		if `r(N)' > 0 {
+
+			*Write header if this is the first case found
+			if `cases_found' == 0 noi report_title , report_tempfile("`report_tempfile'") testname("OUTDATED SYNTAX")
+
+			*Prepare message and write it
+			local error_msg "The values in [`od_var'] column is using outdated syntax. It is recommended to update the syntax to the new syntax. See wiki page linked to below. These fields were found to have outdated syntax:"
+			noi report_file add , report_tempfile("`report_tempfile'")  message("`error_msg'") table("list row `od_var' if out_`od_var' == 1")
+
+			*Indicate that a case have been found
+			local cases_found 1
+		}
+
+	}
+
+	*If any cases were found, then write link to close this section
+	if `cases_found' == 1 noi report_wikilink , report_tempfile("`report_tempfile'") wikifragment("Outdated_Syntax")
+
 
 	/***********************************************
 		TEST - Type column
