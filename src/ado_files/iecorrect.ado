@@ -412,8 +412,8 @@ end
 * Load data set for each check and keep only the lines filled by user
 **********************************************************************
 
-cap program drop prepdata
-	program 	 prepdata, rclass
+cap program drop _loadsheet
+	program 	 _loadsheet
 	
 	syntax anything using/, stringid(numlist) [debug]
 
@@ -428,40 +428,51 @@ cap program drop prepdata
 			error 601
 		}
 		
-		** Specify the main column for each type of correction -- this column
-		** indicates the name of the variable to be corrected
-		if !`stringid' & "`anything'" != "other" {
-			qui destring idvalue, replace
-			qui count if !missing(idvalue)
-			if r(N) > 0 {
-				cap confirm string var idvalue
-				if !_rc {
-					noi di as error `"{phang}Column idvalue in sheet [`anything'] is not numeric. This column should contain the unique identifier of the observations to be corrected.{p_end}"'
-					local errorfill 1
-				}
-			}
-		}
-		
-		if "`anything'" == "numeric" 	{
-			qui destring valuecurrent value, replace
-			local mainvar	varname
-		}
-		if "`anything'" == "string" 	local mainvar	varname
-		if "`anything'" == "other" 		{
-			qui destring catvalue, replace
-			local mainvar	strvar
-		}
-		if "`anything'" == "drop" 		local mainvar 	idvalue
+end
 
-		* Drop blank lines that were imported by mistake
-		qui drop if missing(`mainvar')
+cap program drop _parsesheet
+	program 	 _parsesheet, rclass
 	
-		** Return the name of the main variable to be used in the next steps
-		return local mainvar `mainvar'
+	syntax anything, idvar(string) [debug]
+
+* Prepare ID values ------------------------------------------------------------
+
+	if "`anything'" != "other" {
+		* Replace * with .
+		foreach var of varlist `varlist' {
+			qui replace `var' = "" if `var' == "*"
+		}
 		
-		if !missing("`debug'") noi di as result "Exiting prepdata subcommand"
+		* Destring all id vars
+		qui destring `varlist', replace
+	}
+	
+* Destring numeric information -------------------------------------------------
+
+	if 		"`anything'" == "numeric"	qui destring valuecurrent value, replace
+	else if "`anything'" == "other"		qui destring catvalue, replace
+
+* Specify the the column that indicates the name of the variable to be corrected
+
+	if 		"`anything'" == "numeric" 	local mainvar	varname
+	else if "`anything'" == "string" 	local mainvar	varname
+	else if "`anything'" == "other" 	local mainvar	strvar
+	
+	* Return the name of the main variable to be used in the next steps
+	return local mainvar `mainvar'
+	
+* Drop lines that do not include any corrections -------------------------------
+
+	if "`anything'" != "drop"		qui drop if missing(`mainvar')
+	else {
+		tempvar   	 nids
+		qui egen 	`nids' = rownonmiss(`idvar')
+		qui drop if `nids' == 0
+	}
 		
-	end
+	if !missing("`debug'") noi di as result "Exiting  subcommand"
+		
+end
 	
 /*******************************************************************************	
 	Initial checks
@@ -478,11 +489,11 @@ cap program drop _checksheets
   
     if !missing("`debug'") noi di as result "Entering checksheets subcommand"
     
-    ** Import the data set and clean blank observations (commmand defined below)
-    prepdata `type' using "`using'", stringid(`stringid') `debug'
-    
-    * Identify the type of correction being made
-    local mainvar `r(mainvar)'
+    _loadsheet 	`type' using "`using'", stringid(`stringid') `debug' 			// import correction sheet
+
+	_parsesheet `type', idvar(`idvar') `debug'									// remove blanks lines, destring numeric variables
+	local mainvar `r(mainvar)'													// identify the type of correction being made
+	
 	_fillidtype, idvar(`idvar') stringvars(`stringvars') `debug'				// check that IDs were filled with the correct information (number/text)
   
 
