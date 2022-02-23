@@ -444,7 +444,7 @@ cap program drop _parsesheet
 	if "`anything'" != "other" {
 		* Replace * with .
 		foreach var of varlist `idvar' {
-			qui replace `var' = "" if `var' == "*"
+			qui replace `var' = ".v" if `var' == "*"
 		}
 		
 		* Destring all id vars
@@ -487,37 +487,26 @@ end
 cap program drop _checksheets
 	program    	 _checksheets, rclass
   
-  syntax using/, type(string) idvar(string) stringvars(string) [debug]
+	syntax using/, type(string) idvar(string) stringvars(string) [debug]
   
     if !missing("`debug'") noi di as result "Entering checksheets subcommand"
     
+* Load sheet and parse data  ---------------------------------------------------
+
     _loadsheet 	`type' using "`using'", `debug' 								// import correction sheet
 
 	_parsesheet `type', idvar(`idvar') `debug'									// remove blanks lines, destring numeric variables
 	local mainvar `r(mainvar)'													// identify the type of correction being made
-	
-	_fillidtype, idvar(`idvar') stringvars(`stringvars') `debug'				// check that IDs were filled with the correct information (number/text)
-  
-
-    ** Check that there are corrections of this type to be made
-    qui count
+	  
+    qui count																	// check that there are corrections to make
     
-    * If there are
+* If there are corrections, check individual sheets ----------------------------
     if `r(N)' > 0 {
         
-      * Check that the sheet is filled correctly
-      if !missing("`debug'") noi di as result "Entering checkcol`type' subcommand"
-      
-	  checkcol`type', idvar(`idvar') 
-      if "`r(errorfill)'" == "1" {
-        error 198
-      }
-      
-	  if !missing("`debug'") noi di as result "Exiting checkcol`type' subcommand"
-      
-      *If everything works, save the sheet in a tempfile and create a local saying to run the next command
-      local  `type'corr  1 
+      _checkcol`type', idvar(`idvar') stringvars(`stringvars') `debug'
             
+      * If everything works, save the sheet in a tempfile and create a local saying to run the next command
+      local  `type'corr  1 
       * List the variables that will need corrections of this type
       qui levelsof `mainvar', local(`type'vars) clean
       
@@ -575,13 +564,15 @@ cap program drop _checksheets
 * Check variables in numeric sheet
 ***********************************
 
-cap program drop checkcolnumeric
-	program 	 checkcolnumeric, rclass
+cap program drop _checkcolnumeric
+	program 	 _checkcolnumeric
 	
-	syntax, idvar(varlist)
+	syntax, idvar(string) stringvars(string) [debug]
+	
+		if !missing("`debug'") noi di as result "Entering checkcolnumeric subcommand"
 	
 		* Check that all relevant variables are in the sheet
-		_fillmisssingcol, columns(`idvar' varname valuecurrent value) type(numeric)
+		_fillmissingcol, columns(`idvar' varname valuecurrent value) type(numeric) `debug'
 		if r(errorfill) == 1 local errorfill 1
 
 		* Keep only those variables in the data set -- the user may have added notes
@@ -591,40 +582,28 @@ cap program drop checkcolnumeric
 * Checks -----------------------------------------------------------------------
 
 		* Check if id variables are filled correctly (either all or none are filled)
-		_fillid, type(numeric)
+		_fillid, type(numeric) idvar(`idvar') `debug'
+		if r(errorfill) == 1 local errorfill 1
+		
+		* Check that IDs were filled with the correct information (number/text)
+		_fillidtype, type(numeric) idvar(`idvar') stringvars(`stringvars') `debug'				
 		if r(errorfill) == 1 local errorfill 1
 		
 		* If none id values were filled, valuecurrent must be filled
-		_fillidorvalue, type(numeric)
+		_fillidorvalue, type(numeric) `debug'
 		if r(errorfill) == 1 local errorfill 1
 		
-		** Check that varname column is string
-		_fillvarname, type(numeric)
+		* Check that varname column is string
+		_fillvarname, type(numeric) `debug'
 		if r(errorfill) == 1 local errorfill 1
-						
-		* valuecurrent col may not have been filled, so only check if it was
-		qui count if !missing(valuecurrent)
-		if r(N) > 0 {
-			cap confirm string var valuecurrent
-			if !_rc {
-				noi di as error `"{phang}Column valuecurrent in sheet [numeric] is not numeric. This column should contain the values of the `type' variables to be corrected.{p_end}"'
-				local errorfill 1
-			}
-		}
 		
-		cap confirm string var value
-		if !_rc {
-			noi di as error `"{phang}Column value in sheet [numeric] is not numeric. This column should contain the correct values of the `type' variables to be corrected.{p_end}"'
-			local errorfill 1
-		}
+		* Check that value current was correctly filled
+		_fillcurrent, type(numeric) `debug'
+		if r(errorfill) == 1 local errorfill 1
 		
-		cap assert !missing(value)
-		if _rc {
-			noi di as error `"{phang}At least one entry for column value in sheet [numeric] is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
-			local errorfill 1
-		}		
-		
-		return local errorfill `errorfill'
+		* Check that new value is numeric
+		_fillvalue, type(numeric) `debug'
+		if r(errorfill) == 1 local errorfill 1
 			
 	end		
 
@@ -635,7 +614,7 @@ cap program drop checkcolnumeric
 cap program drop checkcolstring
 	program 	 checkcolstring, rclass
 	
-	syntax, idvar(varlist)
+	syntax, idvar(varlist) [debug]
 	
 		* Check that all relevant variables are in the sheet
 		_fillmisssingcol, columns( `idvar' valuecurrent value) type(string)
@@ -676,7 +655,7 @@ end
 cap program drop checkcolother
   program   	 checkcolother, rclass
   
-  syntax [anything]
+  syntax [anything], [debug]
   
     * Check that all relevant variables are in the sheet
 	_fillmisssingcol, columns(strvar strvaluecurrent catvar catvalue) type(string)
@@ -725,7 +704,7 @@ end
 cap program drop 	checkcoldrop
 	program    		checkcoldrop, rclass
   
-  syntax, idvar(varlist)
+  syntax, idvar(varlist) [debug]
  
  
 	* Check that all relevant variables are in the sheet
@@ -772,20 +751,28 @@ end
 cap program drop _fillid
 	program    	 _fillid, rclass
 	
-	syntax varlist, type(string)
+	syntax, type(string) idvar(string) [debug]
 	
-	local n_vars = wordcount("`varlist'")
+	if !missing("`debug'")	noi di as result "Entering fillid subcommand"
+	
+	local n_vars = wordcount("`idvar'")
 	
 	* Three options: all filled, none filled, some filled
-	tempvar   blank_ids
-	qui egen `blank_ids' = rowmiss(`varlist')
+	tempvar  blank_ids
+	qui gen `blank_ids' = 0
+	
+	foreach var of varlist `idvar' {
+	    cap confirm numeric var `var'
+	    if !_rc		qui replace `blank_ids' = `blank_ids' + 1 if `var' == .
+		else		qui replace `blank_ids' = `blank_ids' + 1 if `var' == ""
+	}
 
 	* Mark all observations where the IDs where not filled (valuecurrent must be filled in these cases)
 	qui gen   blank_ids = (`blank_ids' == `n_vars')
 	
 	qui count if (`blank_ids' > 0) & (`blank_ids' != `n_vars')
 	if r(N) > 0 {
-		noi di as error `"{phang}There are `r(N)' lines in sheet [`type'] where the  ID variable columns were not filled correctly: the value for at least one of the ID variables was left blank. If you wish to apply corrections to obsevartions regardless of the value they take for one of the ID variables, fill the column that corresponds to this variable with the wildcard sign (*).{p_end}"'
+		noi di as error `"{phang}There are `r(N)' lines in sheet [`type'] where the  ID variable columns were not filled correctly: the value for at least one of the ID variables was left blank. If you wish to apply corrections to observations regardless of the value they take for one of the ID variables, fill the column that corresponds to this variable with the wildcard sign (*).{p_end}"'
       local errorfill 1
 	}
   
@@ -798,9 +785,9 @@ cap program drop _fillid
 * Check that IDs have the correct format
 ****************************************
 cap program drop _fillidtype
-	program		 _fillidtype
+	program		 _fillidtype, rclass
 	
-	syntax , stringvars(string) idvar(string) [debug]
+	syntax , stringvars(string) idvar(string) type(string) [debug]
 	
 	if !missing("`debug'") noi di as result "Entering fillidtype subcommand"
 	
@@ -816,16 +803,18 @@ cap program drop _fillidtype
 
 			* Is not a string, but should be
 			if _rc & regex(" `stringvars' ", " `var' ") {
-				noi di as error `"{phang}Variable `var' is a string variable in the original dataset, but was filled with all numeric values in the correction sheet.{p_end}"'
-				error 198
+				noi di as error `"{phang}Variable [`var'] is a string variable in the original dataset, but was filled with all numeric values in sheet [`type'].{p_end}"'
+				local errorfill 1
 			}
 			* Is a string, but should not be
 			else if !_rc & !regex(" `stringvars' ", " `var' ") {
-				noi di as error noi di as error `"{phang}Variable `var' is a numeric variable in the original dataset, but was filled with text in the correction sheet.{p_end}"'
-				error 198
+				noi di as error `"{phang}Variable [`var'] is a numeric variable in the original dataset, but was filled with text in sheet [`type'].{p_end}"'
+				local errorfill 1
 			}
 		}
 	}
+	
+	return local errorfill `errorfill'
 	
 end
  
@@ -835,7 +824,9 @@ end
 cap program drop _fillidorvalue
 	program    	 _fillidorvalue, rclass
 	
-	syntax, type(string)
+	syntax, type(string) [debug]
+	
+	if !missing("`debug'")	noi di as result "Entering fillidorvalue subcommand"
 	
 	qui count if blank_ids & missing(valuecurrent)		
 	if r(N) > 0 {
@@ -856,10 +847,12 @@ cap program drop _fillidorvalue
 cap program drop _fillvarname
 	program    	 _fillvarname, rclass
 	
-	syntax, type(string)
+	syntax, type(string) [debug]
 	
+	if !missing("`debug'")	noi di as result "Entering fillvarname subcommand"
+
 	cap confirm string var varname
-	if r(N) > 0 {
+	if _rc {
 		noi di as error `"{phang}Column varname in sheet [`type'] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
 		local errorfill 1
 	}
@@ -868,15 +861,17 @@ cap program drop _fillvarname
 	
  end
  
- ***********************************************
+************************************************
 * Check that no column was deleted from template
 ************************************************
 
-cap program drop _fillmisssingcol
-	program    	 _fillmisssingcol, rclass
+cap program drop _fillmissingcol
+	program    	 _fillmissingcol, rclass
 	
-	syntax, columns(string) type(string)
+	syntax, columns(string) type(string) [debug]
 	
+	if !missing("`debug'")	noi di as result "Entering fillmissingcol subcommand"
+
 	foreach col in `columns' {
       cap confirm var `col'
       if _rc {
@@ -888,7 +883,60 @@ cap program drop _fillmisssingcol
 	return local errorfill `errorfill'
 	
  end
+ 
+******************************************************
+* Check that column value current was correctly filled
+******************************************************
 
+cap program drop _fillcurrent
+	program    	 _fillcurrent, rclass
+	
+	syntax, type(string) [debug]
+	
+	if !missing("`debug'")	noi di as result "Entering fillcurrent subcommand"
+
+	qui count if !missing(valuecurrent)											// does not apply if column was not filled
+	if r(N) > 0 {
+	    cap confirm `type' var valuecurrent
+		if _rc {
+			noi di as error `"{phang}Column valuecurrent in sheet [`type'] is not of type `type'. This column should contain the values of the `type' variables to be corrected.{p_end}"'
+			local errorfill 1
+		}
+	}
+	
+	return local errorfill `errorfill'
+	
+ end
+ 
+********************************************
+* Check that new value was entered correctly
+********************************************
+
+cap program drop _fillvalue
+	program    	 _fillvalue, rclass
+	
+	syntax, type(string) [debug]
+	
+	if !missing("`debug'")	noi di as result "Entering fillvalue subcommand"
+	
+	cap assert !missing(value)
+	if _rc {
+		noi di as error `"{phang}At least one entry for column value in sheet [`type'] is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
+		local errorfill 1
+	}
+
+	cap confirm `type' var value
+	if _rc {
+		noi di as error `"{phang}Column value in sheet [`type'] is not of type `type'. This column should contain the correct values of the `type' variables to be corrected.{p_end}"'
+		local errorfill 1
+	}
+
+	return local errorfill `errorfill'
+	
+ end
+ 
+		
+ 
 *************************************************************
 * Check if there are extra whitespaces and special characters
 *************************************************************

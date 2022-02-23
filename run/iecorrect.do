@@ -79,6 +79,33 @@
 /*******************************************************************************
 	Apply 
 *******************************************************************************/	
+
+	use 	`tocorrect', clear
+	
+	********************************************
+	* Incorrectly filling ids				   *
+	********************************************
+	
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-stringid.xlsx", idvar(id make) sheet(numeric) debug
+	assert _rc == 198
+	
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-numid.xlsx", idvar(id make) sheet(numeric) debug
+	assert _rc == 198
+	
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-blankid.xlsx", idvar(id make) sheet(numeric) debug
+	assert _rc == 198
+	
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-blankid-blankcurrent.xlsx", idvar(id make) sheet(numeric) debug
+	assert _rc == 198
+	
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-numvarname.xlsx", idvar(id make) sheet(numeric) debug
+	assert _rc == 198
+
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-wrongvalue.xlsx", idvar(id make) sheet(numeric) debug
+	assert _rc == 198
+	
+	iecorrect apply using "${output}/iecorrect/iecorrect-missvarname.xlsx", idvar(id make) sheet(numeric) debug // add error message instead?
+	
 	
 	********************************************
 	* Options 								   *
@@ -86,7 +113,7 @@
 	
 	* Check that precision is not an issue
 	use 	`tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-precision.xlsx", idvar(id) sheet(numeric)
+	iecorrect apply using "${output}/iecorrect/iecorrect-precision.xlsx", idvar(id) sheet(numeric) debug
 	assert gear_ratio == 150 in 1
 	assert gear_ratio == 60  in 2
 	
