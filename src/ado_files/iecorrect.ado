@@ -135,15 +135,6 @@ cap program drop iecorrect
 	
 	qui ds
 	local 	original_vars	`r(varlist)'
-
-/* Check ID format -------------------------------------------------------------
-
-    cap confirm string variable `idvar'
-         if !_rc local  stringid 1
-    else if  _rc local  stringid 0
-
-    if !missing("`debug'") noi di as result "String ID: `stringid'"
-*/
     
 // Check that file exists ------------------------------------------------------
 
@@ -158,7 +149,7 @@ cap program drop iecorrect
     foreach type of local corrSheets {
     
       * Check that template was correctly filled
-      checksheets using "`using'", type("`type'") stringid(`stringid') idvar(`idvar') `debug'
+      _checksheets using "`using'", type("`type'") stringid(`stringid') idvar(`idvar') `debug'
       
       * The result indicates if there are corrections of this type
         local `type'corr   `r(`type'corr)'
@@ -480,8 +471,8 @@ cap program drop prepdata
 * Check that sheet is filled correctly
 ****************************************
   
-cap program drop checksheets
-	program    	 checksheets, rclass
+cap program drop _checksheets
+	program    	 _checksheets, rclass
   
   syntax using/, type(string) stringid(numlist) idvar(varlist)  [debug]
   
@@ -670,7 +661,7 @@ end
 ***********************************
 
 cap program drop checkcolother
-  program    checkcolother, rclass
+  program   	 checkcolother, rclass
   
   syntax [anything]
   
@@ -777,7 +768,7 @@ cap program drop _fillid
 	qui egen `blank_ids' = rowmiss(`varlist')
 
 	* Mark all observations where the IDs where not filled (valuecurrent must be filled in these cases)
-	qui gen   blank_ids = `blank_ids' == `n_vars'
+	qui gen   blank_ids = (`blank_ids' == `n_vars')
 	
 	qui count if (`blank_ids' > 0) & (`blank_ids' != `n_vars')
 	if r(N) > 0 {
