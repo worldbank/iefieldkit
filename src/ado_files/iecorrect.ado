@@ -148,8 +148,10 @@ cap program drop iecorrect
 
     foreach type of local corrSheets {
     
+		if !missing("`debug'") noi di "Starting corrections of type `type'"
+		
       * Check that template was correctly filled
-      _checksheets using "`using'", type("`type'") stringid(`stringid') idvar(`idvar') `debug'
+      _checksheets using "`using'", type("`type'") stringvars(`string_vars') idvar(`idvar') `debug'
       
       * The result indicates if there are corrections of this type
         local `type'corr   `r(`type'corr)'
@@ -307,7 +309,7 @@ cap program drop iecorrect
         cap  file close   `doname'
         qui  file open    `doname' using "`dofile'", text write append
               
-        do`type',    doname("`doname'") idvar("`idvar'") stringid(`stringid') `debug' ``type'opts'
+        do`type',    doname("`doname'") idvar("`idvar'") `debug' ``type'opts'
 
         * Add an extra space before the next set of corrections
         file write   `doname'      _n _n          
@@ -415,9 +417,9 @@ end
 cap program drop _loadsheet
 	program 	 _loadsheet
 	
-	syntax anything using/, stringid(numlist) [debug]
+	syntax anything using/, [debug]
 
-		if !missing("`debug'") noi di as result "Entering prepdata subcommand"
+		if !missing("`debug'") noi di as result "Entering loadsheet subcommand"
 	
 		** Load the sheet that was filled
 		cap import excel "`using'", sheet("`anything'") firstrow allstring clear
@@ -435,16 +437,18 @@ cap program drop _parsesheet
 	
 	syntax anything, idvar(string) [debug]
 
+	if !missing("`debug'") noi di as result "Entering parsesheet subcommand"
+	
 * Prepare ID values ------------------------------------------------------------
 
 	if "`anything'" != "other" {
 		* Replace * with .
-		foreach var of varlist `varlist' {
+		foreach var of varlist `idvar' {
 			qui replace `var' = "" if `var' == "*"
 		}
 		
 		* Destring all id vars
-		qui destring `varlist', replace
+		qui destring `idvar', replace
 	}
 	
 * Destring numeric information -------------------------------------------------
@@ -469,9 +473,7 @@ cap program drop _parsesheet
 		qui egen 	`nids' = rownonmiss(`idvar')
 		qui drop if `nids' == 0
 	}
-		
-	if !missing("`debug'") noi di as result "Exiting  subcommand"
-		
+				
 end
 	
 /*******************************************************************************	
@@ -485,11 +487,11 @@ end
 cap program drop _checksheets
 	program    	 _checksheets, rclass
   
-  syntax using/, type(string) stringid(numlist) idvar(varlist)  [debug]
+  syntax using/, type(string) idvar(string) stringvars(string) [debug]
   
     if !missing("`debug'") noi di as result "Entering checksheets subcommand"
     
-    _loadsheet 	`type' using "`using'", stringid(`stringid') `debug' 			// import correction sheet
+    _loadsheet 	`type' using "`using'", `debug' 								// import correction sheet
 
 	_parsesheet `type', idvar(`idvar') `debug'									// remove blanks lines, destring numeric variables
 	local mainvar `r(mainvar)'													// identify the type of correction being made
@@ -796,9 +798,11 @@ cap program drop _fillid
 * Check that IDs have the correct format
 ****************************************
 cap program drop _fillidtype
-	program		 _fillidtype, rclass
+	program		 _fillidtype
 	
 	syntax , stringvars(string) idvar(string) [debug]
+	
+	if !missing("`debug'") noi di as result "Entering fillidtype subcommand"
 	
 	* Test type for each ID variable if variable contains any non-missing values
 	foreach var of varlist `idvar' {
@@ -813,17 +817,15 @@ cap program drop _fillidtype
 			* Is not a string, but should be
 			if _rc & regex(" `stringvars' ", " `var' ") {
 				noi di as error `"{phang}Variable `var' is a string variable in the original dataset, but was filled with all numeric values in the correction sheet.{p_end}"'
-				local errorfill 1
+				error 198
 			}
 			* Is a string, but should not be
 			else if !_rc & !regex(" `stringvars' ", " `var' ") {
 				noi di as error noi di as error `"{phang}Variable `var' is a numeric variable in the original dataset, but was filled with text in the correction sheet.{p_end}"'
-				local errorfill 1
+				error 198
 			}
 		}
 	}
-	
-	return local errorfill `errorfill'
 	
 end
  
@@ -978,7 +980,7 @@ cap program drop doheader
 cap program drop donumeric
 	program 	 donumeric
 	
-	syntax , doname(string) idvar(string) stringid(numlist) [floatvars(string) doublevars(string) debug] 
+	syntax , doname(string) idvar(string) [floatvars(string) doublevars(string) debug] 
 				
 	if !missing("`debug'") noi di as result "Entering donumeric subcommand"
 	
@@ -1035,7 +1037,7 @@ end
 cap program drop dostring
 	program 	 dostring
 	
-	syntax , doname(string) idvar(string) stringid(numlist) [debug]
+	syntax , doname(string) idvar(string) [debug]
 	
 	if !missing("`debug'") noi di as result "Entering dostring subcommand"
 	
@@ -1084,7 +1086,7 @@ end
 cap program drop 	dodrop
 	program    		dodrop
   
-  syntax , doname(string) idvar(string) stringid(numlist) [debug]
+  syntax , doname(string) idvar(string) [debug]
 
   if !missing("`debug'") noi di as result "Entering dodrop subcommand"
   
@@ -1119,7 +1121,7 @@ end
 cap program drop 	doother
 	program    		doother
   
-  syntax , doname(string) idvar(string) stringid(numlist) [debug]
+  syntax , doname(string) idvar(string) [debug]
   
   if !missing("`debug'") noi di as result "Entering doother subcommand"
   
