@@ -130,6 +130,9 @@ cap program drop iecorrect
 	qui ds, has(type float)
 	local 	float_vars		`r(varlist)'
 	
+	qui ds, has(type string)
+	local 	string_vars		`r(varlist)'
+	
 	qui ds
 	local 	original_vars	`r(varlist)'
 
@@ -489,6 +492,8 @@ cap program drop checksheets
     
     * Identify the type of correction being made
     local mainvar `r(mainvar)'
+	_fillidtype, idvar(`idvar') stringvars(`stringvars') `debug'				// check that IDs were filled with the correct information (number/text)
+  
 
     ** Check that there are corrections of this type to be made
     qui count
@@ -785,7 +790,41 @@ cap program drop _fillid
 	
  end
  
+****************************************
+* Check that IDs have the correct format
+****************************************
+cap program drop _fillidtype
+	program		 _fillidtype, rclass
+	
+	syntax , stringvars(string) idvar(string) [debug]
+	
+	* Test type for each ID variable if variable contains any non-missing values
+	foreach var of varlist `idvar' {
+		
+		* Check if there are non-missing values
+		qui mdesc `var'
+		if r(percent) < 100 {
+			
+			* Is the variable a string?
+			cap confirm string var `var'
 
+			* Is not a string, but should be
+			if _rc & regex(" `stringvars' ", " `var' ") {
+				noi di as error `"{phang}Variable `var' is a string variable in the original dataset, but was filled with all numeric values in the correction sheet.{p_end}"'
+				local errorfill 1
+			}
+			* Is a string, but should not be
+			else if !_rc & !regex(" `stringvars' ", " `var' ") {
+				noi di as error noi di as error `"{phang}Variable `var' is a numeric variable in the original dataset, but was filled with text in the correction sheet.{p_end}"'
+				local errorfill 1
+			}
+		}
+	}
+	
+	return local errorfill `errorfill'
+	
+end
+ 
 ****************************************************
 * Check that valuecurrent is filled when IDs are not
 ****************************************************
