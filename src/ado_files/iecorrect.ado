@@ -142,33 +142,20 @@ cap program drop iecorrect
 // Check which types of corrections need to be made ----------------------------
 
     foreach type of local corrSheets {
-    
-		if !missing("`debug'") noi di "Starting corrections of type `type'"
-		
-      * Check that template was correctly filled
-      _checksheets using "`using'", type("`type'") stringvars(`string_vars') idvar(`idvar') `debug'
-      
-      * The result indicates if there are corrections of this type
-        local `type'corr   `r(`type'corr)'
+    		
+		* Check that template was correctly filled
+		_checksheets using "`using'", type("`type'") stringvars(`string_vars') idvar(`idvar') `debug'
 
-      * If there are, it also lists the variables to be corrected or IDs to be dropped
-      if ``type'corr' == 1 {
-          
-        * List variables to be corrected
-        local `type'vars  `r(`type'vars)'
-        
-        if "`type'" == "other" {
-          local categoricalvars `r(categoricalvars)'
-        }
-        
-        * List IDs to be dropped and corresponding number of observations
-        if "`type'" == "drop" {
-          local idvals   `r(idvals)'
-          local n_obs    `r(n_obs)'
-        }
-        
-        local any_corrections 1
-      }  
+		* Print a list of the variables that will be corrected
+		if "`r(correct)'" == "1" {
+			local corrections		"`corrections' `type'"
+			local any_corrections 	1
+			
+			_printaction,  present(yes) type(`type') `debug'
+		}  
+		else "`r(correct)'" == "0" {
+		    _printaction,  present(no)  type(`type') `debug'
+		}
     }
 
 // Check drop number corrections -----------------------------------------------
@@ -203,12 +190,12 @@ cap program drop iecorrect
  
     foreach type in string other numeric {
 
-		if inlist("`type'","string", "other" ) &  "``type'corr'"== "1" {
+		if inlist("`type'","string", "other" ) & regex(" `corrections' ", " `type' ") {
 			cap confirm string var ``type'vars'
 			if _rc local errortype 1
 		}
 		
-		if "`type'" == "numeric" &  "``type'corr'"== "1"{
+		if "`type'" == "numeric" &  & regex(" `corrections' ", " `type' ")  {
 			qui cap confirm string var `type'vars
 			if !_rc local errortype 1
 		}
@@ -287,9 +274,7 @@ cap program drop iecorrect
 
 	local numericopts "floatvars(`float_vars') doublevars(`double_vars')"
 	
-    foreach type of local corrSheets {
-
-      if ``type'corr' {
+    foreach type of local corrections {
         
 		* Open the data set with the numeric corrections
         cap import excel "`using'", sheet("`type'") firstrow allstring clear
@@ -493,67 +478,22 @@ cap program drop _checksheets
 	_parsesheet `type', idvar(`idvar') `debug'									// remove blanks lines, destring numeric variables
 	local mainvar `r(mainvar)'													// identify the type of correction being made
 	  
-    qui count																	// check that there are corrections to make
-    
+	      
 * If there are corrections, check individual sheets ----------------------------
-    if `r(N)' > 0 {
-        
-      _checkcol`type', idvar(`idvar') stringvars(`stringvars') `debug'
-            
-      * If everything works, save the sheet in a tempfile and create a local saying to run the next command
-      local  `type'corr  1 
-      * List the variables that will need corrections of this type
-      qui levelsof `mainvar', local(`type'vars) clean
-      
-      * List categorical variables used in 'other' corrections
-      if "`type'" == "other" {
-        qui levelsof catvar, local(categoricalvars) clean
-      }
-      
-      * List idvals and number of observations to be dropped
-      if "`type'" == "drop" {
-        qui levelsof idvalue,   local(idvals)
-        qui levelsof n_obs,   local(n_obs)
-      }
-      
-      if inlist("`type'", "string", "numeric", "other") {
-        noi di as text `"{phang}Variables for corrections of type `type': ``type'vars'{p_end}"'
-      }
-      else {
-        noi di as text `"{phang}IDs of observations to be dropped: ``type'vars'{p_end}"'
-      }    
+
+    qui count
+
+    if `r(N)' > 0 {	    
+		_checkcol`type', idvar(`idvar') stringvars(`stringvars') `debug'
+		if !missing("`r(errorfill)'") error 198
+
+		return local correct  			1		
     }
-    
-    * If there are no corrections to be made, save that information and move forward
-    else if `r(N)' == 0 {
-      local  `type'corr  0
-      if inlist("`type'", "string", "numeric", "other") {
-        noi di as text `"{phang}No corrections of type `type'.{p_end}"'
-      }
-      else {
-        noi di as text `"{phang}No observations to be dropped.{p_end}"'
-      }
+	else if `r(N)' == 0 {    
+      return local  correct  			0
     }
-    
-    ** Save the information
-    * Whether there are any corrections to be made
-    return local `type'corr   ``type'corr'  
-    
-    * What are the names of the variables to be corrected
-    return local `type'vars   ``type'vars'
-    
-    if "`type'" == "other" {
-      return local categoricalvars `categoricalvars'
-    }
-    
-    if "`type'" == "drop" {
-      return local idvals `idvals'
-      return local n_obs  `n_obs'
-    }
-    
-    if !missing("`debug'") noi di as result "Exiting checksheets subcommand"
-    
-  end
+	
+end
   
 ***********************************
 * Check variables in numeric sheet
