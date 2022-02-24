@@ -500,7 +500,7 @@ end
 ***********************************
 
 cap program drop _checkcolnumeric
-	program 	 _checkcolnumeric
+	program 	 _checkcolnumeric, rclass
 	
 	syntax, idvar(string) stringvars(string) [debug]
 	
@@ -508,7 +508,7 @@ cap program drop _checkcolnumeric
 	
 		* Check that all relevant variables are in the sheet
 		_fillmissingcol, columns(`idvar' varname valuecurrent value) type(numeric) `debug'
-		if r(errorfill) == 1 local errorfill 1
+		if "`r(errorfill)'" == "1" local errorfill 1
 
 		* Keep only those variables in the data set -- the user may have added notes
 		* that are not relevant for the command
@@ -518,29 +518,31 @@ cap program drop _checkcolnumeric
 
 		* Check if id variables are filled correctly (either all or none are filled)
 		_fillid, type(numeric) idvar(`idvar') `debug'
-		if r(errorfill) == 1 local errorfill 1
+		if "`r(errorfill)'" == "1" local errorfill 1
 		
 		* Check that IDs were filled with the correct information (number/text)
 		_fillidtype, type(numeric) idvar(`idvar') stringvars(`stringvars') `debug'				
-		if r(errorfill) == 1 local errorfill 1
+		if "`r(errorfill)'" == "1" local errorfill 1
 		
 		* If none id values were filled, valuecurrent must be filled
 		_fillidorvalue, type(numeric) `debug'
-		if r(errorfill) == 1 local errorfill 1
+		if "`r(errorfill)'" == "1" local errorfill 1
 		
 		* Check that varname column is string
 		_fillvarname, type(numeric) `debug'
-		if r(errorfill) == 1 local errorfill 1
+		if "`r(errorfill)'" == "1" local errorfill 1
 		
 		* Check that value current was correctly filled
 		_fillcurrent, type(numeric) `debug'
-		if r(errorfill) == 1 local errorfill 1
+		if "`r(errorfill)'" == "1" local errorfill 1
 		
 		* Check that new value is numeric
 		_fillvalue, type(numeric) `debug'
-		if r(errorfill) == 1 local errorfill 1
-			
-	end		
+		if "`r(errorfill)'" == "1" local errorfill 1
+		
+	return local errorfill `errorfill'
+
+end		
 
 ***********************************
 * Check variables in string sheet
@@ -738,12 +740,12 @@ cap program drop _fillidtype
 
 			* Is not a string, but should be
 			if _rc & regex(" `stringvars' ", " `var' ") {
-				noi di as error `"{phang}Variable [`var'] is a string variable in the original dataset, but was filled with all numeric values in sheet [`type'].{p_end}"'
+				noi di as error `"{phang} ID variable [`var'] is a string variable in the original dataset, but was filled with all numeric values in sheet [`type'].{p_end}"'
 				local errorfill 1
 			}
 			* Is a string, but should not be
 			else if !_rc & !regex(" `stringvars' ", " `var' ") {
-				noi di as error `"{phang}Variable [`var'] is a numeric variable in the original dataset, but was filled with text in sheet [`type'].{p_end}"'
+				noi di as error `"{phang}ID variable [`var'] is a numeric variable in the original dataset, but was filled with text in sheet [`type'].{p_end}"'
 				local errorfill 1
 			}
 		}
@@ -784,13 +786,14 @@ cap program drop _fillvarname
 	
 	syntax, type(string) [debug]
 	
-	if !missing("`debug'")	noi di as result "Entering fillvarname subcommand"
+		if !missing("`debug'")	noi di as result "Entering fillvarname subcommand"
 
-	cap confirm string var varname
-	if _rc {
-		noi di as error `"{phang}Column varname in sheet [`type'] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
-		local errorfill 1
-	}
+		cap qui destring varname, replace
+		cap confirm string var varname
+		if _rc {
+			noi di as error `"{phang}Column varname in sheet [`type'] is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
+			local errorfill 1
+		}
 	
 	return local errorfill `errorfill'
 	
