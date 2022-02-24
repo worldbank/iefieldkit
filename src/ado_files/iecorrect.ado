@@ -121,8 +121,11 @@ cap program drop iecorrect
 /*******************************************************************************  
   Tests
 *******************************************************************************/
-			
-// Crete a list of variables in the data ---------------------------------------
+
+	* Test that the file exists
+	_findtemplate using "`using'", `debug' 
+
+// Create a list of variables in the data ---------------------------------------
 
 	qui ds, has(type double)
 	local 	double_vars		`r(varlist)'
@@ -135,14 +138,6 @@ cap program drop iecorrect
 	
 	qui ds
 	local 	original_vars	`r(varlist)'
-    
-// Check that file exists ------------------------------------------------------
-
-    cap confirm new file "`using'"
-    if (_rc != 602) {  
-      noi di as error `"{phang}The iecorrect template is not found. The template must be created before the apply subcommand can be used. {p_end}"'
-      error 601 
-    }
     
 // Check which types of corrections need to be made ----------------------------
 
@@ -935,7 +930,22 @@ cap program drop _fillvalue
 	
  end
  
-		
+**************************
+* Check if template exists
+**************************
+
+cap program drop _findtemplate 
+	program		 _findtemplate 
+	
+	syntax using/, [debug]
+	
+	cap confirm new file "`using'"
+    if (_rc != 602) {  
+      noi di as error `"{phang}The iecorrect template is not found. The template must be created before the apply subcommand can be used. {p_end}"'
+      error 601 
+    }
+	
+end
  
 *************************************************************
 * Check if there are extra whitespaces and special characters
