@@ -413,7 +413,7 @@ cap program drop _loadsheet
 end
 
 cap program drop _parsesheet
-	program 	 _parsesheet, rclass
+	program 	 _parsesheet
 	
 	syntax anything, idvar(string) [debug]
 
@@ -436,14 +436,8 @@ cap program drop _parsesheet
 	if 		"`anything'" == "numeric"	qui destring valuecurrent value, replace
 	else if "`anything'" == "other"		qui destring catvalue, replace
 
-* Specify the the column that indicates the name of the variable to be corrected
-
-	if 		"`anything'" == "numeric" 	local mainvar	varname
-	else if "`anything'" == "string" 	local mainvar	varname
-	else if "`anything'" == "other" 	local mainvar	strvar
-	
-	* Return the name of the main variable to be used in the next steps
-	return local mainvar `mainvar'
+	if 		inlist("`anything'", "numeric", "string") 	local mainvar	varname
+	else if "`anything'" == "other" 					local mainvar	strvar
 	
 * Drop lines that do not include any corrections -------------------------------
 
@@ -474,10 +468,7 @@ cap program drop _checksheets
 * Load sheet and parse data  ---------------------------------------------------
 
     _loadsheet 	`type' using "`using'", `debug' 								// import correction sheet
-
 	_parsesheet `type', idvar(`idvar') `debug'									// remove blanks lines, destring numeric variables
-	local mainvar `r(mainvar)'													// identify the type of correction being made
-	  
 	      
 * If there are corrections, check individual sheets ----------------------------
 
@@ -1262,4 +1253,41 @@ cap program drop 	templatesheet
     }    
  end
 }
+
+/*******************************************************************************  
+  Run the do file with corrections
+*******************************************************************************/
+
+cap program drop 	_printaction
+	program    		_printaction
+  
+	syntax , type(string) present(string) [debug]
+     
+	 	if !missing("`debug'")	noi di as result "Entering printaction subcommand"
+
+		if "`present'" == "yes" {
+
+			if inlist("`type'", "string", "numeric", "other") {
+			    
+				if 		inlist("`anything'", "numeric", "string") 	local mainvar	varname
+				else if "`anything'" == "other" 					local mainvar	strvar
+		
+				noi di as text `"{phang}Variables for corrections of type `type':{p_end}"'
+				levelsof `mainvar', clean
+				
+			}
+		}
+		else if "`present'" == "no" {
+		    if inlist("`type'", "string", "numeric", "other") {
+				noi di as text `"{phang}No corrections of type `type'.{p_end}"'
+			}
+			else if "`type'" == "drop" {
+				noi di as text `"{phang}No observations to be dropped.{p_end}"'
+			}
+		}
+		 	
+ end         
+ 
+    
+
 *********************************** THE END ************************************
