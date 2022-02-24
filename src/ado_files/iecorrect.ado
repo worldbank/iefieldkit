@@ -108,7 +108,7 @@ cap program drop iecorrect
 		templateworkbook using "`using'" , idvar(`idvar') `other' addother(`addother')
 			
 		if !missing("`debug'") noi di "Exiting template subcommand"
-	}																			// End of template subcommand
+	}
 	
 /*==============================================================================
                 APPLY SUBCOMMAND
@@ -307,10 +307,10 @@ cap program drop iecorrect
   Save the do file containing the corrections if "save" was selected
 *******************************************************************************/
 
-		if "`save'" != "" {
-			* Standardize do file path
-			local save= subinstr(`"`save'"',"\","/",.)
-         
+	if "`save'" != "" {
+		* Standardize do file path
+		local save= subinstr(`"`save'"',"\","/",.)
+	 
       * Get the file extension       
       local save_fileext = substr(`"`save'"',strlen(`"`save'"')-strpos(strreverse(`"`save'"'),".")+1,.)
       
@@ -1169,29 +1169,29 @@ cap program drop 	dofooter
 *******************************************************************************/
 {
 cap program drop dorun
-  program     dorun
+	program     dorun
   
-  syntax , doname(string) dofile(string) data(string) [NOIsily debug]
-  
-  if !missing("`debug'")     noi di as result "Entering dorun subcommand"
-  
-                local display qui
-  if !missing("`noisily'")  local display noi
-  
-  file open `doname' using "`dofile'", read    
-  file read `doname' line
-    
-    while r(eof)==0 {
-      if !missing("`noisily'") display `"`line'"'
-      `display' `line'
-      file read `doname' line
-    }
+	syntax , doname(string) dofile(string) data(string) [NOIsily debug]
 
-  file close `doname'
+	if !missing("`debug'")     noi di as result "Entering dorun subcommand"
 
-  qui save `data', replace
+				local display qui
+	if !missing("`noisily'")  local display noi
 
-  if !missing("`debug'") noi di as result "Exiting dorun subcommand"
+	file open `doname' using "`dofile'", read    
+	file read `doname' line
+
+	while r(eof)==0 {
+	  if !missing("`noisily'") display `"`line'"'
+	  `display' `line'
+	  file read `doname' line
+	}
+
+	file close `doname'
+
+	qui save `data', replace
+
+	if !missing("`debug'") noi di as result "Exiting dorun subcommand"
   
 end
 }
