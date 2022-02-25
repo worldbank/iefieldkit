@@ -216,10 +216,12 @@ else if "`subcommand'" == "apply" {
     
     * Don't run if there are no corrections to be made
     if !missing("`any_corrections'") {
-      _dorun , doname("`doname'") dofile("`dofile'") data("`data'") `debug' `noisily' 
-    }     
+		_dorun , doname("`doname'") dofile("`dofile'") data("`data'") `debug' `noisily' 
+    }
+	if regex("`corrSheets'", "other") {
+		noi di as result "{phang}{bf:iecorrect} has made changes to categorical variables, but it did not apply value labels. To apply value labels, use the command {bf:iecodebook}{p_end}"
+	}
   
-    if !missing("`debug'") noi di as result "Exiting apply subcommand"
   }
 
  end
