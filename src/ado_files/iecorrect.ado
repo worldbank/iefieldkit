@@ -109,13 +109,13 @@ cap program drop iecorrect
 			
 		if !missing("`debug'") noi di "Exiting template subcommand"
 	}
-	
+
 /*==============================================================================
                 APPLY SUBCOMMAND
 ==============================================================================*/
 
-  else if "`subcommand'" == "apply" {
-  
+else if "`subcommand'" == "apply" {
+
     if !missing("`debug'") noi di "Entering apply subcommand"
     
 /*******************************************************************************  
@@ -152,10 +152,11 @@ cap program drop iecorrect
 			local any_corrections 	1
 			
 			_printaction,  present(yes) type(`type') `debug'
-		}  
-		else "`r(correct)'" == "0" {
+		}
+		else if "`r(correct)'" == "0" {
 		    _printaction,  present(no)  type(`type') `debug'
 		}
+		
     }
 
 // Check drop number corrections -----------------------------------------------
@@ -222,7 +223,7 @@ cap program drop iecorrect
 			}
 		}				
 	}
-	   
+
 /*******************************************************************************  
   Create a do file containing the corrections
 *******************************************************************************/    
@@ -295,7 +296,6 @@ cap program drop iecorrect
         file write   `doname'      _n _n          
         file close   `doname'
 
-      }
     }
 
     * If the do file will be saved for later reference, add a footer
@@ -342,7 +342,7 @@ cap program drop iecorrect
 /*******************************************************************************  
   Run the do file containing the corrections
 *******************************************************************************/
-  
+
     restore
     
     * Don't run if there are no corrections to be made
@@ -353,10 +353,8 @@ cap program drop iecorrect
     if !missing("`debug'") noi di as result "Exiting template subcommand"
   
   }                                        // End of apply subcommand 
-  
-end
 
-
+ end
 
 
 /*==============================================================================
