@@ -86,15 +86,13 @@ cap program drop iecorrect
 
 	if "`subcommand'" == "template" {
 		
-		if !missing("`debug'") noi di "Entering template subcommand"
-	
 		// Check if file already exists and check if the "other" tab is included
 		cap confirm new file `using'
 		if (_rc == 602) {
 			if "`other'" != "" {
 				cap import excel "`using'", sheet("other") clear
-				if _rc == 601 local addother "1"
-				else local errorfile "1"
+				if _rc == 601 local addother 	1
+				else 		  local errorfile 	1
 				
 			}
 			if ("`other'" == "") | ("`errorfile'" == "1") {
@@ -105,9 +103,7 @@ cap program drop iecorrect
 		}		
 		
 		// Create the template -----------------------------------------------------
-		templateworkbook using "`using'" , idvar(`idvar') `other' addother(`addother')
-			
-		if !missing("`debug'") noi di "Exiting template subcommand"
+		templateworkbook using "`using'" , idvar(`idvar') `other' addother("`addother'")
 	}
 
 /*==============================================================================
