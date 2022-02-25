@@ -11,7 +11,7 @@ cap program drop iecorrect
 			save(string) 					 ///
 			replace 						 ///
 			other 							 ///
-			sheet(string) 					 ///
+			SHEETs(string) 					 ///
 			debug 							 ///
 		]
 		
@@ -37,15 +37,10 @@ cap program drop iecorrect
                 PROCESS OPTIONS
 ==============================================================================*/
 	
-	if "`sheet'" == "" {
-		local corrSheets	numeric string drop 
-		
-		if "`other'" != "" {
-			local corrSheets "`corrSheets' other"
-		}
-	}
+		 if !missing("`sheets'") local corrSheets	`sheets'
 	else {
-		local corrSheets	`sheet'
+								 local corrSheets	numeric string drop 
+		if "`other'" != "" 		 local corrSheets "`corrSheets' other"
 	}
 
 /*==============================================================================
