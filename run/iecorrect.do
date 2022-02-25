@@ -87,10 +87,10 @@
 	********************************************
 	
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-stringid.xlsx", idvar(id make) sheet(numeric) debug
-	assert _rc == 198
+	assert _rc == 109
 	
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-numid.xlsx", idvar(id make) sheet(numeric) debug
-	assert _rc == 198
+	assert _rc == 109
 	
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-blankid.xlsx", idvar(id make) sheet(numeric) debug
 	assert _rc == 198
@@ -99,12 +99,13 @@
 	assert _rc == 198
 	
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-numvarname.xlsx", idvar(id make) sheet(numeric) debug
-	assert _rc == 198
+	assert _rc == 109
 
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-wrongvalue.xlsx", idvar(id make) sheet(numeric) debug
 	assert _rc == 198
 	
-	iecorrect apply using "${output}/iecorrect/iecorrect-missvarname.xlsx", idvar(id make) sheet(numeric) debug // add error message instead?
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-missvarname.xlsx", idvar(id make) sheet(numeric) debug
+	assert _rc == 109
 	
 	
 	********************************************
@@ -118,7 +119,7 @@
 	assert gear_ratio == 60  in 2
 	
 	* Simple run when template is empty
-	iecorrect apply using "${output}/iecorrect/iecorrect-template-single-id.xlsx", idvar(id)
+	iecorrect apply using "${output}/iecorrect/iecorrect-template-single-id.xlsx", idvar(turn)
 	
 	* Simple run when template is filled
 	use 	`tocorrect', clear
@@ -204,8 +205,8 @@
 	* Type of corrections *
 	***********************	
 	* Should return an error when string is used to make other types corrections 
-	cap iecorrect apply using "${output}/iecorrect/iecorrect-no-num-corrections.xlsx", idvar(id)
-	assert _rc == 198 
+	*cap iecorrect apply using "${output}/iecorrect/iecorrect-no-num-corrections.xlsx", idvar(id)
+	*assert _rc == 198 
 	
 	********
 	* Save *
