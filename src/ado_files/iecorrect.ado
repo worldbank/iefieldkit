@@ -158,15 +158,6 @@ else if "`subcommand'" == "apply" {
 		
     }
 
-* Check if the string variables to be corrected don't have extra white spaces and special characters
-		foreach var of local `type'vars { 
-			qui destring `var', replace
-			qui cap confirm string var `var' 
-			if !_rc {
-				valstrings `var', location(Variable)
-			}	
-		}
-
 // Create a do file containing the corrections ---------------------------------
 
 	* Define tempfile
@@ -180,7 +171,7 @@ else if "`subcommand'" == "apply" {
 		foreach var in "`genvars'" {
 			cap  file close   `doname'
 			qui  file open    `doname' using "`dofile'", text write append
-				 file write  `doname' `"gen `var' = .  "' _n     										 // <---- Writing in do file here
+				 file write   `doname' `"gen `var' = .  "' _n     										 // <---- Writing in do file here
 				 file close   `doname'	
 		}
 	}
@@ -312,9 +303,8 @@ cap program drop _parsesheet
 	
 * Destring numeric information -------------------------------------------------
 
-	if 		"`type'" == "numeric"	qui destring valuecurrent value, replace
-	else if "`type'" == "other"		qui destring catvalue, replace
-				
+	qui destring *, replace
+					
 end
 	
 /*******************************************************************************	
@@ -353,7 +343,7 @@ cap program drop _checksheets
 		return local correct  	1
     }
 	else if `r(N)' == 0 {    
-		return local  correct  			0
+		return local correct  	0
     }
 
 end
@@ -386,9 +376,14 @@ cap program drop _checkcolnumeric
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
 		* Check that varname column is string
-		_fillvarname, type(numeric) `debug'
-		if "`r(errortype)'" == "1" local errortype 1
+		foreach var in value valuecurrent {
+			_fillvartype, type(numeric) vartype(numeric) var(`var') `debug'
+			if "`r(errortype)'" == "1" local errortype 1
+		}
 		
+		_fillvartype, type(numeric) vartype(string) var(varname) `debug'
+		if "`r(errortype)'" == "1" local errortype 1
+			
 		* Check that variables to be corrected exist
 		qui levelsof varname, local(numericvars)
 		foreach var of local numericvars {
@@ -439,9 +434,11 @@ cap program drop _checkcolstring
 		_fillidorvalue, type(string) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
-		* Check that varname column is string
-		_fillvarname, type(string) `debug'
-		if "`r(errortype)'" == "1" local errortype 1
+		* Check that information in columns has the right type
+		foreach var in varname value valuecurrent {
+			_fillvartype, type(string) vartype(string) var(`var') `debug'
+			if "`r(errortype)'" == "1" local errortype 1
+		}
 			
 		* Check that variables to be corrected exist
 		qui levelsof varname, local(stringvars)
@@ -453,11 +450,18 @@ cap program drop _checkcolstring
 			if "`r(errortype)'" == "1" local errortype 1
 		}
 		
+		* Check if the string variables to be corrected don't have extra white spaces and special characters
+		foreach var in value valuecurrent { 
+			if !_rc {
+				_valstrings `var', location(Variable)
+			}	
+		}
+		
 		* Check that value current was correctly filled
 		_fillcurrent, type(string) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
-		* Check that new value is numeric
+		* Check that new value is a string
 		_fillvalue, type(string) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
@@ -483,14 +487,13 @@ cap program drop _checkcolother
 		keep strvar strvaluecurrent catvar catvalue
 		
 		* Check that strvar and catvar contain strings
-		foreach var in strvar catvar {
-		  qui destring `var', replace
-		  cap confirm string var `var'
-		  if _rc {
-			noi di as error `"{phang}Column {bf:`var'} in sheet {bf:other} is not a string. This column needs to be filled with variable names for corrections of categorical variables to be made.{p_end}"'
-			local errorfill 1
-		  }
+		foreach var in strvar catvar strvaluecurrent {
+			_fillvartype, type(other) vartype(string) var(`var') `debug'
+			if "`r(errortype)'" == "1" local errortype 1
 		}
+		
+		_fillvartype, type(other) vartype(numeric) var(catvalue) `debug'
+		if "`r(errortype)'" == "1" local errortype 1
 		
 		* Check that variables listed in column strvar are string variables
 		qui levelsof strvar, local(stringvars)
@@ -523,10 +526,9 @@ cap program drop _checkcolother
 			}
 		}
 		
-
 		** Check if the string columns have extra whitespaces and special characters
-		foreach var in strvar strvaluecurrent catvar {
-		  valstrings `var', location(Column)         
+		foreach var in strvar strvaluecurrent {
+		  _valstrings `var', location(Column)         
 		}
     
     return local errorfill	`errorfill'
@@ -686,20 +688,22 @@ cap program drop _fillidorvalue
 * Check that varname column is filled with text
 ***********************************************
 
-cap program drop _fillvarname
-	program    	 _fillvarname, rclass
+cap program drop _fillvartype
+	program    	 _fillvartype, rclass
 	
-	syntax, type(string) [debug]
+	syntax, type(string) vartype(string) var(string) [debug]
 	
-		if !missing("`debug'")	noi di as result "Entering fillvarname subcommand"
+	if !missing("`debug'")	noi di as result "Entering fillvartype subcommand"
 
-		cap qui destring varname, replace
-		cap confirm string var varname
-		if _rc {
-			noi di as error `"{phang}Column varname in sheet {bf:`type'} is not a string. This column should contain the name of the `type' variables to be corrected.{p_end}"'
-			local errortype 1
+		qui mdesc `var'
+		if r(percent) < 100 {
+			cap confirm `type' var `var'
+			if _rc {
+				noi di as error `"{phang}Column {bf:`var'} in sheet {bf:`type'} is not of type `vartype'.{p_end}"'
+				local errortype 1
+			}
 		}
-	
+		
 	return local errortype `errortype'
 	
  end
@@ -803,8 +807,8 @@ end
 *************************************************************
 * Check if there are extra whitespaces and special characters
 *************************************************************
-cap program drop valstrings
-	program    	 valstrings, rclass
+cap program drop _valstrings
+	program    	 _valstrings, rclass
   
   syntax varname, location(string)
 
@@ -825,43 +829,52 @@ cap program drop valstrings
   
     cap assert `varlist' == `validation'
     if _rc {
-      strerror, var(`varlist') type(whitespace) location(`location')  
+		qui drop `validation'
+		_strerror, var(`varlist') type(whitespace) location(`location')  
     }
   
     ********************
-    * Special Characters
+    * Special characters
     ********************
     forvalues i = 0/255 {
-      if !inrange(`i', 48, 57) /// numbers
-        & !inrange(`i', 65, 90) /// uppers case letters
-        & !inrange(`i', 97, 122) ///  case letters
-        & !inlist(`i', 32, 33, 35, 37, 38, 40, 41, 42, 43, 44, 45, 46, 58, 59, 60, 61, 62, 63, 64, 91, 93, 95){ 
-        capture assert index(`validation', char(`i')) == 0 
-		if _rc local errorspecialcharac 1	
+		
+		* Lis accepted characters
+		if 	  !inrange(`i', 48, 57) /// numbers
+			& !inrange(`i', 65, 90) /// uppers case letters
+			& !inrange(`i', 97, 122) ///  case letters
+			& !inlist(`i', 32, 33, 35, 37, 38, 40, 41, 42, 43, 44, 45, 46, 58, 59, 60, 61, 62, 63, 64, 91, 93, 95) { 
+        
+		capture assert index(`validation', char(`i')) == 0 
+		if _rc {
+			qui drop `validation'
+			_strerror, var(`varlist') type(specialchar) location(`location')
+		}
       }
     }
-	
-	if "`errorspecialcharac'" == "1" {
-			strerror, var(`varlist') type(specialchar) location(`location')
-	}
+		
+	qui drop `validation'
 	
 end  
 
-cap program drop strerror
-	program      strerror
+**************************************
+* Error message for special characters
+**************************************
+
+cap program drop _strerror
+	program      _strerror
   
   syntax , var(string) type(string) location(string)
   
-  if "`type'" == "specialchar" {
-    local issue   special characters
-    local details   ""
-  }
-  else if "`type'" == "whitespace" {
-    local issue   extra whitespaces
-    local details   (leading, trailing or consecutive spaces, tabs or new lines)
-  }
+	  if "`type'" == "specialchar" {
+		local issue   special characters
+		local details   ""
+	  }
+	  else if "`type'" == "whitespace" {
+		local issue   extra whitespaces
+		local details   (leading, trailing or consecutive spaces, tabs or new lines)
+	  }
   
-  noi di as error `"{phang}`location' {bf:`var'} contains `issue' `details'. {bf:iecorrect} will run, but this may cause mismatches between the template spreadsheet and the content of the data, in which case the corrections will not be applied. It is recommended to remove `issue' from the data and the template spreadsheet before running {bf:iecorrect}.{p_end}"'
+	  noi di as error `"{phang}`location' {bf:`var'} contains `issue' `details'. {bf:iecorrect} will run, but this may cause mismatches between the template spreadsheet and the content of the data, in which case the corrections will not be applied. It is recommended to remove `issue' from the data and the template spreadsheet before running {bf:iecorrect}.{p_end}"'
     
 end
   
@@ -897,7 +910,7 @@ end
 cap program drop _vartype
 	program    	 _vartype, rclass
 	
-	syntax, type(string) vartype(string) column(string) var(string) stringvars(string) [debug]
+	syntax, type(string) vartype(string) column(string) var(string) [stringvars(string) debug]
 	
 	if !missing("`debug'")	noi di as result "Entering vartype subcommand"
 
@@ -909,7 +922,7 @@ cap program drop _vartype
 		}
 		
 		if "`errortype'" == "1" {
-			noi di as error `"{phang} Variable {bf:`var'} listed in column {bf:`column'} in sheet {bf:`type'} is not of type `vartype'. This column should contain `vartype' variables to be corrected.{p_end}"'
+			noi di as error `"{phang} Variable {bf:`var'} listed in column {bf:`column'} in sheet {bf:`type'} is not of type `vartype'.{p_end}"'
 		}
 		
 	return local errortype `errortype'
@@ -927,8 +940,9 @@ cap program drop _vargen
 
 	if !missing("`debug'")	noi di as result "Entering vargen subcommand"
 
+		if "`type'" == "other" local message " Check the variable name or use option {bf:generate} to create the variable."
 		if !regex(" `originalvars' ", " `var' ") & missing("`generate'") {
-			noi di as error `"{phang} The variable {bf:`var'} listed in column {bf:`column'} of sheet {bf:`type'} does not exist in the dataset. Check the variable name or use option {bf:`generate'} to create the variable.{p_end}"'
+			noi di as error `"{phang} The variable {bf:`var'} listed in column {bf:`column'} of sheet {bf:`type'} does not exist in the dataset.`message'{p_end}"'
 			local errorgen	1
 		}
 		else if !regex(" `originalvars' ", " `var' ") & !missing("`generate'") {
