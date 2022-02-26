@@ -99,13 +99,13 @@
 	assert _rc == 198
 	
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-numvarname.xlsx", idvar(id make) sheet(numeric) debug
-	assert _rc == 111
+	assert _rc == 109
 
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-wrongvalue.xlsx", idvar(id make) sheet(numeric) debug
 	assert _rc == 198
 	
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-missvarname.xlsx", idvar(id make) sheet(numeric) debug
-	assert _rc == 109
+	assert _rc == 198
 	
 	
 	********************************************

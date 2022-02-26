@@ -375,6 +375,9 @@ cap program drop _checkcolnumeric
 		_fillidorvalue, type(numeric) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
+		_fillrequired, type(numeric) varlist(varname value) `debug'
+		if "`r(errorfill)'" == "1" local errorfill 1
+		
 		* Check that varname column is string
 		foreach var in value valuecurrent {
 			_fillvartype, type(numeric) vartype(numeric) var(`var') `debug'
@@ -396,10 +399,6 @@ cap program drop _checkcolnumeric
 		
 		* Check that value current was correctly filled
 		_fillcurrent, type(numeric) `debug'
-		if "`r(errorfill)'" == "1" local errorfill 1
-		
-		* Check that new value is numeric
-		_fillvalue, type(numeric) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
 	return local errorfill	`errorfill'
@@ -434,6 +433,9 @@ cap program drop _checkcolstring
 		_fillidorvalue, type(string) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
+		_fillrequired, type(string) varlist(varname value) `debug'
+		if "`r(errorfill)'" == "1" local errorfill 1
+		
 		* Check that information in columns has the right type
 		foreach var in varname value valuecurrent {
 			_fillvartype, type(string) vartype(string) var(`var') `debug'
@@ -459,10 +461,6 @@ cap program drop _checkcolstring
 		
 		* Check that value current was correctly filled
 		_fillcurrent, type(string) `debug'
-		if "`r(errorfill)'" == "1" local errorfill 1
-		
-		* Check that new value is a string
-		_fillvalue, type(string) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
 		return local errorfill	`errorfill'
@@ -515,16 +513,10 @@ cap program drop _checkcolother
 			_vartype, type(categorical) vartype(numeric) column(catvar) var(`var') stringvars(`stringvars')  `debug'
 			if "`r(errortype)'" == "1" local errortype 1
 		}
-		
 
 		* All columns in this sheet must be specified
-		foreach var in strvar strvaluecurrent catvar catvalue {
-			qui count if missing(`var')    
-			if r(N) > 0 {
-			  noi di as error `"{phang}There are `r(N)' lines in sheet {bf:other} sheet where column  {bf:`var'} is not filled. This column must be filled for categorical corrections to be made correctly.{p_end}"'
-			  local errorfill 1
-			}
-		}
+		_fillrequired, type(other) varlist(strvar strvaluecurrent catvar catvalue) `debug'
+		if "`r(errorfill)'" == "1" local errorfill 1
 		
 		** Check if the string columns have extra whitespaces and special characters
 		foreach var in strvar strvaluecurrent {
@@ -563,11 +555,8 @@ cap program drop 	_checkcoldrop
 	if "`r(errorfill)'" == "1" local errorfill 1
 
 	* The number of observations to be dropped must be checked
-	cap assert !missing(n_obs)
-    if _rc {
-      noi di as error `"{phang}At least one entry for column n_obs in sheet {bf:drop} is blank. Dropping observations without confirming the number of rows to be deleted is a risky practice that is not allowed by iecorrect. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
-      local errorfill 1
-    }
+	_fillrequired, type(drop) varlist(n_obs) `debug'
+	if "`r(errorfill)'" == "1" local errorfill 1
 	
 	qui destring n_obs, replace
     cap confirm string var n_obs
@@ -697,7 +686,7 @@ cap program drop _fillvartype
 
 		qui mdesc `var'
 		if r(percent) < 100 {
-			cap confirm `type' var `var'
+			cap confirm `vartype' var `var'
 			if _rc {
 				noi di as error `"{phang}Column {bf:`var'} in sheet {bf:`type'} is not of type `vartype'.{p_end}"'
 				local errortype 1
@@ -758,32 +747,38 @@ cap program drop _fillcurrent
 	
  end
  
+****************************************
+* Check that required columns are filled
+****************************************
+
+cap program drop _fillrequired
+	program    	 _fillrequired, rclass
+	
+	syntax, type(string) varlist(string) [debug]
+	
+	if !missing("`debug'")	noi di as result "Entering fillrequired subcommand"
+
+		* Customize error message
+			 if "`type'" == "other" local message " This column must be filled for categorical corrections to be made correctly."
+		else if "`type'" == "drop"  local message " Dropping observations without confirming the number of rows to be deleted is a risky practice that is not allowed by iecorrect."
+		else						local message "This column should contain the names of the `type' variables to be corrected."
+		
+		* Check that required variables are filled and print error message otherwise
+		foreach var of local varlist {
+			qui count if missing(`var')    
+			if r(N) > 0 {
+			  noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} sheet where column  {bf:`var'} is not filled.`message' If there are no corrections specified in a row, remove the row from the corrections form.{p_end}"'
+			  local errorfill 1
+			}
+		}
+	
+	return local errorfill `errorfill'
+	
+ end
+ 
 ********************************************
 * Check that new value was entered correctly
 ********************************************
-
-cap program drop _fillvalue
-	program    	 _fillvalue, rclass
-	
-	syntax, type(string) [debug]
-	
-	if !missing("`debug'")	noi di as result "Entering fillvalue subcommand"
-	
-	cap assert !missing(value)
-	if _rc {
-		noi di as error `"{phang}At least one entry for column value in sheet {bf:`type'} is blank. If there are no corrections specified in a row, remove it from the corrections form.{p_end}"'
-		local errorfill 1
-	}
-
-	cap confirm `type' var value
-	if _rc {
-		noi di as error `"{phang}Column value in sheet {bf:`type'} is not of type `type'. This column should contain the correct values of the `type' variables to be corrected.{p_end}"'
-		local errorfill 1
-	}
-
-	return local errorfill `errorfill'
-
-end
  
 **************************
 * Check if template exists
