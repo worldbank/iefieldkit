@@ -5,7 +5,6 @@
 	This file is meant to be used to test the commands before a new release.
 	It should not be merged to the Master branch, just kept on develop so it
 	can be used before making a new PR.
-
 *******************************************************************************/
 
 
@@ -42,7 +41,7 @@ qui {
 		noi di as error "Add the folder path to your GitHub folder to the Master run file."
 		exit
 	}
-	if !inlist(1, `ieduplicates', `iecompdup', `ietestform', `iecodebook', `iefieldkit') {
+	if !inlist(1, `ieduplicates', `iecompdup', `ietestform', `iecodebook', `iefieldkit', `iecorrect') {
 		noi di as error "No commands to test"
 		exit
 	}
@@ -54,15 +53,19 @@ qui {
 *******************************************************************************/
 	
 	* Test ieduplicates
-	if `ieduplicates' do "${iefieldkit}/run/ieduplicates.do"
+	if `ieduplicates' 	do "${run}/ieduplicates.do"
 	
 	* Test iecompdup
-	if `iecompdup' do "${iefieldkit}/run/ieduplicates.do"	
+	if `iecompdup' 		do "${run}/ieduplicates.do"	
 	
 	* Test ietestform
-	if `ietestform' do "${iefieldkit}/run/ietestform.do"	
+	if `ietestform' 	do "${run}/ietestform.do"	
 	
-	* Test ietestform
-	if `iecodebook' do "${iefieldkit}/run/iecodebook.do"	
+	* Test iecodebook
+	if `iecodebook' 	do "${run}/iecodebook.do"	
+
+	* Test iecorrect
+	if `iecorrect' 		do "${run}/iecorrect.do"	
+
 	
 *************************** End of Master Do-File ******************************
