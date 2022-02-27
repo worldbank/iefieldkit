@@ -1,5 +1,5 @@
 {smcl}
-{* 7 Jun 2019}{...}
+{* 14 Feb 2022}{...}
 {hline}
 help for {hi:iefieldkit}
 {hline}
@@ -21,11 +21,16 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/iefieldkit":
 {marker desc}
 {title:Description}
 
-{pstd}{cmdab:iegraph} This command returns the version of iefieldkit installed. It
+{pstd}This command returns the version of iefieldkit installed. It
 	can be used in the beginning of a Master Do-file that is intended to be used
 	by multiple users to programmatically test if iefieldkit is not installed for
 	the user and therefore need to be installed, or if the version the user has
-	installed is too old and needs to be upgraded.
+	installed is too old and needs to be upgraded.{p_end}
+
+{pstd}This package includes the following commands:{p_end}
+{pmore}- {help iecodebook}{p_end}
+{pmore}- {help ieduplicates} and {help iecompdup}{p_end}
+{pmore}- {help ietestform}{p_end}
 
 {marker optslong}
 {title:Options}
@@ -41,7 +46,7 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/iefieldkit":
 	replaces the iefieldkit file with the latest version. In your code you can skip
 	the second part if you are not sure which version is required. But you should
 	always have the first part testing that {inp:r(version)} has a value before using
-	it in less than or greater than expressions.
+	it in less than or greater than expressions.{p_end}
 
 {inp}    cap iefieldkit
 {inp}    if "`r(version)'" == "" {
@@ -53,15 +58,9 @@ command please see the {browse "https://dimewiki.worldbank.org/wiki/iefieldkit":
 {inp}      ssc install iefieldkit , replace
 {inp}    }{text}
 
-{title:Acknowledgements}
-
-{phang}We would like to acknowledge the help in testing and proofreading we received
- in relation to this command and help file from (in alphabetic order):{p_end}
-{pmore}Luiza Cardoso De Andrade{break}Seungmin Lee{break}
-
 {title:Authors}
 
-{phang}Kristoffer Bjarkefur, The World Bank, DECIE
+{phang}DIME Analytics, The World Bank, DECIE
 
 {phang}Please send bug-reports, suggestions and requests for clarifications
 		 writing "iefieldkit iefieldkit" in the subject line to the email address

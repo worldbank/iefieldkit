@@ -1,15 +1,8 @@
 {smcl}
-{* 7 Jun 2019}{...}
+{* 14 Feb 2022}{...}
 {hline}
 help for {hi:iecodebook}
 {hline}
-
-    _                     __     __                __
-   (_)__  _________  ____/ /__  / /_  ____  ____  / /__
-  / / _ \/ ___/ __ \/ __  / _ \/ __ \/ __ \/ __ \/ //_/
- / /  __/ /__/ /_/ / /_/ /  __/ /_/ / /_/ / /_/ / ,<
-/_/\___/\___/\____/\__,_/\___/_.___/\____/\____/_/|_|
-
 
 {title:Title}
 
@@ -48,8 +41,9 @@ renames, recodes, variable labels, and value labels, and applies them to the cur
 {p 2 4}{cmdab:iecodebook append}{break} reads an Excel codebook that specifies how variables should be harmonized across
 two or more datasets - rename, recode, variable labels, and value labels - applies the harmonization, and appends the datasets.{p_end}
 {break}
-{p 2 4}{cmdab:iecodebook export}{break} creates an Excel codebook that describes the current dataset,
-and optionally produces an export version of the dataset with only variables used in specified dofiles.{p_end}
+{p 2 4}{cmdab:iecodebook export}{break} creates an Excel or plaintext codebook that describes the current dataset,
+optionally creates or verifies a datasignature for record-keeping, optionally re-saves the dataset in the specified location,
+and optionally reduces the dataset to only the variables used in a set of specified dofiles.{p_end}
 
 {title:Syntax}
 
@@ -59,32 +53,37 @@ and optionally produces an export version of the dataset with only variables use
 
 {dlgtab 0:Apply: Setting up and using a codebook to alter current data}
 
-{p 2}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"}{p_end}
+{p 2}{cmdab:iecodebook template} {help using} {it:"/path/to/codebook.xlsx"} , [{bf:replace}]{p_end}
 
-{p 2 4 }{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"} /// {break}
+{p 2 4 }{cmdab:iecodebook apply} {help using} {it:"/path/to/codebook.xlsx"} {break}
 , [{bf:drop}] [{opt miss:ingvalues(# "label" [# "label" ...])}]{p_end}
 
 {p 2 4 } {it:Note: This function operates on the dataset that is open in the current Stata session.}{p_end}
 
 {dlgtab 0:Append: Setting up and using a codebook to harmonize and append multiple datasets}
 
-{p 2 4}{cmdab:iecodebook template} /// {break}
-{it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
-{help using} {it:"/path/to/codebook.xlsx"} /// {break}
-, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}{p_end}
+{p 2 4}{cmdab:iecodebook template} {break}
+{it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
+{help using} {it:"/path/to/codebook.xlsx"} {break}{p_end}
+{p 2 3}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}
+{break} [{bf:match}] [{bf:replace}]{p_end}
 
-{p 2 4}{cmdab:iecodebook append} /// {break}
-{it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} /// {break}
-{help using} {it:"/path/to/codebook.xlsx"} /// {break}
-, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} /// {break}
-[{opt miss:ingvalues(# "label" [# "label" ...])}] [{bf:nodrop}]{p_end}
+{p 2 4}{cmdab:iecodebook append} {break}
+{it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
+{help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
+{p 2 3}, {bf:clear} {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)} {break}
+[{opth gen:erate(varname)} {opt miss:ingvalues(# "label" [# "label" ...])}]{break}
+[{bf:report}] [{bf:replace}] [{bf:keepall}] {p_end}
 
 
-{dlgtab 0:Export: Creating a full codebook of the current data}
+{dlgtab 0:Export: Creating codebooks and signatures for datasets}
 
-{p 2 4}{cmdab:iecodebook export} [{help if}] [{help in}] /// {break}
-{help using} {it:"/path/to/codebook.xlsx"} ,  /// {break}
-[{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
+{p 2 4}{cmdab:iecodebook export} ["/path/to/data"] {break}
+{help using} {it:"/path/to/codebook.xlsx"} {break} {p_end}
+{p 2 4}, [{bf:replace}] [{opt save}] [{bf:verify}] {break}
+    [{opt sign:ature}] [{opt reset}] {break}
+	[{opt plain:text}({it:compact} | {it:detailed})] [{opt noexcel}] {break}
+    [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
 
 {hline}
 
@@ -95,9 +94,14 @@ and optionally produces an export version of the dataset with only variables use
 {synopthdr:Apply Options}
 {synoptline}
 {synopt:{opt drop}}Requests that {cmdab:iecodebook} drop all variables which have no entry in the "name" column in the codebook.
-The default behavior is to retain all variables. Alternatively, to drop variables one-by-one, write "drop" in the "name" column of the codebook.{p_end}
+The default behavior is to retain all variables. {bf:Alternatively, to drop variables (or remove value labels from variables) one-by-one,} write .
+(a single period) in the "name" (or "choices") column of the codebook.
+Unused value labels will always be removed from the datset by {cmdab:iecodebook},
+but existing value labels will remain attached to variables by default.
+Removing value labels explicitly with . is therefore recommended
+when you wish to remove value label information from the dataset.{p_end}
 {break}
-{synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
+{synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition in the "choices" column.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every coded answer.{p_end}
 {synoptline}
 
@@ -106,20 +110,33 @@ For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "
 {marker Options}{...}
 {synopthdr:Append Options}
 {synoptline}
+{synopt:{opt clear}}{bf:This option is required}, as {cmdab:iecodebook append} will clear the data in memory.{p_end}
+{break}
 {synopt:{opt surveys()}}{bf:This option is always required in append.} When creating a template {it:or} reading a codebook from {it:"/path/to/codebook.xlsx"},
 {cmdab:iecodebook} will use this list of names to identify each survey in the codebook.
 {it:These must be exactly one word} for each survey, and they must come in the same order as the filepaths.
 Names must have no spaces or special characters.
-When importing, this will also be used to create a variable {it:survey} identifying the source of each observation.{p_end}
+When importing, this will also be used to create a variable identifying the source of each observation.{p_end}
 {break}
-{synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition.
+{synopt:{opt match}}This option can be used to "auto-align" the {bf:template} command when preparing for {bf:iecodebook append}.
+If specified, it will cause any variables in later datasets with the same original name as a variable in the first dataset
+to appear in the same row of the Excel sheet.{p_end}
+{break}
+{synopt:{opt gen:erate()}}This option names the variable identifying the source of each observation. If left blank, the default is "survey".{p_end}
+{break}
+{synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition in the "choices" column.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every value-labeled answer.{p_end}
 {break}
-{synopt:{opt nodrop}}{bf:Specifying this option will keep all variables from all datasets. Use carefully!}
+{synopt:{opt report}}This option writes a codebook in the standard {bf:export} format describing the appended dataset.
+It will be placed in the same folder as the append codeboook, with the same name, with "_report" added to the filename.{p_end}
+{break}
+{synopt:{opt replace}}This option is required to overwrite a previous report.{p_end}
+{break}
+{synopt:{opt keep:all}}By default, {cmdab:iecodebook append} will only retain those variables with a new {it:name} explicitly written in the codebook to signify manual review for harmonization.
+{bf:Specifying this option will keep all variables from all datasets. Use carefully!}
 Forcibly appending data, especially of different types, can result in loss of information.
 For example, appending a same-named string variable to a numeric variable may cause data deletion.
-(This is common when one dataset has all missing values for a given variable.)
-By default, {cmdab:iecodebook append} will {bf:drop} all variables without a new {it:name} explicitly written in the codebook to signify manual review for harmonization.{p_end}
+(This is common when one dataset has all missing values for a given variable.){p_end}
 {synoptline}
 
 {break}
@@ -127,8 +144,36 @@ By default, {cmdab:iecodebook append} will {bf:drop} all variables without a new
 {marker Options}{...}
 {synopthdr:Export Options}
 {synoptline}
-{synopt:{opt trim()}} Takes one or more dofiles and trims the current dataset to only include variables used in those dofiles,
-and saves an identically named .dta file at the location specified in {it:"/path/to/codebook.xlsx"}.{p_end}
+{synopt:{opt replace}}This option allows {cmdab:iecodebook export} to overwrite an existing codebook or dataset.{p_end}
+{break}
+{synopt:{opt save}}This option requests that a the data be saved at the same location as the codebook,
+with the same name as the codebook.{p_end}
+{break}
+{synopt:{opt saveas()}}This option requests that a the data be saved at the specified location,
+overwriting the codebook name.{p_end}
+{break}
+{synopt:{opt verify}}This option orders {cmdab:iecodebook export} to confirm that the current data precisely matches an existing codebook.
+It will break with an error and describe all changes if there are any differences between the two.
+A new codebook will not be written in this case.{p_end}
+{break}
+{synopt:{opt plain:text}({it:compact} | {it:detailed})}This option requests that the codebook be created as a plaintext file.
+This file contains the default output of {help codebook} if argument {it:detailed}} is used, 
+and the compact output of {help codebook} if argument {it:compact} is used.
+Only one of the arguments can be used}.{p_end}
+{synopt:{opt noexcel}}This option requests that the codebook be created as a plaintext file.
+It can only be used alongside option {opt plain:text()} and cannot be combined with {bf:verify}.{p_end}
+{break}
+{synopt:{opt sign:ature}}This option requests that a {help datasignature} be verified
+in the same destination folder as the codebook and/or data are saved,
+and will return an error if a datasignature file is not found or is different,
+guaranteeing data has not changed since the last {bf:reset} of the signature.{p_end}
+{break}
+{synopt:{opt reset}}Specified with {opt sign:ature},
+this option allows {cmdab:iecodebook export} to place a new datasignature
+or overwrite an existing datasignature.{p_end}
+{break}
+{synopt:{opt trim()}}This option takes one or more dofiles as inputs, and trims the current dataset to only include variables used in those dofiles,
+before executing any of the other {bf: export} tasks requested.{p_end}
 {synoptline}
 
 {marker example}
@@ -147,7 +192,7 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c TLC}{hline 91}{c TRC}
 {col 3}{c |}{col 4} name{col 12}label{col 22}choices{col 31}name:current{col 45}label:current{col 60}choices:current{col 80}recode:current{col 95}{c |}
 {col 3}{c LT}{hline 91}{c RT}
-{col 3}{c |}{col 4} survey{col 12}{it:(Ignore this placeholder, but do not delete it.)}{col 45}{col 60} {col 80} {col 95}{c |}
+{col 3}{c |}{col 4} _template{col 12}{it:(Ignore this placeholder, but do not delete it.)}{col 45}{col 60} {col 80} {col 95}{c |}
 {col 3}{c |}{col 4} {col 95}{c |}
 {col 3}{c |}{col 4} car{col 12}Name{col 22}{col 31}make{col 45}Make and Model{col 60} {col 80} {col 95}{c |}
 {col 3}{c |}{col 4}  |{col 12}  |{col 22}{it:value}{col 31}{col 45}{col 60} {col 80}{it:recode}{col 95}{c |}
@@ -201,7 +246,7 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {col 3}{c TLC}{hline 91}{c TRC}
 {col 3}{c |}{col 4} name{col 12}label{col 22}choices{col 31}name:First{col 45}recode:First{col 60}name:Second{col 80}recode:Second{col 95}{c |}
 {col 3}{c LT}{hline 91}{c RT}
-{col 3}{c |}{col 4} survey{col 12}{it:(Ignore this placeholder, but do not delete it.)}{col 45}{col 60} {col 80} {col 95}{c |}
+{col 3}{c |}{col 4} survey{col 12}{it:Data Source (do not edit this row)}{col 45}{col 60} {col 80} {col 95}{c |}
 {col 3}{c |}{col 4} {col 95}{c |}
 {col 3}{c |}{col 4} cost{col 12}Cost{col 22}{col 31}price{col 45}{col 60}cost{col 80}{col 95}{c |}<- {it:align old}
 {col 3}{c |}{col 4}  |{col 12}  |{col 22}{it:value}{col 31}{col 45}{col 60} {col 80}{col 95}{c |}   {it:names}
@@ -219,8 +264,8 @@ and saves an identically named .dta file at the location specified in {it:"/path
 {p 4 6}{inp:iecodebook append}
 {break}{inp:"data1.dta" "data2.dta"}
 {break}{inp: using "codebook.xlsx"}
-{break}{inp: , surveys(First Second)}
-{break}{stata iecodebook append "data1.dta" "data2.dta" using "codebook.xlsx" , surveys(First Second):(Run)}{p_end}
+{break}{inp: , clear surveys(First Second)}
+{break}{stata iecodebook append "data1.dta" "data2.dta" using "codebook.xlsx" , clear surveys(First Second):(Run)}{p_end}
 
 {dlgtab 0:Export: Creating a simple codebook}
 {break}
