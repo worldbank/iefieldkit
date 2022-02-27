@@ -585,27 +585,36 @@ cap program drop _fillid
 	
 	if !missing("`debug'")	noi di as result "Entering fillid subcommand"
 	
-	local n_vars = wordcount("`idvar'")
-	
-	* Three options: all filled, none filled, some filled
-	tempvar  blank_ids
-	qui gen `blank_ids' = 0
-	
-	foreach var of varlist `idvar' {
-	    cap confirm numeric var `var'
-	    if !_rc		qui replace `blank_ids' = `blank_ids' + 1 if `var' == .
-		else		qui replace `blank_ids' = `blank_ids' + 1 if `var' == ""
-	}
+		* Three options: all filled, none filled, some filled
+		qui gen __blank_ids   = 0
+		qui gen __missing_ids = 0
+		
+		foreach var of varlist `idvar' {
+			cap confirm numeric var `var'
+			if !_rc	{
+				qui replace __blank_ids   = __blank_ids   + 1 if `var' == .v
+				qui replace __missing_ids = __missing_ids + 1 if `var' == .
+			}	
+			else {
+				qui replace __blank_ids   = __blank_ids   + 1 if `var' == ".v"
+				qui replace __missing_ids = __missing_ids + 1 if `var' == ""
+				
+			}		
+		}
 
-	* Mark all observations where the IDs where not filled (valuecurrent must be filled in these cases)
-	qui gen   blank_ids = (`blank_ids' == `n_vars')
-	
-	qui count if (`blank_ids' > 0) & (`blank_ids' != `n_vars')
-	if r(N) > 0 {
-		noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} where the  ID variable columns were not filled correctly: the value for at least one of the ID variables was left blank. If you wish to apply corrections to observations regardless of the value they take for one of the ID variables, fill the column that corresponds to this variable with the wildcard sign (*).{p_end}"'
-      local errorfill 1
-	}
-  
+		* Error if columns was left blanks instead of using wildcard 
+		qui count if (__missing_ids > 0)
+		if r(N) > 0 {
+			noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} where the  ID variable columns were not filled correctly: the value for at least one of the ID variables was left blank. If you wish to apply corrections to observations regardless of the value they take for one of the ID variables, fill the column that corresponds to this variable with the wildcard sign ("*").{p_end}"'
+		  local errorfill 1
+		}
+		
+		* Mark all observations where the IDs where not filled (valuecurrent must be filled in these cases)		
+		local n_vars = wordcount("`idvar'")
+		qui replace __blank_ids = (__blank_ids == `n_vars')
+		
+		qui drop 	__missing_ids
+		
 	* Return an error if something was filled incorrectly
 	return local errorfill `errorfill'
 	
@@ -660,13 +669,13 @@ cap program drop _fillidorvalue
 	
 	if "`type'" == "drop" qui gen valuecurrent = .
 	
-	qui count if blank_ids & missing(valuecurrent)		
+	qui count if __blank_ids & missing(valuecurrent)		
 	if r(N) > 0 {
-		noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} where neither the ID variable values or the {bf:valuecurrent} column were filled. At least one of these columns should be filled for numeric corrections to be made correctly.{p_end}"'
+		noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} where neither the ID variable values or the {bf:valuecurrent} column were specified. At least one of these columns should be filled for corrections to be made correctly.{p_end}"'
 		local errorfill 1
 	}
 	
-	qui drop blank_ids
+	qui drop __blank_ids
 	if "`type'" == "drop" qui drop valuecurrent
 	
 	return local errorfill `errorfill'
@@ -1146,8 +1155,8 @@ cap program drop _idcond
 		forvalues i = 1/`n_ids' {
 			local idvarname : word `i' of `idvar' 
 			local idval 	= `idvarname'[`row']
-	
-		if !missing(`idval') {
+
+			if !missing("`idval'") & ("`idval'" != ".v") {
 					 if regex(" `stringvars' ", " `idvarname' ") local idcond	`"(`idvarname' == "`idval'") & "'
 				else if regex(" `floatvars' " , " `idvarname' ") local idcond	`"(`idvarname' == float(`idval')) & "'
 				else if regex(" `doublevars' ", " `idvarname' ") local idcond	`"(`idvarname' == double(`idval')) & "'
@@ -1155,7 +1164,7 @@ cap program drop _idcond
 			}
 		}
 
-	return local idcond `"`idcond'"'
+	  return local idcond `"`idcond'"'
 
 end
 

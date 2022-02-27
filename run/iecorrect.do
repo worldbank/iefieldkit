@@ -54,7 +54,8 @@
 	assert _rc == 198
 	
 	* No file extension
-	//iecorrect template using "${output}/iecorrect/iecorrect-template", id(id) 		// should this return an error?
+	cap erase "${output}/iecorrect/iecorrect-template.xlsx"
+	iecorrect template using "${output}/iecorrect/iecorrect-template", idvar(id) 		// should this return an error?
 	
 	* Folder does not exist
 	cap iecorrect template using "folder/iecorrect-template", idvar(id)
@@ -73,8 +74,7 @@
 	assert _rc == 601
 	
 	* No file extension
-	cap erase "${output}/iecorrect/iecorrect-template.xlsx"
-//	iecorrect apply using "${output}/iecorrect/iecorrect-template", idvar(id) debug
+	iecorrect apply using "${output}/iecorrect/iecorrect-template", idvar(id) debug
 
 /*******************************************************************************
 	Apply 
@@ -169,7 +169,6 @@
 	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) save("${output}/iecorrect/iecorrect-simple-num-id.do") replace noisily
 	assert _N == 73
 	
-	
 	* Correct individual data points - string sheet
 	use `tocorrect', clear
 	gen make_check = make
@@ -178,7 +177,18 @@
 	assert make == "Dodge Platinum" if id == 29
 	assert make == "News 98"        if make_check == "Olds 98"
 	
-
+	use `tocorrect', clear
+	iecorrect apply using "${output}/iecorrect/iecorrect-multiple-ids.xlsx", idvar(make id)
+	assert price == 2 in 10
+	assert origin == "foo" in 12
+	assert origin == "bar" in 5
+	
+	use `tocorrect', clear
+	iecorrect apply using "${output}/iecorrect/iecorrect-missingid.xlsx", idvar(make id)
+	assert price == 2 in 10
+	assert origin == "foo" in 12
+	assert origin == "bar" in 5
+	
 	* Correct individual data points - numeric sheet
 	use `tocorrect', clear
 	gen length_check = length
@@ -214,8 +224,8 @@
 	* Save, Wrong file extension
 	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) save("${output}/iecorrect/iecorrect-simple-num-id") replace
 
-	//iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) save("${output}/iecorrect/iecorrect-simple-num-id.c") replace
-	//assert _rc == 198
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) save("${output}/iecorrect/iecorrect-simple-num-id.c") replace
+	assert _rc == 198
 	
 	* Save, folder path does not exist
 	use `tocorrect', clear
