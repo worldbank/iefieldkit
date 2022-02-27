@@ -27,6 +27,7 @@ qui {
 	global codebook		"${output}/iecodebook"
 	
 	* Select commands to test
+	local ieduplicates	1
 	local iecompdup		1
 	local ietestform	1
 	local iecodebook	1
@@ -45,9 +46,6 @@ qui {
 		exit
 	}
 	
-	** Test if output folder exists, if not create it
-	mata : st_numscalar("r(dirExist)", direxists("${testouput}"))
-	if `r(dirExist)' == 0  mkdir "${testouput}"
 }	
 
 /*******************************************************************************
