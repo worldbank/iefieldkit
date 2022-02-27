@@ -14,25 +14,23 @@ qui {
 *******************************************************************************/
 
 	* Set root paths
-	global GitHub		"C:\Users\wb501238\Documents\GitHub"
-	global AnalyticsDB	"C:\Users\wb501238\Dropbox\WB\Analytics\DIME Analytics"
-
+	if inlist(c(username), "WB501238", "wb501238") {
+		global GitHub		"C:\Users\wb501238\Documents\GitHub"
+		global AnalyticsDB	"C:\Users\wb501238\Dropbox\WB\Analytics\DIME Analytics"
+	}
+	
 	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
 	global run 			"${iefieldkit}/run"
 	global output		"${run}/output"
-	
-	** Test if output folder exists, if not create it
-	mata : st_numscalar("r(dirExist)", direxists("${testouput}"))
-	if `r(dirExist)' == 0  mkdir "${testouput}"
+	global form			"${AnalyticsDB}/Data Coordinator/iefieldkit/ietestform"
+	global codebook		"${output}/iecodebook"
 	
 	* Select commands to test
-	local ieduplicates	0
-	local iecompdup		0
-	local ietestform	0
-	local iecodebook	0
-	local iefieldkit	0
-	local iecorrect		1
+	local iecompdup		1
+	local ietestform	1
+	local iecodebook	1
+	local iefieldkit	1
 	
 /*******************************************************************************
 	Part II: Test inputs

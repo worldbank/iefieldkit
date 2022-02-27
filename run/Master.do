@@ -22,9 +22,10 @@ qui {
 	
 	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
-	global output		"${iefieldkit}/run/output"
+	global run 			"${iefieldkit}/run"
+	global output		"${run}/output"
 	global form			"${AnalyticsDB}/Data Coordinator/iefieldkit/ietestform"
-	global codebook		"${iefieldkit}/run/output/iecodebook"
+	global codebook		"${output}/iecodebook"
 	
 	* Select commands to test
 	local ieduplicates	1
