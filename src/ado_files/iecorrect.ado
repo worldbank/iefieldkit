@@ -634,8 +634,8 @@ cap program drop _fillidtype
 	foreach var of varlist `idvar' {
 		
 		* Check if there are non-missing values
-		qui mdesc `var'
-		if r(percent) < 100 {
+		count if missing(`var')
+		if r(N) != 0 {
 			
 			* Is the variable a string?
 			cap confirm string var `var'
@@ -693,8 +693,8 @@ cap program drop _fillvartype
 	
 	if !missing("`debug'")	noi di as result "Entering fillvartype subcommand"
 
-		qui mdesc `var'
-		if r(percent) < 100 {
+		count if missing(`var')
+		if r(N) != 0 {
 			cap confirm `vartype' var `var'
 			if _rc {
 				noi di as error `"{phang}Column {bf:`var'} in sheet {bf:`type'} is not of type `vartype'.{p_end}"'
