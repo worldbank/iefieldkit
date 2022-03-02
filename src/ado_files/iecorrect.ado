@@ -285,25 +285,27 @@ cap program drop _parsesheet
 	qui keep if `allmiss' > 0
 	drop        `allmiss'
 	
-* Check that all relevant variables are in the sheet ---------------------------
+	if _N > 0 {
+		* Check that all relevant variables are in the sheet ---------------------------
 
-	_fillmissingcol, idvar(`idvar') type(`type') `debug'
-	
-* Prepare ID values ------------------------------------------------------------
+			_fillmissingcol, idvar(`idvar') type(`type') `debug'
+			
+		* Prepare ID values ------------------------------------------------------------
 
-	if "`type'" != "other" {
-		* Replace * with .
-		foreach var of varlist `idvar' {
-			qui replace `var' = ".v" if `var' == "*"
-		}
-		
-		* Destring all id vars
-		qui destring `idvar', replace
+			if "`type'" != "other" {
+				* Replace * with .
+				foreach var of varlist `idvar' {
+					qui replace `var' = ".v" if `var' == "*"
+				}
+				
+				* Destring all id vars
+				qui destring `idvar', replace
+			}
+			
+		* Destring numeric information -------------------------------------------------
+
+			qui destring *, replace
 	}
-	
-* Destring numeric information -------------------------------------------------
-
-	qui destring *, replace
 					
 end
 	
