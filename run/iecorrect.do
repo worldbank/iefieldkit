@@ -92,7 +92,7 @@
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-numid.xlsx", idvar(id make) sheet(numeric) debug
 	assert _rc == 109
 	
-	cap iecorrect apply using "${output}/iecorrect/iecorrect-blankid.xlsx", idvar(id make) sheet(numeric) debug
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-blankid.xlsx", idvar(id make) sheet(numeric) debug 
 	assert _rc == 198
 	
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-blankid-blankcurrent.xlsx", idvar(id make) sheet(numeric) debug
@@ -114,34 +114,34 @@
 	
 	* Check that precision is not an issue
 	use 	`tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-precision.xlsx", idvar(id) sheet(numeric) debug
+	iecorrect apply using "${output}/iecorrect/iecorrect-precision.xlsx", idvar(id) sheet(numeric) debug save("${output}/iecorrect/iecorrect-precision") replace
 	assert gear_ratio == 150 in 1
 	assert gear_ratio == 60  in 2
 	
 	* Simple run when template is empty
-	iecorrect apply using "${output}/iecorrect/iecorrect-template-single-id.xlsx", idvar(turn)
+	iecorrect apply using "${output}/iecorrect/iecorrect-template-single-id.xlsx", idvar(turn) save("${output}/iecorrect/iecorrect-template-single-id") replace
 	
 	* Simple run when template is filled
 	use 	`tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id)
+	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) save("${output}/iecorrect/iecorrect-simple-num-id") replace
 		
 	* Sheets
 	use 	`tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) sheet(string)
+	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) sheet(string) save("${output}/iecorrect/iecorrect-simple-num-id-string") replace
 	
 	use 	`tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) sheet(numeric)
+	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) sheet(numeric) save("${output}/iecorrect/iecorrect-simple-num-id-numeric") replace
 	
 	use 	`tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) sheet(other)
+	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) sheet(other) save("${output}/iecorrect/iecorrect-simple-num-id-other") replace
 	
 	use 	`tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) sheet(drop)
+	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) sheet(drop) save("${output}/iecorrect/iecorrect-simple-num-id-drop") replace
 	
 	* Save
 	use 	`tocorrect', clear
 	cap erase "${output}/iecorrect/iecorrect-simple-num-id.do"
-	cap iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) save("${output}/iecorrect/iecorrect-simple-num-id.do") 
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) save("${output}/iecorrect/iecorrect-simple-num-id.do") replace
 	
 	* Save, replace
 	use 	`tocorrect', clear
@@ -153,11 +153,11 @@
 	
 	* Generate
 	use 	`tocorrect', clear
-	cap iecorrect apply using "${output}/iecorrect/iecorrect-gen.xlsx", idvar(id) other
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-gen.xlsx", idvar(id) other save("${output}/iecorrect/iecorrect-gen") replace
 	assert _rc == 111
 	
 	use 	`tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-gen.xlsx", idvar(id) other generate
+	iecorrect apply using "${output}/iecorrect/iecorrect-gen.xlsx", idvar(id) other generate save("${output}/iecorrect/iecorrect-gen") replace
 
 	* Count number of observations before dropping
 	use 	`tocorrect', clear
@@ -169,8 +169,14 @@
 	
 	* All wildcards on string ID
 	use 	`tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-wildcard-strings.xlsx", idvar(make)
+	iecorrect apply using "${output}/iecorrect/iecorrect-wildcard-strings.xlsx", idvar(make) save("${output}/iecorrect/iecorrect-wildcard-strings") replace
 	qui count if inlist(mpg, 22, 14)
+	assert r(N) == 0
+	
+	* Don't fill ID or valuecurrent
+	use 	`tocorrect', clear
+	iecorrect apply using "${output}/iecorrect/iecorrect-noidnovalue.xlsx", idvar(id) save("${output}/iecorrect/iecorrect-noidnovalue") replace
+	qui count if headroom != 5
 	assert r(N) == 0
 	
 	********************************************
@@ -192,13 +198,13 @@
 	assert make == "News 98"        if make_check == "Olds 98"
 	
 	use `tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-multiple-ids.xlsx", idvar(make id)
+	iecorrect apply using "${output}/iecorrect/iecorrect-multiple-ids.xlsx", idvar(make id) save("${output}/iecorrect/iecorrect-multiple-ids") replace
 	assert price == 2 in 10
 	assert origin == "foo" in 12
 	assert origin == "bar" in 5
 	
 	use `tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-missingid.xlsx", idvar(make id)
+	iecorrect apply using "${output}/iecorrect/iecorrect-missingid.xlsx", idvar(make id) save("${output}/iecorrect/iecorrect-missingid") replace
 	assert price == 2 in 10
 	assert origin == "foo" in 12
 	assert origin == "bar" in 5
