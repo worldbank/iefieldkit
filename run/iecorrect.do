@@ -99,7 +99,7 @@
 	assert _rc == 198
 	
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-numvarname.xlsx", idvar(id make) sheet(numeric) debug
-	assert _rc == 109
+	assert _rc == 111
 
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-wrongvalue.xlsx", idvar(id make) sheet(numeric) debug
 	assert _rc == 198
@@ -159,6 +159,10 @@
 	use 	`tocorrect', clear
 	iecorrect apply using "${output}/iecorrect/iecorrect-gen.xlsx", idvar(id) other generate
 
+	* Count number of observations before dropping
+	use 	`tocorrect', clear
+	iecorrect apply using "${output}/iecorrect/iecorrect-nobs.xlsx", idvar(make foreign) save("${output}/iecorrect/iecorrect-nobs") replace
+	
 	********************************************
 	* Corrections using a template 			   *
 	********************************************	

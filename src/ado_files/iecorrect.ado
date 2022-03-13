@@ -125,7 +125,7 @@ else if "`subcommand'" == "apply" {
 	
 	qui ds
 	local 	original_vars	`r(varlist)'
-    
+
 // Check inputs ----------------------------------------------------------------
 
     foreach type of local corrSheets {
@@ -133,7 +133,8 @@ else if "`subcommand'" == "apply" {
 		* Check that template was correctly filled
 		_checksheets using "`using'", type("`type'") ///
 			originalvars(`original_vars') stringvars(`string_vars') ///
-			idvar(`idvar') `debug' `generate'
+			floatvars(`float_vars') doublevars(`double_vars') ///
+			idvar(`idvar') `debug' `generate' data(`data')
 
 		if !missing("`r(genvars)'")	local genvars "`r(genvars)'"
 		
@@ -320,7 +321,10 @@ end
 cap program drop _checksheets
 	program    	 _checksheets, rclass
   
-	syntax using/, type(string) idvar(string) originalvars(string) stringvars(string) [debug generate]
+	syntax using/, ///
+		type(string) idvar(string) ///
+		originalvars(string) stringvars(string) data(string) ///
+		[debug generate floatvars(string) doublevars(string)]
   
     if !missing("`debug'") noi di as result "Entering checksheets subcommand"
     
@@ -334,7 +338,11 @@ cap program drop _checksheets
     qui count
 
     if `r(N)' > 0 {	    
-		_checkcol`type', idvar(`idvar') originalvars(`originalvars') stringvars(`stringvars') `debug' `generate'
+		_checkcol`type', ///
+			idvar(`idvar') ///
+			originalvars(`originalvars') stringvars(`stringvars') ///
+			floatvars(`floatvars') doublevars(`doublevars') ///
+			`debug' `generate' data(`data') 
 		
 			 if !missing("`r(errorfill)'")	error 198
 		else if !missing("`r(errortype)'")  error 109
@@ -357,7 +365,10 @@ end
 cap program drop _checkcolnumeric
 	program 	 _checkcolnumeric, rclass
 	
-	syntax, idvar(string) originalvars(string) [stringvars(string) debug generate]
+	syntax, ///
+		idvar(string) originalvars(string) ///
+		[stringvars(string) floatvars(string) doublevars(string) ///
+		data(string)  debug generate]
 	
 	if !missing("`debug'") noi di as result "Entering checkcolnumeric subcommand"
 	
@@ -416,7 +427,10 @@ end
 cap program drop _checkcolstring
 	program 	 _checkcolstring, rclass
 	
-	syntax, idvar(string) originalvars(string) [stringvars(string) debug generate]
+	syntax, ///
+		idvar(string) originalvars(string) ///
+		[stringvars(string) floatvars(string) doublevars(string) ///
+		data(string) debug generate]
 
 	if !missing("`debug'") noi di as result "Entering checkcolstring subcommand"
 	
@@ -478,7 +492,10 @@ end
 cap program drop _checkcolother
   program   	 _checkcolother, rclass
   
-  	syntax, idvar(string) originalvars(string) [stringvars(string) debug generate]
+ 	syntax, ///
+		idvar(string) originalvars(string) ///
+		[stringvars(string) floatvars(string) doublevars(string) ///
+		data(string) debug generate]
 
 	if !missing("`debug'") noi di as result "Entering checkcolother subcommand"
   
@@ -539,7 +556,10 @@ end
 cap program drop 	_checkcoldrop
 	program    		_checkcoldrop, rclass
   
-  syntax, idvar(varlist) [originalvars(string) stringvars(string) debug]
+	syntax, ///
+		idvar(string) originalvars(string) ///
+		[stringvars(string) floatvars(string) doublevars(string) ///
+		data(string) debug generate]
  
 	* Keep only relevant variables -- the user may have added notes that are not relevant for the command
 	keep `idvar' n_obs
@@ -566,6 +586,12 @@ cap program drop 	_checkcoldrop
       noi di as error `"{phang}Column {bf:n_obs} in sheet {bf:drop} is not numeric. This column should contain the number of observations to be dropped.{p_end}"'
       local errorfill 1
     }
+	
+	_filldropobs, ///
+		idvar(`idvar') ///
+		originalvars(`originalvars') floatvars(`floatvars') doublevars(`doublevars') stringvars(`stringvars') ///
+		`debug' data(`data')
+	if "`r(errorfill)'" == "1" local errorfill 1
 	
 	return local errorfill	`errorfill'
 	return local errorgen 	`errorgen'
@@ -634,10 +660,10 @@ cap program drop _fillidtype
 	
 	* Test type for each ID variable if variable contains any non-missing values
 	foreach var of varlist `idvar' {
-		
+
 		* Check if there are non-missing values
-		qui count if missing(`var')
-		if r(N) != 0 {
+		qui count if !missing(`var')
+		if r(N) > 0 {
 			
 			* Is the variable a string?
 			cap confirm string var `var'
@@ -883,31 +909,50 @@ cap program drop _strerror
 	  noi di as error `"{phang}`location' {bf:`var'} contains `issue' `details'. {bf:iecorrect} will run, but this may cause mismatches between the template spreadsheet and the content of the data, in which case the corrections will not be applied. It is recommended to remove `issue' from the data and the template spreadsheet before running {bf:iecorrect}.{p_end}"'
     
 end
+
+***********************
+* Dropping observations
+***********************
+cap program drop 	_filldropobs
+	program    		_filldropobs, rclass
+
+	syntax , ///
+		idvar(string) data(string) ///
+		[originalvars(string) floatvars(string) doublevars(string) stringvars(string) debug] 
+		
+	if !missing("`debug'") noi di as result "Entering filldropobs subcommand"
+
+	* Write one line of correction for each line in the data set
+	qui count 
+	forvalues row = 1/`r(N)' {
+		
+		local nobs = n_obs[`row']
+	
+		_idcond, ///
+			idvar(`idvar') row(`row') `debug' ///
+			stringvars(`stringvars') floatvars(`floatvars') doublevars(`doublevars') 
+		
+		local condition "`r(idcond)'"
+		local condition = substr(`"`condition'"', 1, length(`"`condition'"') - 3)
+
+		preserve
+	
+		  qui use `data', clear
+		  qui count if `condition'
+		  local count = r(N)
+		  cap assert `nobs' != `count'
+		  if !_rc {
+			noi di as error `"{phang} The number of observations satisfying the condition {bf:`condition'} in the data (`count') does not match the number of observations listed in the column {bf:n_obs} of the template sheet {bf:drop} (`nobs').{p_end}"'
+			local errorfill 1
+		  }
+	
+		restore
+	}
+	
+	return local errorfill `errorfill'
+
+end
   
-**************************************
-* Check number of observations to drop
-**************************************
-
-cap program drop _ndropobs
-	program    	 _ndropobs, rclass
-	
-	syntax, condition(string) nobs(numlist 1) [debug]
-	
-		if !missing("`debug'")	noi di as result "Entering ndropobs subcommand"
-
-      qui count if `condition'
-      
-      cap assert `nobs' != r(N)
-      if !_rc {
-        noi di as error `"{phang} The number of observations satisfying the condition {bf:`condition'} in the data (r(N)) does not match the number of observations listed in the column {bf:n_obs} of the template sheet {bf:drop} (`nobs').{p_end}"'
-        error 111    
-      }
-      else if _rc {
-        noi di as result `"{phang}`nobs' observations satisfying the condition {bf:`condition'} will be removed from the data.{p_end}"'
-      }
-    }
-	
-end  
   
 *********************
 * Check variable type
@@ -1091,7 +1136,7 @@ cap program drop 	_dodrop
   if !missing("`debug'") noi di as result "Entering dodrop subcommand"
   
 	  file write  `doname'      "** Drop observations " _n               								// <---- Writing in do file here
-
+	  
 	  * Write one line of correction for each line in the data set
 	  qui count 
 	  forvalues row = 1/`r(N)' {
@@ -1108,7 +1153,7 @@ cap program drop 	_dodrop
 		}
 		
 end
-  
+
 ***************************
 * Write 'other' corrections
 ***************************
@@ -1155,14 +1200,15 @@ cap program drop _idcond
 		local n_ids = wordcount("`idvar'")
 
 		forvalues i = 1/`n_ids' {
+			
 			local idvarname : word `i' of `idvar' 
 			local idval 	= `idvarname'[`row']
 
 			if !missing("`idval'") & ("`idval'" != ".v") {
-					 if regex(" `stringvars' ", " `idvarname' ") local idcond	`"(`idvarname' == "`idval'") & "'
-				else if regex(" `floatvars' " , " `idvarname' ") local idcond	`"(`idvarname' == float(`idval')) & "'
-				else if regex(" `doublevars' ", " `idvarname' ") local idcond	`"(`idvarname' == double(`idval')) & "'
-				else 									   		 local idcond	`"(`idvarname' == `idval') & "'
+					 if regex(" `stringvars' ", " `idvarname' ") local idcond	`"`idcond' (`idvarname' == "`idval'") & "'
+				else if regex(" `floatvars' " , " `idvarname' ") local idcond	`"`idcond' (`idvarname' == float(`idval')) & "'
+				else if regex(" `doublevars' ", " `idvarname' ") local idcond	`"`idcond' (`idvarname' == double(`idval')) & "'
+				else 									   		 local idcond	`"`idcond' (`idvarname' == `idval') & "'
 			}
 		}
 
@@ -1321,7 +1367,7 @@ cap program drop 	_dosave
 			error 602          
 		}
 
-		noi di as result `"{phang}Corrections do=file was saved to: {browse "`save'":`save'} {p_end}"'
+		noi di as result `"{phang}Corrections do-file was saved to: {browse "`save'":`save'} {p_end}"'
 
 end
  
