@@ -154,9 +154,11 @@ column must be filled.{p_end}
 {dlgtab:Dropping observations:}
 
 {pstd}Corrections made by {it:dropping} observations are implemented through the 
-{it:drop} tab of the Excel spreadsheet. This tab only has one {bf:required} column:{p_end}
+{it:drop} tab of the Excel spreadsheet. This tab has two {bf:required} columns:{p_end}
 
-{phang2}{it:idvalue}, which should be filled with the value of the ID variable in the observations to be dropped.{p_end}
+{phang2}{it:idvalue}, which should be filled with the value of the ID variables in the observations to be dropped.{p_end}
+{phang2}{it:n_obs}, which should be filled with the number of observations to be dropped by the conditions created in the corresponding line. {cmd:iecorrect} will throw an error if the number of observations that have the ID values specified in the line does not match
+the value entered in this column.{p_end}
 
 
 {marker CatCorrections}{...}
