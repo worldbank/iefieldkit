@@ -275,38 +275,37 @@ end
 cap program drop _parsesheet
 	program 	 _parsesheet
 	
-	syntax , idvar(string) type(string) [stringvars(string) debug]
+	syntax , idvar(string) type(string) [debug]
 
 	if !missing("`debug'") noi di as result "Entering parsesheet subcommand"
 	
  * Drop lines with no information ----------------------------------------------
-	qui {
-		
-		tempvar  allmiss
-		egen    `allmiss' = rownonmiss(*), strok
-		keep if `allmiss' > 0
-		drop    `allmiss'
-		
-		if _N > 0 {
-		
-			* Check that all relevant variables are in the sheet ---------------------------
+ 
+	tempvar      allmiss
+	egen        `allmiss' = rownonmiss(*), strok
+	qui keep if `allmiss' > 0
+	drop        `allmiss'
+	
+	if _N > 0 {
+		* Check that all relevant variables are in the sheet ---------------------------
+
 			_fillmissingcol, idvar(`idvar') type(`type') `debug'
-				
-			* Prepare ID values ------------------------------------------------------------
+			
+		* Prepare ID values ------------------------------------------------------------
+
 			if "`type'" != "other" {
 				* Replace * with .
 				foreach var of varlist `idvar' {
 					qui replace `var' = ".v" if `var' == "*"
-					
 				}
-			}
 				
-			* Destring numeric information -------------------------------------------------
-			foreach var of varlist _all {
-				if !regex(" `stringvars' ", " `var' ") destring `var', replace
+				* Destring all id vars
+				qui destring `idvar', replace
 			}
-		}
+			
+		* Destring numeric information -------------------------------------------------
 
+			qui destring *, replace
 	}
 					
 end
@@ -332,7 +331,7 @@ cap program drop _checksheets
 * Load sheet and parse data  ---------------------------------------------------
 
     _loadsheet using "`using'",  type(`type') `debug' 								// import correction sheet
-	_parsesheet , idvar(`idvar') type(`type') stringvars(`stringvars') `debug'		// remove blanks lines, destring numeric variables
+	_parsesheet , idvar(`idvar') type(`type') `debug'									// remove blanks lines, destring numeric variables
 	      
 * If there are corrections, check individual sheets ----------------------------
 
