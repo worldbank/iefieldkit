@@ -163,6 +163,11 @@
 	use 	`tocorrect', clear
 	iecorrect apply using "${output}/iecorrect/iecorrect-nobs.xlsx", idvar(make foreign) save("${output}/iecorrect/iecorrect-nobs") replace
 	
+	* Use multiple ID vars
+	use 	`tocorrect', clear
+	iecorrect apply using "${output}/iecorrect/iecorrect-test-idcond.xlsx", idvar(make foreign) save("${output}/iecorrect/iecorrect-test-idcond.do") replace
+
+	
 	********************************************
 	* Corrections using a template 			   *
 	********************************************	
