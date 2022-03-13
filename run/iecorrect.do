@@ -166,7 +166,12 @@
 	* Use multiple ID vars
 	use 	`tocorrect', clear
 	iecorrect apply using "${output}/iecorrect/iecorrect-test-idcond.xlsx", idvar(make foreign) save("${output}/iecorrect/iecorrect-test-idcond.do") replace
-
+	
+	* All wildcards on string ID
+	use 	`tocorrect', clear
+	iecorrect apply using "${output}/iecorrect/iecorrect-wildcard-strings.xlsx", idvar(make)
+	qui count if inlist(mpg, 22, 14)
+	assert r(N) == 0
 	
 	********************************************
 	* Corrections using a template 			   *
