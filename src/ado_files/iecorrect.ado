@@ -166,8 +166,8 @@ else if "`subcommand'" == "apply" {
     tempfile  dofile
 
 	* If the do file will be saved for later reference, add a header
-    if ("`save'" != "")  _doheader , doname("`doname'") dofile("`dofile'")
-  
+    if ("`save'" != "") qui _doheader , doname("`doname'") dofile("`dofile'")
+ 
 	if !missing("`genvars'") & !missing("`generate'") {
 		foreach var in "`genvars'" {
 			cap  file close   `doname'
@@ -176,7 +176,7 @@ else if "`subcommand'" == "apply" {
 				 file close   `doname'	
 		}
 	}
-	
+
 	* Write correction do-file
     foreach type of local corrections {
         
@@ -1022,7 +1022,10 @@ cap program drop _doheader
 
 	cap file close  `doname'
 		file open  	`doname' using   "`dofile'", text write replace
-		file write  `doname'    "* Write header here" _n _n          // <---- Writing in do file here
+		file write  `doname' "/*=============================================================================="  _n     // <---- Writing in do file here
+		file write  `doname' "This do-file was created using iecorrect" _n 												// <---- Writing in do file here
+		file write  `doname' "Last updated by `c(username)' on `c(current_date)' at `c(current_time)'" _n 				// <---- Writing in do file here
+		file write  `doname' "==============================================================================*/" _n _n   // <---- Writing in do file here
 		file close  `doname'  
       
   end
@@ -1205,10 +1208,10 @@ cap program drop _idcond
 			local idval 	= `idvarname'[`row']
 
 			if !missing("`idval'") & ("`idval'" != ".v") {
-					 if regex(" `stringvars' ", " `idvarname' ") local idcond	`"`idcond' (`idvarname' == "`idval'") & "'
-				else if regex(" `floatvars' " , " `idvarname' ") local idcond	`"`idcond' (`idvarname' == float(`idval')) & "'
-				else if regex(" `doublevars' ", " `idvarname' ") local idcond	`"`idcond' (`idvarname' == double(`idval')) & "'
-				else 									   		 local idcond	`"`idcond' (`idvarname' == `idval') & "'
+					 if regex(" `stringvars' ", " `idvarname' ") local idcond	`"`idcond'(`idvarname' == "`idval'") & "'
+				else if regex(" `floatvars' " , " `idvarname' ") local idcond	`"`idcond'(`idvarname' == float(`idval')) & "'
+				else if regex(" `doublevars' ", " `idvarname' ") local idcond	`"`idcond'(`idvarname' == double(`idval')) & "'
+				else 									   		 local idcond	`"`idcond'(`idvarname' == `idval') & "'
 			}
 		}
 
@@ -1247,17 +1250,8 @@ cap program drop _dorun
 	if !missing("`noisily'")  local display noi
 	else					  local display qui
 
-	file open `doname' using "`dofile'", read    
-	file read `doname' line
-
-	while r(eof)==0 {
-	  if !missing("`noisily'") display `"`line'"'
-	  `display' `line'
-	  file read `doname' line
-	}
-
-	file close `doname'
-
+	 `display' do "`dofile'"
+	
 	qui save `data', replace
   
 end
@@ -1405,8 +1399,7 @@ cap program drop 	_printaction
 				noi di as text `"{phang}No observations to be dropped.{p_end}"'
 			}
 		}
-		 	
- end         
+end         
  
     
 
