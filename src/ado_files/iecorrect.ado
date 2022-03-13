@@ -289,24 +289,34 @@ cap program drop _parsesheet
 		
 		if _N > 0 {
 		
-			* Check that all relevant variables are in the sheet ---------------------------
+			* Check that all relevant variables are in the sheet ---------------
 			_fillmissingcol, idvar(`idvar') type(`type') `debug'
 				
-			* Prepare ID values ------------------------------------------------------------
+			* Prepare ID values ------------------------------------------------
 			if "`type'" != "other" {
-				* Replace * with .
 				foreach var of varlist `idvar' {
-					qui replace `var' = ".v" if `var' == "*"
-					
+					replace  `var'  = ".v" if `var' == "*"
+					count if `var' != ".v"
+					if ((r(N) > 0) | !regex(" `stringvars' ", " `var' ")) destring `var', replace					
 				}
 			}
-				
-			* Destring numeric information -------------------------------------------------
-			foreach var of varlist _all {
-				if !regex(" `stringvars' ", " `var' ") destring `var', replace
+						
+			* Destring numeric columns -----------------------------------------
+			if 	inlist("`type'", "numeric", "string") {
+				replace  valuecurrent = ".v" if valuecurrent == "*"
+			}
+			
+			if "`type'" == "numeric" {
+				destring value valuecurrent, replace
+			}
+			else if "`type'" == "drop" {
+				destring n_obs, replace
+			}
+			else if "`type'" == "other" {
+				replace  strvaluecurrent = ".v" if strvaluecurrent == "*"
+				destring catvalue, replace
 			}
 		}
-
 	}
 					
 end
@@ -324,8 +334,9 @@ cap program drop _checksheets
   
 	syntax using/, ///
 		type(string) idvar(string) ///
-		originalvars(string) stringvars(string) data(string) ///
-		[debug generate floatvars(string) doublevars(string)]
+		originalvars(string) data(string) ///
+		[debug generate ///
+		stringvars(string) floatvars(string) doublevars(string)]
   
     if !missing("`debug'") noi di as result "Entering checksheets subcommand"
     
@@ -350,7 +361,7 @@ cap program drop _checksheets
 		else if !missing("`r(errorgen)'") 	error 111
 
 			 if !missing("`r(genvars)'")	return local genvars	"`r(genvars)'"
-	
+
 		return local correct  	1
     }
 	else if `r(N)' == 0 {    
@@ -385,11 +396,11 @@ cap program drop _checkcolnumeric
 		_fillidtype, type(numeric) idvar(`idvar') stringvars(`stringvars') `debug'				
 		if "`r(errortype)'" == "1" local errortype 1
 		
-		* If none id values were filled, valuecurrent must be filled
-		_fillidorvalue, type(numeric) `debug'
+		* Check that all columns were filled		
+		_fillrequired, type(numeric) varlist(varname) vartype(string) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
-		_fillrequired, type(numeric) varlist(varname value) `debug'
+		_fillrequired, type(numeric) varlist(value valuecurrent) vartype(numeric) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
 		* Check that varname column is string
@@ -450,7 +461,7 @@ cap program drop _checkcolstring
 		_fillidorvalue, type(string) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
-		_fillrequired, type(string) varlist(varname value) `debug'
+		_fillrequired, type(string) varlist(varname value valuecurrent) vartype(string) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
 		* Check that information in columns has the right type
@@ -535,10 +546,13 @@ cap program drop _checkcolother
 		}
 
 		* All columns in this sheet must be specified
-		_fillrequired, type(other) varlist(strvar strvaluecurrent catvar catvalue) `debug'
+		_fillrequired, type(other) varlist(strvar strvaluecurrent catvar) vartype(string) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
-		** Check if the string columns have extra whitespaces and special characters
+		_fillrequired, type(other) varlist(catvalue) vartype(numeric) `debug'
+		if "`r(errorfill)'" == "1" local errorfill 1
+		
+		* Check if the string columns have extra whitespaces and special characters
 		foreach var in strvar strvaluecurrent {
 		  _valstrings `var', location(Column)         
 		}
@@ -578,7 +592,7 @@ cap program drop 	_checkcoldrop
 	if "`r(errorfill)'" == "1" local errorfill 1
 
 	* The number of observations to be dropped must be checked
-	_fillrequired, type(drop) varlist(n_obs) `debug'
+	_fillrequired, type(drop) varlist(n_obs) vartype(numeric) `debug'
 	if "`r(errorfill)'" == "1" local errorfill 1
 	
 	qui destring n_obs, replace
@@ -686,31 +700,6 @@ cap program drop _fillidtype
 	
 end
  
-****************************************************
-* Check that valuecurrent is filled when IDs are not
-****************************************************
-cap program drop _fillidorvalue
-	program    	 _fillidorvalue, rclass
-	
-	syntax, type(string) [debug]
-	
-	if !missing("`debug'")	noi di as result "Entering fillidorvalue subcommand"
-	
-	if "`type'" == "drop" qui gen valuecurrent = .
-	
-	qui count if __blank_ids & missing(valuecurrent)		
-	if r(N) > 0 {
-		noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} where neither the ID variable values or the {bf:valuecurrent} column were specified. At least one of these columns should be filled for corrections to be made correctly.{p_end}"'
-		local errorfill 1
-	}
-	
-	qui drop __blank_ids
-	if "`type'" == "drop" qui drop valuecurrent
-	
-	return local errorfill `errorfill'
-	
- end
- 
 ***********************************************
 * Check that varname column is filled with text
 ***********************************************
@@ -780,7 +769,7 @@ cap program drop _fillcurrent
 			local errorfill 1
 		}
 	}
-	
+
 	return local errorfill `errorfill'
 	
  end
@@ -792,24 +781,24 @@ cap program drop _fillcurrent
 cap program drop _fillrequired
 	program    	 _fillrequired, rclass
 	
-	syntax, type(string) varlist(string) [debug]
+	syntax, type(string) varlist(string) vartype(string) [debug]
 	
 	if !missing("`debug'")	noi di as result "Entering fillrequired subcommand"
 
-		* Customize error message
-			 if "`type'" == "other" local message " This column must be filled for categorical corrections to be made correctly."
-		else if "`type'" == "drop"  local message " Dropping observations without confirming the number of rows to be deleted is a risky practice that is not allowed by iecorrect."
-		else						local message "This column should contain the names of the `type' variables to be corrected."
-		
+			 if	"`vartype'" == "string"		local condition	`"== """'
+		else if	"`vartype'" == "numeric"	local condition `"== ."'	
+
 		* Check that required variables are filled and print error message otherwise
 		foreach var of local varlist {
-			qui count if missing(`var')    
-			if r(N) > 0 {
-			  noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} sheet where column  {bf:`var'} is not filled.`message' If there are no corrections specified in a row, remove the row from the corrections form.{p_end}"'
+			if regex("`var'", "current") local message `" If you wish to apply corrections to observations regardless of their current value, fill this column with the wildcard sign ("*")."'
+
+			cap count if `var' `condition'    // captured so type mismatches errors are not returned at this point
+			if (!_rc) & (r(N) > 0) {
+			  noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} sheet where column  {bf:`var'} is not filled. If there are no corrections specified in a row, remove the row from the corrections form.`message'{p_end}"'
 			  local errorfill 1
 			}
 		}
-	
+
 	return local errorfill `errorfill'
 	
  end
@@ -1061,12 +1050,12 @@ cap program drop _donumeric
 
 			* Calculate condition for replacement based on current value
 			local valuecurrent 	= valuecurrent[`row']
-			if "`valuecurrent'" != "." {
+			if  "`valuecurrent'" != ".v" {
 				if 		regex(" `floatvars' ", " `var' ")  local line	`"`line'(`var' == float(`valuecurrent')) & "'
 				else if regex(" `doublevars' ", " `var' ") local line	`"`line'(`var' == double(`valuecurrent')) & "'
 				else 									   local line	`"`line'(`var' == `valuecurrent') & "'
 			}
-			
+
 			_idcond, ///
 				idvar(`idvar') row(`row') `debug' ///
 				stringvars(`stringvars') floatvars(`floatvars') doublevars(`doublevars') 
@@ -1111,7 +1100,7 @@ cap program drop _dostring
 
 			* Calculate condition for replacement based on current value
 			local valuecurrent 	= valuecurrent[`row']
-			if ("`valuecurrent'" != "") 	local line	`"`line'(`var' == "`valuecurrent'") & "'
+			if ("`valuecurrent'" != ".v") 	local line	`"`line'(`var' == "`valuecurrent'") & "'
 			
 			_idcond, ///
 				idvar(`idvar') row(`row') `debug' ///
@@ -1182,9 +1171,11 @@ cap program drop 	_doother
 			local strvaluecurrent 	= `""`strvaluecurrent'""'
 			local catvar       		= catvar[`row']
 			local catvalue       	= catvalue[`row']
-			
-			if "`catvar'" != ""  {
-			  file write `doname'    `"replace `catvar' = `catvalue' if `strvar' == `strvaluecurrent'"' _n
+		
+			file write `doname'    `"replace `catvar' = `catvalue'"'
+
+			if `"`strvaluecurrent'"' != ".v"  {
+			  file write `doname'    `" if `strvar' == `strvaluecurrent'"' _n
 			}
 		}
 
