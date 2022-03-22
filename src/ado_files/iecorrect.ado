@@ -457,9 +457,6 @@ cap program drop _checkcolstring
 		_fillidtype, type(string) idvar(`idvar') stringvars(`stringvars') `debug'				
 		if "`r(errortype)'" == "1" local errortype 1
 		
-		* If none id values were filled, valuecurrent must be filled
-		_fillidorvalue, type(string) `debug'
-		if "`r(errorfill)'" == "1" local errorfill 1
 		
 		_fillrequired, type(string) varlist(varname value valuecurrent) vartype(string) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
@@ -588,9 +585,7 @@ cap program drop 	_checkcoldrop
 	if "`r(errortype)'" == "1" local errortype 1
 		
 	* If none id values were filled, valuecurrent must be filled
-	_fillidorvalue, type(drop) `debug'
-	if "`r(errorfill)'" == "1" local errorfill 1
-
+	
 	* The number of observations to be dropped must be checked
 	_fillrequired, type(drop) varlist(n_obs) vartype(numeric) `debug'
 	if "`r(errorfill)'" == "1" local errorfill 1
