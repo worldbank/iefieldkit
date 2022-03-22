@@ -169,7 +169,7 @@ else if "`subcommand'" == "apply" {
     if ("`save'" != "") qui _doheader , doname("`doname'") dofile("`dofile'")
  
 	if !missing("`genvars'") & !missing("`generate'") {
-		foreach var in "`genvars'" {
+		foreach var in `genvars' {
 			cap  file close   `doname'
 			qui  file open    `doname' using "`dofile'", text write append
 				 file write   `doname' `"gen `var' = .  "' _n     										 // <---- Writing in do file here
