@@ -173,37 +173,32 @@ so that you can check your expectations against the data.{p_end}
 
 
 {marker CatCorrections}{...}
-{dlgtab:Corrections to categorical variables:}
+{dlgtab:Corrections involving categorical variables:}
 
-{pstd} These correction can be made through the {bf:other} tab of the Excel 
-spreadsheet. 
-The tab is called "other" because it is meant to enable the addition new categories 
-based on the string values on "Other: specify" fields. 
-If combined with the option generate, it can also be used to encode open-ended 
-fields and create a categorical variable to represent them.
-This is an advanced feature and the sheet that allows for these corrections is notes
-included in the template spreadsheet by default. 
-To make corrections of this type, include the option {cmdab:other} in both the 
-{cmdab:template} and {cmdab:apply} subcommands.
+{pstd} 
+In Stata, categorical variables are represented by numbers with associated value labels.
+This tab allows string variables, such as the "Other, Specify" variables
+that accompany categorical responses in many surveys, to be incorporated into categorical variables.
+If the {bf:other} option is specified during the {bf:template} subcommand,
+the spreadsheet template will have a sheet called {bf:other}.
+If the {bf:other} option is specified during the {bf:apply} subcommand,
+the modifications requested in the {bf:other} sheet will be applied to the data.
 {p_end}
 
-{pstd}In Stata, categorical variables are represented by numbers with associated value
- labels. Differently from the other sheets, where the column to be correct is also used 
- to identify the rows to be corrected, this sheet uses values of a text column 
- (the string variable or {bf:strvar}) as a reference to replace values in a categorical 
- column (the {bf:catvar}). It contains the following columns:{p_end}
- 
-{phang2}{it:strvar}, which should be filled with the name of the string variable representing 
-the "Other: specify" question (or whatever variable needs to be encoded).  Filling this column 
+{pstd}
+To use the {bf:other} sheet with categorical variables, do the following.
+You will identify the string variable which is intended to be incorporated,
+the value which you want to incorporate, the categorical variable that should
+be modified, and the numerical value that the categorical variable should take.
+You will then request changes through the {bf:other} sheet, using the following columns:{p_end}
+
+{phang2}{it:strvar}, which must be filled with the name of the string variable representing 
+the variable that needs to be encoded.  Filling this column 
 is {bf:required} for this type of correction to run properly.{p_end}
 
 {phang2}{it:strvaluecurrent}, which should be filled with the value of the 
 string variable in the observation to be corrected. 
 Filling this column is {bf:required} for this type of correction to run properly.{p_end}
-
-{phang2}{it:strvalue}, which should be filled with the value you want to replace 
-the string variable with, in case you also want to correct it. 
-Filling this column is not required for this type of correction to run properly.{p_end}
 
 {phang2}{it:catvar}, which should be filled with the {bf:name of the categorical variable to be corrected}. 
 Filling this column is {bf:required} for this type of correction to run properly.
@@ -211,11 +206,15 @@ If this variable does not yet exist, the option {cmdab:gen:erate} can be used to
 
 {phang2}{it:catvalue}, which should be filled with the {bf:correct value} of the categorical variable.
 This value will replace the current value of the categorical variable
-once {cmd:iecorrect apply} is run. 
+once {cmd:iecorrect apply} is run. (If the variable is already labeled,
+those value labels will still work; but new labels for new values will need to be created separately.)
 Filling this column is {bf:required} for this type of correction to run properly.{p_end}
 
-
-{pstd}If the variable listed under the {bf:catvar} column does not exist, then the command will return an error indicating so. To override this error and create the specified variable, use the option {cmdab:gen:erate}.{p_end}
+{pstd}If the variable listed under the {bf:catvar} column does not exist, 
+then the command will return an error indicating so. 
+To have {cmd:iecorrect apply} create the specified variable,
+use the option {cmdab:gen:erate}.
+Any requested categorical variables that do not exist will be created.{p_end}
 
 {pstd}{p_end}
 
