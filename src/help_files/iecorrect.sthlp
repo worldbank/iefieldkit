@@ -124,7 +124,7 @@ decided on corrections.{p_end}
 {phang2}{it:notes} allows the team working with this data to document {bf:how} the 
 issue and the correct value were identified.{p_end}
 
-{dlgtab:Corrections to sting and numeric variables:}
+{dlgtab:Corrections to string and numeric variables:}
 
 {pstd} String and numeric variable correction can be made through the {bf:string} and {bf:numeric} tabs of the Excel spreadsheet. 
 
@@ -156,9 +156,20 @@ column must be filled.{p_end}
 {pstd}Corrections made by {it:dropping} observations are implemented through the 
 {it:drop} tab of the Excel spreadsheet. This tab has two {bf:required} columns:{p_end}
 
-{phang2}{it:idvalue}, which should be filled with the value of the ID variables in the observations to be dropped.{p_end}
-{phang2}{it:n_obs}, which should be filled with the number of observations to be dropped by the conditions created in the corresponding line. {cmd:iecorrect} will throw an error if the number of observations that have the ID values specified in the line does not match
-the value entered in this column.{p_end}
+{phang2}First, one column will appear for each specified {it:idvar}. 
+These must be filled with the value of the ID variable in the observation to be corrected.
+If filled with *, all relevant observations will be dropped
+with the indicated current value of the variable to be corrected,
+as well as matching values of any other completed {it:idvar} columns.  
+{p_end}
+
+{phang2}{it:n_obs}, which must be filled with the exact number of observations 
+that should be dropped by the conditions specified in the corresponding line. 
+{cmd:iecorrect} will return an error if the number of observations 
+that have the ID values specified in the line does not match
+the value entered in this column.
+It will also return the number of observations that were detected matching the ID pattern,
+so that you can check your expectations against the data.{p_end}
 
 
 {marker CatCorrections}{...}
