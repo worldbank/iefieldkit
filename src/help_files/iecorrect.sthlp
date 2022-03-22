@@ -225,10 +225,10 @@ Any requested categorical variables that do not exist will be created.{p_end}
 {pstd}
 {hi:Example 1: template subcommand}
 
-{phang2}{inp:iecorrect template using "C:\myImpactEvaluation\baseline\documentation\Corrections.xlsx"}{p_end}
+{phang2}{inp:iecorrect template using "C:/myImpactEvaluation/baseline/documentation/Corrections.xlsx"}{p_end}
 
 {pmore}Specified like this, {cmdab:iecorrect} will create a template Excel spreadsheet at
-"C:\myImpactEvaluation\baseline\documentation\Corrections.xlsx".
+"C:/myImpactEvaluation/baseline/documentation/corrections.xlsx".
 This template will be empty, and 
 each tab in this template must be filled by the user following the instructions above
 before running the {bf:apply subcommand} to implement the corrections.{p_end}
@@ -236,10 +236,10 @@ before running the {bf:apply subcommand} to implement the corrections.{p_end}
 {phang}
 {hi:Example 2: apply subcommand}
 
-{phang2}{inp:iecorrect apply "C:\myImpactEvaluation\baseline\documentation\Corrections.xlsx", idvar(key)}{p_end}
+{phang2}{inp:iecorrect apply "C:/myImpactEvaluation/baseline/documentation/corrections.xlsx", idvar(key)}{p_end}
 
 {pmore}Specified like this, {cmdab:iecorrect} starts by looking for the file
-"C:\myImpactEvaluation\baseline\documentation\Corrections.xlsx". If there is a report
+"C:/myImpactEvaluation/baseline/documentation/corrections.xlsx". If there is a report
 with corrections, those corrections are applied to the data set.{p_end}
 
 {title:Acknowledgements}
