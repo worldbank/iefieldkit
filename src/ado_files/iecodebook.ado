@@ -424,10 +424,11 @@ qui {
           keep if name == "`theVariable'"
 
           local theOldType = type[1]
-          if "`theOldType'" != "`theType'" {
-            local QUITFLAG = 1
-            di as err "The type of {bf:`theVariable'} has changed:"
-            di as err `"  it was `theOldType' and is now `theType'."'
+          if ("`theOldType'" != "`theType'") & ///
+            !(strpos("`theOldType'","str") & strpos("`theType'","str")) {
+              local QUITFLAG = 1
+              di as err "The type of {bf:`theVariable'} has changed:"
+              di as err `"  it was `theOldType' and is now `theType'."'
           }
           local theOldLabel = label[1]
           if "`theOldLabel'" != "`theLabel'" {
