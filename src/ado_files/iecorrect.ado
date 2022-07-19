@@ -310,6 +310,7 @@ cap program drop _parsesheet
 				destring value valuecurrent, replace
 			}
 			else if "`type'" == "drop" {
+				replace  n_obs = ".v" if n_obs == "*"
 				destring n_obs, replace
 			}
 			else if "`type'" == "other" {
@@ -591,16 +592,21 @@ cap program drop 	_checkcoldrop
 	_fillidtype, type(drop) idvar(`idvar') stringvars(`stringvars') `debug'				
 	if "`r(errortype)'" == "1" local errortype 1
 		
+	cap confirm string var n_obs
+    if !_rc {
+		noi di as error `"{phang}Column {bf:n_obs} in sheet {bf:drop} is not numeric. This column should contain the number of observations to be dropped.{p_end}"'
+		local errorfill 1
+    }
+	
 	* The number of observations to be dropped must be checked
 	_fillrequired, type(drop) varlist(n_obs) vartype(numeric) `debug'
 	if "`r(errorfill)'" == "1" local errorfill 1
 	
-	qui destring n_obs, replace
-    cap confirm string var n_obs
-    if !_rc {
-      noi di as error `"{phang}Column {bf:n_obs} in sheet {bf:drop} is not numeric. This column should contain the number of observations to be dropped.{p_end}"'
-      local errorfill 1
-    }
+   qui count if missing(n_obs)
+   if r(N) > 0 {
+		noi di as error `"{phang}Column {bf:n_obs} in sheet {bf:drop} was not filled. This column should contain the number of observations to be dropped, and it does not accept wildcards.{p_end}"'
+		local errorfill 1
+   }
 	
 	_filldropobs, ///
 		idvar(`idvar') ///
@@ -714,14 +720,14 @@ cap program drop _fillidorvalue
 	if "`type'" == "string" {
 		qui count if __blank_ids & valuecurrent == ".v"
 		if r(N) > 0 {
-			noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} where neither the ID variable values or the {bf:valuecurrent} column were specified. At least one of these columns should be filled for corrections to be made correctly.{p_end}"'
+			noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} where neither the ID variable values or the {bf:valuecurrent} column were specified. At least one of these columns should be filled with valid information (other than a wildcard) for corrections to be made correctly.{p_end}"'
 			local errorfill 1
 		}
 	}
 	else {
 		qui count if __blank_ids & missing(valuecurrent)		
 		if r(N) > 0 {
-			noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} where neither the ID variable values or the {bf:valuecurrent} column were specified. At least one of these columns should be filled for corrections to be made correctly.{p_end}"'
+			noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} where neither the ID variable values or the {bf:valuecurrent} column were specified. At least one of these columns should be filled with valid information (other than a wildcard) for corrections to be made correctly.{p_end}"'
 			local errorfill 1
 		}
 	}
@@ -826,7 +832,7 @@ cap program drop _fillrequired
 
 			cap count if `var' `condition'    // captured so type mismatches errors are not returned at this point
 			if (!_rc) & (r(N) > 0) {
-			  noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} sheet where column  {bf:`var'} is not filled. If there are no corrections specified in a row, remove the row from the corrections form.`message'{p_end}"'
+			  noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} sheet where column  {bf:`var'} is not filled. This column is required for corrections to be made correctly. If there are no corrections specified in a row, remove the row from the corrections form.`message'{p_end}"'
 			  local errorfill 1
 			}
 		}

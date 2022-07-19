@@ -237,6 +237,12 @@
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-wrong-type.xlsx", idvar(id)
 	assert _rc == 109
 	
+	********************************************************
+	* Did not specify number of observations to be dropped *
+	********************************************************
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-nonobs.xlsx", idvar(id) replace debug
+	assert _rc == 198
+
 	********
 	* Save *
 	********	

@@ -164,7 +164,9 @@ as well as matching values of any other completed {it:idvar} columns.
 {p_end}
 
 {phang2}{it:n_obs}, which must be filled with the exact number of observations 
-that should be dropped by the conditions specified in the corresponding line. 
+that should be dropped by the conditions specified in the corresponding line.
+This column must always be filled for this type of correction to be performed
+and it does not accept wildcards.
 {cmd:iecorrect} will return an error if the number of observations 
 that have the ID values specified in the line does not match
 the value entered in this column.
