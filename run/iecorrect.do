@@ -235,8 +235,8 @@
 	* Type of corrections *
 	***********************	
 	* Should return an error when string is used to make other types corrections 
-	*cap iecorrect apply using "${output}/iecorrect/iecorrect-no-num-corrections.xlsx", idvar(id)
-	*assert _rc == 198 
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-wrong-type.xlsx", idvar(id)
+	assert _rc == 109
 	
 	********
 	* Save *
