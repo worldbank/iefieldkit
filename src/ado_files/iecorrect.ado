@@ -396,6 +396,10 @@ cap program drop _checkcolnumeric
 		_fillidtype, type(numeric) idvar(`idvar') stringvars(`stringvars') `debug'				
 		if "`r(errortype)'" == "1" local errortype 1
 		
+		* If none id values were filled, valuecurrent must be filled
+		_fillidorvalue, type(numeric) `debug'
+		if "`r(errorfill)'" == "1" local errorfill 1
+		
 		* Check that all columns were filled		
 		_fillrequired, type(numeric) varlist(varname) vartype(string) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
@@ -587,10 +591,6 @@ cap program drop 	_checkcoldrop
 	_fillidtype, type(drop) idvar(`idvar') stringvars(`stringvars') `debug'				
 	if "`r(errortype)'" == "1" local errortype 1
 		
-	* If none id values were filled, valuecurrent must be filled
-	_fillidorvalue, type(drop) `debug'
-	if "`r(errorfill)'" == "1" local errorfill 1
-
 	* The number of observations to be dropped must be checked
 	_fillrequired, type(drop) varlist(n_obs) vartype(numeric) `debug'
 	if "`r(errorfill)'" == "1" local errorfill 1
@@ -699,6 +699,38 @@ cap program drop _fillidtype
 	return local errortype `errortype'
 	
 end
+ 
+ 
+****************************************************
+* Check that valuecurrent is filled when IDs are not
+****************************************************
+cap program drop _fillidorvalue
+	program    	 _fillidorvalue, rclass
+
+	syntax, type(string) [debug]	
+
+	if !missing("`debug'")	noi di as result "Entering fillidorvalue subcommand"
+
+	if "`type'" == "string" {
+		qui count if __blank_ids & valuecurrent == ".v"
+		if r(N) > 0 {
+			noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} where neither the ID variable values or the {bf:valuecurrent} column were specified. At least one of these columns should be filled for corrections to be made correctly.{p_end}"'
+			local errorfill 1
+		}
+	}
+	else {
+		qui count if __blank_ids & missing(valuecurrent)		
+		if r(N) > 0 {
+			noi di as error `"{phang}There are `r(N)' lines in sheet {bf:`type'} where neither the ID variable values or the {bf:valuecurrent} column were specified. At least one of these columns should be filled for corrections to be made correctly.{p_end}"'
+			local errorfill 1
+		}
+	}
+	
+	qui drop __blank_ids
+
+	return local errorfill `errorfill'
+
+ end
  
 ***********************************************
 * Check that varname column is filled with text

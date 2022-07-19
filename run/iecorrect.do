@@ -175,9 +175,8 @@
 	
 	* Don't fill ID or valuecurrent
 	use 	`tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-noidnovalue.xlsx", idvar(id) save("${output}/iecorrect/iecorrect-noidnovalue") replace
-	qui count if headroom != 5
-	assert r(N) == 0
+	cap iecorrect apply using "${output}/iecorrect/iecorrect-noidnovalue.xlsx", idvar(id) save("${output}/iecorrect/iecorrect-noidnovalue") replace
+	assert _rc == 198
 	
 	********************************************
 	* Corrections using a template 			   *
