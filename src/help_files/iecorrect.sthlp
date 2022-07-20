@@ -52,7 +52,7 @@ A do-file implementing the complete set of corrections may optionally be generat
 {cmdab:iecorrect apply}
 {help using} {it:"/path/to/corrections_file.xlsx"}, {cmdab:idvar(}{it:varlist}{cmd:)} {break}
 [
-{cmdab:sheet(}{it:string}{cmd:)}
+{cmdab:sheet:s(}{it:string}{cmd:)}
 {cmdab:noi:sily}
 {cmdab:other}
 {cmdab:gen:erate} 
@@ -69,10 +69,12 @@ A do-file implementing the complete set of corrections may optionally be generat
   Specify the variable list that uniquely identifies the dataset. 
   Values from these variables will be used to select the observations to be changed. 
   This option is always required. {p_end}
-{synopt :{cmdab:sheet(}{it:string}{cmd:)}}
+{synopt :{cmdab:sheet:s(}{it:string}{cmd:)}}
   Select which {help iecorrect##TypeCorrections:types of corrections} will be made.
   By default, corrections will be made from numeric, string, and drop sheets
-  if this option is not specified.{p_end}
+  if this option is not specified.
+  This option allows the user to select only a subset of them.
+  {p_end}
 {break}
 {phang}{it:Documentation} {p_end}
 {synopt :{cmdab:save(}{it:string}{cmd:)}}
@@ -106,7 +108,7 @@ indicated in the form to the dataset that is currently in memory.{p_end}
 
 {pstd}The Excel report includes three sheets by default, 
 called {it:string}, {it:numeric}, and {it:drop}.
-The {it:categorical} sheet may be added by specifying the {cmdab:other} option.
+The {it:other} sheet may be added by specifying the {cmdab:other} option.
 Each of these sheets indicates one type of correction.
 Each type of correction requires slightly different input from the user, discussed below.
 Do not delete any of the sheets or the headers in the template form, or the command will not run properly. {p_end}

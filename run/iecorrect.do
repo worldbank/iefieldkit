@@ -245,10 +245,12 @@
 
 	********
 	* Save *
-	********	
+	********
+	use `tocorrect', clear
 	* Save, Wrong file extension
 	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) save("${output}/iecorrect/iecorrect-simple-num-id") replace
 
+	use `tocorrect', clear
 	cap iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) save("${output}/iecorrect/iecorrect-simple-num-id.c") replace
 	assert _rc == 198
 	

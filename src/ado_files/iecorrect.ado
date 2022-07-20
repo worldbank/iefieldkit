@@ -37,11 +37,13 @@ cap program drop iecorrect
                 PROCESS OPTIONS
 ==============================================================================*/
 	
-		 if !missing("`sheets'") local corrSheets	`sheets'
+	if !missing("`sheets'") 	 local corrSheets	`sheets'
 	else {
-								 local corrSheets	numeric string drop 
-		if "`other'" != "" 		 local corrSheets "`corrSheets' other"
+								 local corrSheets	numeric string drop
 	}
+	if "`other'" != "" 		 	 local corrSheets "`corrSheets' other"
+	
+	_testsheets, sheets("`corrSheets'") debug
 
 /*==============================================================================
                 Test File
@@ -247,8 +249,28 @@ cap program drop _testid
 end
 
 /*******************************************************************************  
-  Import data set
+  Test selected sheets
 *******************************************************************************/
+
+cap program drop _testsheets
+	program 	 _testsheets
+	
+	syntax , sheets(string) [debug]
+	
+	if !missing("`debug'") noi di as result "Entering testsheets subcommand"
+	
+	local n_sheets = wordcount("`sheets'")
+	
+	forvalues sheet = 1/`n_sheets' {
+		
+		local sheetname : word `sheet' of `sheets'
+		
+		if !inlist("`sheetname'", "string", "numeric", "drop", "other") {
+			noi di as error `"{phang}`sheetname' is not a valid sheet name to be selected in option {bf:sheets}. This option only accepts a combination of the words "string", "numeric", and "drop", separated by space.{p_end}"'
+			error 198
+		}
+	}
+end
 
 **********************************************************************
 * Load data set for each check and keep only the lines filled by user
