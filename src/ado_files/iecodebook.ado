@@ -1,4 +1,4 @@
-*! version 2.1 14FEB2022  DIME Analytics dimeanalytics@worldbank.org
+*! version 3.0 21JUL2022  DIME Analytics dimeanalytics@worldbank.org
 
 // Main syntax ---------------------------------------------------------------------------------
 
@@ -288,14 +288,14 @@ qui {
     noi di `"Data signature can be found at at {browse `"`signloc'"':`signloc'}"'
   }
 
-  // Save data copy if requested
-  if ("`save'" != "") | (`"`saveas'"' != "") {
-	if `"`saveas'"' != ""  local savedta = `saveas'
-  
-    save "`savedta'", `replace'
-    noi di `"Copy of data saved at {browse `"`savedta'"':`savedta'}"'
+  // Prepare to save data copy if requested
+  if ("`save'" != "") | (`"`saveas'"' != "") { 
+    if `"`saveas'"' != ""  local savedta = `saveas'
+    tempfile outdata
+    save `outdata'
   }
 
+  // Error if attempting to verify without Excel codebook
 	if !missing("`verify'") & !missing("`excel'") { 
 		di as err "The [noexcel] and [verify] options cannot be combined."
 		err 184
@@ -424,10 +424,11 @@ qui {
           keep if name == "`theVariable'"
 
           local theOldType = type[1]
-          if "`theOldType'" != "`theType'" {
-            local QUITFLAG = 1
-            di as err "The type of {bf:`theVariable'} has changed:"
-            di as err `"  it was `theOldType' and is now `theType'."'
+          if ("`theOldType'" != "`theType'") & ///
+            !(strpos("`theOldType'","str") & strpos("`theType'","str")) {
+              local QUITFLAG = 1
+              di as err "The type of {bf:`theVariable'} has changed:"
+              di as err `"  it was `theOldType' and is now `theType'."'
           }
           local theOldLabel = label[1]
           if "`theOldLabel'" != "`theLabel'" {
@@ -620,6 +621,13 @@ qui {
         noi di "Existing codebook and data structure verified to match."
       }
   use `allData' , clear
+  
+  // Save data copy if requested
+  if ("`save'" != "") | (`"`saveas'"' != "") { 
+    copy `outdata' "`savedta'", `replace'
+    noi di `"Copy of data saved at {browse `"`savedta'"':`savedta'}"'
+  }
+  
 } // end qui
 
 end
