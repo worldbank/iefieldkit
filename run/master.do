@@ -19,6 +19,12 @@ qui {
 		global AnalyticsDB	"C:\Users\wb501238\Dropbox\WB\Analytics\DIME Analytics"
 	}
 	
+	*Kbjarkefur
+	if lower(c(username)) == "wb462869" { 
+		global GitHub		"C:\Users\wb462869\github" 
+		global AnalyticsDB	"C:\Users\wb462869\Dropbox\DIME Analytics" 
+	} 
+	
 	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
 	global run 			"${iefieldkit}/run"
