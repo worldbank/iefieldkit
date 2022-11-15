@@ -1179,7 +1179,8 @@ cap program drop 	templatesheet
   syntax using/, varlist(string) sheetname(string) [current(string)]
   
   qui {
-      clear
+      
+	  clear
       set obs 1
       
       foreach var of local varlist {
@@ -1191,9 +1192,8 @@ cap program drop 	templatesheet
       }
       
       export excel using "`using'", sheet("`sheetname'") firstrow(varlabels)
-    
-
-    }    
+ }    
+ 
  end
 }
 
