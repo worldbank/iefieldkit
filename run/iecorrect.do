@@ -23,16 +23,6 @@
 	iecorrect template using "run/output/iecorrect/iecorrect-template-single-id.xlsx", idvar(make)
 	
 	* Create the template with multiple id variables
-	
-	* Create the template with other tab
-	cap erase 				 "${output}/iecorrect/iecorrect-template-other.xlsx"
-	iecorrect template using "${output}/iecorrect/iecorrect-template-other", idvar(id)
-	
-	* Add 'other' tab
-	cap erase 				 "${output}/iecorrect/iecorrect-template-add-other.xlsx"
-	iecorrect template using "${output}/iecorrect/iecorrect-template-add-other", idvar(id)
-	iecorrect template using "${output}/iecorrect/iecorrect-template-add-other", idvar(id) other
-	
 	cap erase 				 "run/output/iecorrect/iecorrect-template-multiple-ids.xlsx"
 	iecorrect template using "run/output/iecorrect/iecorrect-template-multiple-ids", idvar(make id)
 		
@@ -128,9 +118,6 @@
 		
 	* Sheets
 	use 	`tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) sheet(string) save("${output}/iecorrect/iecorrect-simple-num-id-string") replace
-	
-	use 	`tocorrect', clear
 	iecorrect apply using "run/output/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) sheet(string) save("run/output/iecorrect/iecorrect-simple-num-id-string") replace
 	
 	use 	`tocorrect', clear
@@ -150,14 +137,6 @@
 	
 	* Noisily
 	use 	`tocorrect', clear
-	
-	* Generate
-	use 	`tocorrect', clear
-	cap iecorrect apply using "${output}/iecorrect/iecorrect-gen.xlsx", idvar(id) other save("${output}/iecorrect/iecorrect-gen") replace
-	assert _rc == 111
-	
-	use 	`tocorrect', clear
-	iecorrect apply using "${output}/iecorrect/iecorrect-gen.xlsx", idvar(id) other generate save("${output}/iecorrect/iecorrect-gen") replace
 	iecorrect apply using "run/output/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) noisily
 
 	* Count number of observations before dropping
@@ -218,14 +197,6 @@
 		
 	assert length == 0 if length_check == 184
 	assert price  == 1 if id == 74
-	
-	* Correct individual data points - other sheet
-	use `tocorrect', clear
-	gen origin_check = origin
-	
-	iecorrect apply using "${output}/iecorrect/iecorrect-simple-num-id.xlsx", idvar(id) sheet(other)
-	assert foreign == 2   		if origin_check == "Local"
-	assert foreign == 3         if origin       == "Alien"
 	
 	********************************************
 	* Incorrect uses : error messages expected *
