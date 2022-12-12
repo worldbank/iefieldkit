@@ -198,6 +198,11 @@
 	assert length == 0 if length_check == 184
 	assert price  == 1 if id == 74
 	
+	* Fix issue with ids containing hyphens
+	sysuse auto, clear
+	replace make = subinstr(make, "Datsun ", "datsun-",  .)
+	iecorrect apply using "run/output/iecorrect/hyphen-id.xlsx" , idvar(make) save("run/output/iecorrect/hyphen-id.do") debug replace
+		
 	********************************************
 	* Incorrect uses : error messages expected *
 	********************************************
@@ -206,6 +211,7 @@
 	* Type of corrections *
 	***********************	
 	* Should return an error when string is used to make other types corrections 
+	use `tocorrect', clear
 	cap iecorrect apply using "run/output/iecorrect/iecorrect-wrong-type.xlsx", idvar(id)
 	assert _rc == 109
 	

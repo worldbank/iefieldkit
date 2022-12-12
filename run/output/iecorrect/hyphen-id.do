@@ -5,9 +5,8 @@ Last updated by luizaandrade on 11 Dec 2022 at 18:59:47
 
 
 
-** Drop observations 
-drop if (foreign == 1)
-drop if (make == "Test") & (foreign == 0)
+** Correct entries in numeric variables 
+replace price = 0 if (make == "datsun-210")
 
 
 ***************************************************************** End of do-file

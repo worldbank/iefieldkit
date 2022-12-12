@@ -983,7 +983,7 @@ cap program drop _donumeric
 				idvar(`idvar') row(`row') `debug' ///
 				stringvars(`stringvars') floatvars(`floatvars') doublevars(`doublevars') 
 				
-			if !missing("`r(idcond)'") 	local line `"`line'`r(idcond)'"'
+			if !missing(`"`r(idcond)'"') 	local line `"`line'`r(idcond)'"'	
 			local line = substr(`"`line'"', 1, length(`"`line'"') - 3)
 			
 			** Write the line to the do file
@@ -1096,7 +1096,9 @@ cap program drop _idcond
 			}
 		}
 
-	  return local idcond `"`idcond'"'
+	if !missing("`debug'") noi di as result "Exiting idcond subcommand"
+	 
+	return local idcond `"`idcond'"'
 
 end
 
