@@ -184,8 +184,11 @@ else if "`subcommand'" == "apply" {
     
     * Don't run if there are no corrections to be made
     if !missing("`any_corrections'") {
-		_dorun , doname("`doname'") dofile("`dofile'") data("`data'") `debug' `noisily' 
+		_dorun using "`using'", doname("`doname'") dofile("`dofile'") data("`data'") sheets("`corrections'") idvar(`idvar') `debug' `noisily' 
     }
+	
+	* Return the corrected dataset
+	qui use `data', clear
   
   }
 
@@ -1126,16 +1129,112 @@ cap program drop 	_dofooter
 cap program drop _dorun
 	program      _dorun
   
-	syntax , doname(string) dofile(string) data(string) [NOIsily debug]
+	syntax using/, doname(string) dofile(string) data(string) sheets(string) idvar(string) [NOIsily debug]
 
-	if !missing("`debug'")     noi di as result "Entering dorun subcommand"
-
+	if !missing("`debug'")    noi di as result "Entering dorun subcommand"
+	if !missing("`noisily'")  noi di ""
+	
 	if !missing("`noisily'")  local display noi
 	else					  local display qui
-
-	 `display' do "`dofile'"
 	
+	
+	* Read do-file line by line
+	tempname file
+	file open `doname' using "`dofile'", read
+	file read `doname' line
+	
+	while r(eof)==0 {
+		
+		* If the line is starting a new type of correction, 
+		* start a new matrix to store the number of changes caused by this
+		* type of corrections
+		if (substr(`"`line'"', 1, 3) == "** ") {
+			
+			if regex(`"`line'"', "numeric") local matrix numeric
+			if regex(`"`line'"', "string") 	local matrix string
+			if regex(`"`line'"', "Drop") 	local matrix drop
+			
+			local row 1
+			
+		}
+		* If the line is actually making a correction, make that correction and
+		* count the number of changes
+		else if ((substr(`"`line'"', 1, 7) == "replace") | (substr(`"`line'"', 1, 4) == "drop")) {
+			
+			local ++row
+			
+			* Count number of changes and store in a local
+			local  		if_start 	= strpos(`"`line'"'," if (")
+			local  		condition 	= substr(`"`line'"', `if_start', .)
+			qui count  `condition'
+			local obs = r(N)
+			
+			* Throw a warning if there are no changes
+			if (`obs' == 0) {
+				local nochange 1
+			}
+			
+			* Run line with changes
+			`display' di `"`line'"'
+			`display' `line'
+			
+			* Write number of changes in matrix with this type of changes
+			if (`row' == 2) {
+				mat `matrix' = `obs'
+			}
+			else {
+				mat `matrix' = `matrix' , `obs'
+			}
+		}
+		
+		* Read next line
+		file read `doname' line
+	}
+
+	file close `doname'
+	
+	if ("`nochange'" == "1") {
+		noi di as error `"{phang}At least one of the lines in the spreadsheet did not create any modifications in the data. Refer to column [n_changes] in the spreadsheet for details on which lines caused this error.{p_end}"'
+	}
+	
+	* Save changes to the data
 	qui save `data', replace
+
+	* Update information on the workbook to include last date when changes were made
+	foreach sheet of local sheets {
+		
+		qui import excel "`using'", sheet("`sheet'") firstrow allstring clear
+		
+		* Update records from last time the file was run
+		qui ds
+		if regex(r(varlist),  "date_last_changed")  local changes_applied 1
+		else										local changes_applied 0
+		
+									local keep `idvar' initials notes
+		if ("`sheet'" != "drop")	local keep `keep' varname  valuecurrent value 
+		else						local keep `keep' n_obs
+		if (`changes_applied' == 1)	local keep `keep' date_last_changed
+										  keep `keep'
+		
+		* Add new column to template with number of changes for corrections other than "drop" type
+		* (drop type already has a check for number of observations dropped)
+		if ("`sheet'"  != "drop") {
+			
+			matrix `sheet' = `sheet''
+			svmat  `sheet' , names("n_changes")
+			
+			rename n_changes1  n_changes
+			local  keep `keep' n_changes
+		}
+		
+		* Add a column with the date when changes were last applied
+		if (`changes_applied' == 1)	replace date_last_changed = "`c(current_date)'"
+		else 						gen		date_last_changed = "`c(current_date)'"
+
+		* Export Excel
+		qui export excel "`using'", sheet("`sheet'", replace) firstrow(variables)
+
+	}
   
 end
 }
@@ -1273,6 +1372,9 @@ cap program drop 	_printaction
 				noi di as text `"{phang}No observations to be dropped.{p_end}"'
 			}
 		}
+		
+		if !missing("`debug'")	noi di as result "Exiting printaction subcommand"
+
 end         
  
     
