@@ -746,6 +746,24 @@ qui {
         }
       }
     }
+
+    gen badlabel = (strpos(type,"str") & choices!="")
+      qui su badlabel
+      if `r(max)' != 0 {
+        di as err "You are trying to label the following non-numeric variables:"
+        di as err " "
+        di as err "{col 4} Line {col 11} Name {col 24} Label"
+        forv i = 1/`c(N)' {
+            local mi = badlabel[`i']
+            local li = name[`i']
+            local la = label[`i']
+            if "`mi'" == "1" di as err "{col 4} `=`i'+1' {col 11} `li' {col 24} `la'"
+          }
+          di as err " "
+          error 100
+      }
+      }
+
     if `QUITFLAG' error 198
 
     // Loop over choices sheet and accumulate vallab definitions
@@ -760,11 +778,18 @@ qui {
       // Catch undefined levels
       count if missing(value)
       if r(N) > 0 {
-        di as err "You have specified the value labels without a corresponding values."
+        di as err "You have specified value labels without corresponding values."
         di as err "{bf:iecodebook} will exit. Complete the following value labels and re-run the command to continue:"
-        noi li list_name label if missing(value), table noh
         di as err " "
-        error 100
+        di as err "{col 4} Line {col 11} List {col 24} Label"
+          forv i = 1/`c(N)' {
+            local mi = value[`i']
+            local li = list_name[`i']
+            local la = label[`i']
+            if "`mi'" == "" di as err "{col 4} `=`i'+1' {col 11} `li' {col 24} `la'"
+          }
+          di as err " "
+          error 100
       }
       // Catch any labels called on choices that are not defined in choice sheet
       levelsof list_name , local(theListedLabels)
