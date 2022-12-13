@@ -169,7 +169,7 @@ qui {
   // Store current data
   tempfile allData
     save `allData' , emptyok replace
-      
+
   // Template Setup
     // Load dataset if argument
     if `"`anything'"' != "" {
@@ -196,14 +196,14 @@ qui {
 
     // Stack up all the lines of code from all the dofiles in a dataset
     foreach dofile in `trim' {
-      
+
       // Check for dofile
       if !strpos(`"`dofile'"',".do") {
         di as err "The specified file does not include a .do extension." ///
           "Make sure it is a Stata .do-file and you include the file extension."
         error 610
       }
-      
+
       // Load dofile contents as data
       import delimited `dofile' , clear varnames(nonames)
 
@@ -289,24 +289,24 @@ qui {
   }
 
   // Prepare to save data copy if requested
-  if ("`save'" != "") | (`"`saveas'"' != "") { 
+  if ("`save'" != "") | (`"`saveas'"' != "") {
     if `"`saveas'"' != ""  local savedta = `saveas'
     tempfile outdata
     save `outdata'
   }
 
   // Error if attempting to verify without Excel codebook
-	if !missing("`verify'") & !missing("`excel'") { 
+	if !missing("`verify'") & !missing("`excel'") {
 		di as err "The [noexcel] and [verify] options cannot be combined."
 		err 184
 	}
-	
+
   // Write text codebook ONLY if requested
   if !missing("`plaintext'") {
 
 	noisily {
 
-		if "`plaintext'" == "compact" { 
+		if "`plaintext'" == "compact" {
 			local compact 	 , compact
 		}
 		else if "`plaintext'" == "detailed" {
@@ -315,21 +315,21 @@ qui {
 			di as err "Option [plaintext] was incorrectly specified. Please select one of the following formats: [compact] or [detailed]."
 			err 198
 		}
-		
+
 		local theTextFile = subinstr(`"`using'"',".xls",".txt",.)
-		local theTextFile = subinstr(`"`using'"',".xlsx",".txt",.)	
-				
+		local theTextFile = subinstr(`"`using'"',".xlsx",".txt",.)
+
 		local old_linesize `c(linesize)'
 		set linesize 75
-		
+
 		cap log close signdata
 			log using "`theTextFile'" , nomsg text `replace' name(signdata)
 			noisily : codebook `compact'
 		log close signdata
-		
+
 		set linesize `old_linesize'
 		noi di `"Codebook in plaintext created using {browse "`theTextFile'":`theTextFile'}
-		
+
 		if !missing("`excel'") exit
 	}
   }
@@ -339,7 +339,7 @@ qui {
 		noi error 198
 	}
   }
- 
+
 
 
   // Otherwise, write XLSX file and VERIFY if requested
@@ -563,12 +563,12 @@ qui {
             keep in `i'
             local faultLab  = label[1]
             local faultName = name[1]
-            
+
             cap export excel label using `test'  , replace
               if _rc != 0 di as err `"  `faultName' {tab} [`faultLab']"'
             restore
           }
-        } 
+        }
         else forvalues i = 1/10 {
           if `rc' != 0 {
             sleep `i'000
@@ -592,12 +592,12 @@ qui {
               keep in `i'
               local faultLab  = label[1]
               local faultName = lname[1]
-              
+
               cap export excel label using `test'  , replace
                 if _rc != 0 di as err `"  `faultName' {tab} [`faultLab']"'
               restore
             }
-          } 
+          }
           else forvalues i = 1/10 {
             if `rc' != 0 {
               sleep `i'000
@@ -621,13 +621,13 @@ qui {
         noi di "Existing codebook and data structure verified to match."
       }
   use `allData' , clear
-  
+
   // Save data copy if requested
-  if ("`save'" != "") | (`"`saveas'"' != "") { 
+  if ("`save'" != "") | (`"`saveas'"' != "") {
     copy `outdata' "`savedta'", `replace'
     noi di `"Copy of data saved at {browse `"`savedta'"':`savedta'}"'
   }
-  
+
 } // end qui
 
 end
@@ -669,13 +669,13 @@ qui {
   preserve
   import excel "`using'" , clear first sheet(survey) allstring
 
-  // Confirm survey names match codebook 
+  // Confirm survey names match codebook
   cap confirm variable name`survey'
     if _rc {
       di as err "The survey name `survey' does not appear in the codebook."
       error 111
     }
-  
+
     // Check for broken things, namely quotation marks
     foreach var of varlist name`survey' name label choices recode`survey' {
       cap confirm string variable `var'
@@ -686,7 +686,7 @@ qui {
         replace `var' = subinstr(`var', char(10), "", .) // Remove line end
       }
     }
-    
+
     // Remove leading/trailing spaces
     replace choices = trim(choices)
     replace name    = trim(name)
@@ -728,7 +728,7 @@ qui {
       if "`theName'"   != "" {
         // Drop if requested
         if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == ".") {
-        
+
 		  if !regex(" `allVars' ", " `theName' ") {
             di as error "Error: You requested changes to variable [`theName'] on line `=`i'-1', but it was not found in the data."
             error 111
@@ -936,7 +936,7 @@ qui {
     use "`dataset'" , clear
 
     iecodebook apply using "`using'" , survey(`survey') `drop' `options'
-    
+
     cap confirm variable `generate'
       if _rc==0 {
         di as err "There is a variable called `generate' in your dataset."
