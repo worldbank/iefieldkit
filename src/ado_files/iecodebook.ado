@@ -746,7 +746,7 @@ qui {
         // Report error when variable is missing from original data
         if !regex(" `allVars' ", " `theName' ") {
           di as error "Error: You requested changes to variable [`theName'] on line `=`i'-1', but it was not found in the data."
-          error 111
+          local QUITFLAG = 1
         }
 
         // Prepare to drop any variable that is renamed "." ; or left blank if [drop] option
