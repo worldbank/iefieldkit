@@ -699,11 +699,25 @@ qui {
       local theName = name`survey'[`i']
       local theNameList "`theNameList' `theName'"
     }
+    if "`: list allVars - theNameList'" != "" {
+      if "`drop'" != "" {
+        pause
+        local firstDrop  "drop `: list allVars - theNameList'"
+      }
+      else {
+        di as err "The following variables in the `survey' data are not handled in the codebook:"
+          foreach item in `: list allVars - theNameList' {
+            di as err "  `item'"
+          }
+        di as err "Add them to the codebook to be managed, or use [drop] to remove all unused variables."
+        di as err "If you are getting this message from [iecodebook append], remove [keepall] to drop variables."
+        error 198
+      }
+    }
     if "`: list dups theNameList'" != "" {
       di as err "You have multiple entries for the same original variable in name:`survey'."
       di as err "The duplicates are: `: list dups theNameList'"
       di as err "This will cause conflicts. {bf:iecodebook} will now quit."
-      error 198
     }
 
     // Loop over survey sheet and accumulate rename, relabel, recode, vallab
@@ -711,31 +725,35 @@ qui {
     local QUITFLAG = 0
     forvalues i = 2/`r(N)' {
       local theName    = name`survey'[`i']
-        local theRename   = name[`i']
-        local theRename = trim("`theRename'")
+      local theRename   = name[`i']
+      local theRename = trim("`theRename'")
+      local theLabel    = label[`i']
+      local theChoices  = choices[`i']
+      local theRecode   = recode`survey'[`i']
+        // Check new name validity
         if strtoname("`theRename'") != "`theRename'" & "`theRename'" != "." {
           di as err "Error: [`theRename'] on line `=`i'-1' is not a valid Stata variable name."
           local QUITFLAG = 1
         }
-      local theLabel    = label[`i']
-      local theChoices  = choices[`i']
+        // Check choice list validity
         if strtoname("`theChoices'") != "`theChoices'" & "`theChoices'" != "." {
           di as err "Error: [`theChoices'] on line `=`i'-1' is not a valid Stata choice list name."
           local QUITFLAG = 1
         }
-      local theRecode   = recode`survey'[`i']
 
-      if "`theName'"   != "" {
-        // Drop if requested
+      if "`theName'" != "" {
+
+        // Report error when variable is missing from original data
+        if !regex(" `allVars' ", " `theName' ") {
+          di as error "Error: You requested changes to variable [`theName'] on line `=`i'-1', but it was not found in the data."
+          error 111
+        }
+
+        // Prepare to drop any variable that is renamed "." ; or left blank if [drop] option
         if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == ".") {
-
-		  if !regex(" `allVars' ", " `theName' ") {
-            di as error "Error: You requested changes to variable [`theName'] on line `=`i'-1', but it was not found in the data."
-            error 111
-          }
-
           local allDrops "`allDrops' `theName'"
         }
+
         // Otherwise process requested changes as long as there is something specified
         else {
           if "`theRename'"  != "" local allRenames1 = `"`allRenames1' `theName'"'
@@ -761,7 +779,6 @@ qui {
           }
           di as err " "
           error 100
-      }
       }
 
     if `QUITFLAG' error 198
@@ -850,6 +867,7 @@ qui {
       error 102
     }
     keep `toKeep'
+    `firstDrop'
 
 
     // Apply all recodes, choices, and labels
