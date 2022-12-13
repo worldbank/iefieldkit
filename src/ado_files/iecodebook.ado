@@ -737,7 +737,7 @@ qui {
         }
         // Check choice list validity
         if strtoname("`theChoices'") != "`theChoices'" & "`theChoices'" != "." {
-          di as err "Error: [`theChoices'] on line `=`i'-1' is not a valid Stata choice list name."
+          di as err "Error: [`theChoices'] on line `=`i'+1' is not a valid Stata choice list name."
           local QUITFLAG = 1
         }
 
