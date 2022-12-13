@@ -206,7 +206,7 @@ qui {
       }
 
       // Load dofile contents as data
-      import delimited `dofile' , clear varnames(nonames)
+      import delimited "`dofile'" , clear varnames(nonames)
 
       unab allv : *
       gen v = ""
