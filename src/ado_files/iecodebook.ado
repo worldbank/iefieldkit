@@ -547,7 +547,7 @@ qui {
         merge m:1 name`template' using `newdata' , nogen
         replace name`template' = "" if type`template' == ""
 
-        sort `order'
+        sort `order' , stable
         drop `order'
       }
 
