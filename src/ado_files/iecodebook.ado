@@ -745,7 +745,7 @@ qui {
 
         // Report error when variable is missing from original data
         if !regex(" `allVars' ", " `theName' ") {
-          di as error "Error: You requested changes to variable [`theName'] on line `=`i'-1', but it was not found in the data."
+          di as error "Error: You requested changes to variable [`theName'] on line `=`i'+1', but it was not found in the data."
           local QUITFLAG = 1
         }
 
