@@ -6,7 +6,7 @@
 
     ssc install iefieldkit
 
-To install **iefieldkit**, type **`ssc install iefieldkit`** in Stata. This will install the most recent published version of **iefieldkit**. The main version of the code in the repo (the `master` branch) is what is published on SSC as well.
+To install **iefieldkit**, type **`ssc install iefieldkit`** in Stata. This will install the most recent published version of **iefieldkit**. The main version of the code in the repo (the `main` branch) is what is published on SSC as well.
 
 To make sure that you have the most recent published version of **iefieldkit** installed type `adoupdate iefieldkit, update` in Stata, or type `adoupdate` and follow the instructions to update all your user-written Stata commands (including **iefieldkit**) on your computer.
 
