@@ -732,7 +732,7 @@ qui {
       local theRecode   = recode`survey'[`i']
         // Check new name validity
         if strtoname("`theRename'") != "`theRename'" & "`theRename'" != "." {
-          di as err "Error: [`theRename'] on line `=`i'-1' is not a valid Stata variable name."
+          di as err "Error: [`theRename'] on line `=`i'+1' is not a valid Stata variable name."
           local QUITFLAG = 1
         }
         // Check choice list validity
