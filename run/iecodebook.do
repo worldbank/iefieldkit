@@ -1,9 +1,9 @@
 
 	qui do "${GitHub}/iefieldkit/src/ado_files/iecodebook.ado"
 	
-/*******************************************************************************
-	Folder and format testing
-*******************************************************************************/
+********************************************************************************
+**# Folder and format testing
+********************************************************************************
 	
 	sysuse auto, clear
 
@@ -34,9 +34,9 @@
 	cap iecodebook  using "${codebook}/auto.xlsx"
 	assert _rc == 197
 
-/*******************************************************************************
-	Single data set
-*******************************************************************************/
+********************************************************************************
+**#	Single data set
+********************************************************************************
 	
 /*------------------------------------------------------------------------------
 	Template subcommand
@@ -226,9 +226,9 @@
  
 
 	
-/*******************************************************************************
-	Append data sets
-*******************************************************************************/
+********************************************************************************
+**# Append data sets
+********************************************************************************
 
 /*------------------------------------------------------------------------------
 	Template subcommand
@@ -335,7 +335,8 @@
 	cap iecodebook append `auto1' `auto2' ///
 		using "${codebook}/template_survey.xlsx", /// 
 		clear surveys(Second name_incorrect) replace 
-	assert _rc == 111
+	
+	assert _rc == 198
 	
 	* Survey option just one of the names                                          
 	cap iecodebook append `auto1' `auto2' ///
@@ -348,11 +349,11 @@
 	cap iecodebook append `auto1' `auto2' ///
 		using "${codebook}/harmonization.xlsx", /// 
 		clear surveys(Second First) replace 
-	assert _rc == 111
+	assert _rc == 198
 	
-/*******************************************************************************
-	Export final codebook
-*******************************************************************************/
+********************************************************************************
+**# Export final codebook
+********************************************************************************
 
 	sysuse auto, clear
 	cap erase "${codebook}/auto_export.xlsx"
@@ -554,6 +555,24 @@
 		"${codebook}/auto_export.xslx", ///
 		replace
 	assert _rc == 601
-
 	
+********************************************************************************
+**# Incomplete template (not all vars are listed)
+********************************************************************************
+
+	* Single dataset
+	sysuse auto, clear
+	cap iecodebook apply using "${codebook}/auto_incomplete_vars.xlsx"
+	assert _rc == 198
+	
+	* Append
+	cap iecodebook append `auto1' `auto2' ///
+		using "${codebook}/append_incomplete_vars.xlsx", ///
+		surveys(one two) keepall clear
+	assert _rc == 198
+	
+	iecodebook append `auto1' `auto2' ///
+		using "${codebook}/append_incomplete_vars.xlsx", ///
+		surveys(one two)  clear
+		
 ***************************************************************** End of do-file
