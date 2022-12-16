@@ -214,7 +214,7 @@ else if "`subcommand'" == "apply" {
 cap program drop _testid
 	program 	 _testid
 	
-	syntax varlist
+	syntax varlist, [break]
 	
 	cap isid `varlist'
 		
@@ -307,13 +307,10 @@ cap program drop _parsesheet
 			}
 						
 			* Destring numeric columns -----------------------------------------
-			if 	inlist("`type'", "numeric", "string") {
-				replace  valuecurrent = ".v" if valuecurrent == "*"
-			}
+			if 	inlist("`type'", "numeric") 			replace  valuecurrent = ".v" if valuecurrent == "*"
+			if 	inlist("`type'", "numeric", "string")   cap destring value valuecurrent, replace
+			if 	inlist("`type'", "string") 				replace  valuecurrent = ".v" if valuecurrent == "*"
 			
-			if "`type'" == "numeric" {
-				destring value valuecurrent, replace
-			}
 			else if "`type'" == "drop" {
 				replace  n_obs = ".v" if n_obs == "*"
 				destring n_obs, replace
@@ -406,7 +403,7 @@ cap program drop _checkcolnumeric
 		_fillrequired, type(numeric) varlist(value valuecurrent) vartype(numeric) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
-		* Check that varname column is string
+		* Check that varname column is numeric
 		foreach var in value valuecurrent {
 			_fillvartype, type(numeric) vartype(numeric) var(`var') `debug'
 			if "`r(errortype)'" == "1" local errortype 1
@@ -670,9 +667,9 @@ cap program drop _fillvartype
 	
 	syntax, type(string) vartype(string) var(string) [debug]
 	
-	if !missing("`debug'")	noi di as result "Entering fillvartype subcommand"
+	if !missing("`debug'")	noi di as result "Entering fillvartype subcommand: testing column `var'"
 
-		qui count if missing(`var')
+		qui count if !missing(`var')
 		if r(N) != 0 {
 			cap confirm `vartype' var `var'
 			if _rc {
