@@ -11,6 +11,7 @@ cap program drop iecorrect
 			replace 						 ///
 			SHEETs(string) 					 ///
 			debug 							 ///
+			break							 ///
 		]
 		
 	preserve
@@ -26,7 +27,7 @@ cap program drop iecorrect
 ==============================================================================*/
 
 	* Test if idvar uniquely identifies the dataset
-	_testid `idvar'
+	_testid `idvar', `break'
 		
 	tempfile 	 data
 	qui save	`data'
@@ -184,7 +185,10 @@ else if "`subcommand'" == "apply" {
     
     * Don't run if there are no corrections to be made
     if !missing("`any_corrections'") {
-		_dorun using "`using'", doname("`doname'") dofile("`dofile'") data("`data'") sheets("`corrections'") idvar(`idvar') `debug' `noisily' 
+		_dorun using "`using'", ///
+			doname("`doname'") dofile("`dofile'") ///
+			data("`data'") sheets("`corrections'") ///
+			idvar(`idvar') `debug' `noisily'  `break'
     }
 	
 	* Return the corrected dataset
@@ -216,6 +220,11 @@ cap program drop _testid
 		
 	if _rc == 459 {
 			noi di as error `"{phang}The ID variables listed in option {bf:idvar} do not uniquely and fully identify the data. This may cause unintended changes to the data when applying corrections.{p_end}"'
+			if !missing("`break'") {
+				error 111
+				exit
+			}
+			
 			noi di 			""
 	}
 	
@@ -1129,7 +1138,7 @@ cap program drop 	_dofooter
 cap program drop _dorun
 	program      _dorun
   
-	syntax using/, doname(string) dofile(string) data(string) sheets(string) idvar(string) [NOIsily debug]
+	syntax using/, doname(string) dofile(string) data(string) sheets(string) idvar(string) [NOIsily debug break]
 
 	if !missing("`debug'")    noi di as result "Entering dorun subcommand"
 	if !missing("`noisily'")  noi di ""
@@ -1194,7 +1203,12 @@ cap program drop _dorun
 	file close `doname'
 	
 	if ("`nochange'" == "1") {
-		noi di as error `"{phang}At least one of the lines in the spreadsheet did not create any modifications in the data. Refer to column [n_changes] in the spreadsheet for details on which lines caused this error.{p_end}"'
+		noi di as  error `"{phang}At least one of the lines in the spreadsheet did not create any modifications in the data. Refer to column [n_changes] in the spreadsheet for details on which lines caused this error.{p_end}"'
+		if !missing("`break'") {
+			noi di as  error `"{phang}No corrections were applied to the data.{p_end}"'
+			error 111 
+			exit
+		}
 	}
 	
 	* Save changes to the data

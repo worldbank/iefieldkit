@@ -55,13 +55,14 @@ A do-file implementing the complete set of corrections may optionally be generat
 {cmdab:noi:sily}
 {cmdab:save(}{it:/path/to/do_file.do}{cmd:)} 
 {cmdab:replace}
+{cmdab:break}
 ]{p_end}
 
 {marker opts}{...}
 {synoptset 28}{...}
 {synopthdr:Options}
 {synoptline}
-{phang} {it:Corrections} {p_end}{break}
+{phang} {it:Corrections} {p_end}
 {synopt :{cmdab:idvar(}{it:varlist}{cmd:)}}
   Specify the variable list that uniquely identifies the dataset. 
   Values from these variables will be used to select the observations to be changed. 
@@ -82,8 +83,12 @@ A do-file implementing the complete set of corrections may optionally be generat
 {synopt :{cmdab:noi:sily}}
   Print the code and list of modifications as they run.{p_end}
 {break}
-{phang} {it:Advanced Corrections} {p_end}
-
+{phang} {it:Error handling} {p_end}
+{synopt :{cmdab:break}}
+  Throw an error if inconsistencies are found in how the template was filled. By default,
+  if the variables listed in {cmdab:idvar(}{it:varlist}{cmd:)} do not uniquely identify the data
+  or any lines filled in the template do not match any observation, only a warning message will be printed.{p_end}
+  
 {marker IntendedWokflow}{...}
 {title:Intended workflow}
 
@@ -106,7 +111,7 @@ Do not delete any of the sheets or the headers in the template form, or the comm
 
 {dlgtab:Corrections to string and numeric variables:}
 
-{pstd} String and numeric variable correction can be made through the {bf:string} and {bf:numeric} tabs of the Excel spreadsheet. 
+{pstd} String and numeric variable corrections can be made through the {bf:string} and {bf:numeric} tabs of the Excel spreadsheet. 
 
 {phang2}First, one column will appear for each specified {it:idvar}. 
 These must be filled with the value of the ID variable in the observation to be corrected.

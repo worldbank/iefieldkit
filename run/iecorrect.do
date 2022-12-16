@@ -75,7 +75,7 @@
 	
 	********************************************
 	* Incorrectly filling ids				   *
-	********************************************
+	*******************************************F*
 	
 	cap iecorrect apply using "run/output/iecorrect/iecorrect-stringid.xlsx", idvar(id make) sheet(numeric) debug
 	assert _rc == 109
@@ -110,7 +110,9 @@
 	assert gear_ratio == 60  in 2
 	
 	* Simple run when template is empty
-	iecorrect apply using "run/output/iecorrect/iecorrect-template-single-id.xlsx", idvar(turn) save("run/output/iecorrect/iecorrect-template-single-id") replace
+	    iecorrect apply using "run/output/iecorrect/iecorrect-template-single-id.xlsx", idvar(turn) save("run/output/iecorrect/iecorrect-template-single-id") replace
+	cap iecorrect apply using "run/output/iecorrect/iecorrect-template-single-id.xlsx", idvar(turn) save("run/output/iecorrect/iecorrect-template-single-id") replace break
+	assert _rc == 111
 	
 	* Simple run when template is filled
 	use 	`tocorrect', clear
@@ -214,6 +216,23 @@
 	use `tocorrect', clear
 	cap iecorrect apply using "run/output/iecorrect/iecorrect-wrong-type.xlsx", idvar(id)
 	assert _rc == 109
+	
+	****************************
+	* No corrections specified *
+	****************************
+	* Warning message only
+	use `tocorrect', clear
+	iecorrect apply using "run/output/iecorrect/iecorrect-no-corrections.xlsx", idvar(id) debug
+	qui count if mpg < 0
+	assert r(N) == 1 
+
+	* Break the code
+	cap iecorrect apply using "run/output/iecorrect/iecorrect-no-corrections.xlsx", idvar(id) debug break
+	assert _rc == 111
+	
+	use `tocorrect', clear
+	cap iecorrect apply using "run/output/iecorrect/iecorrect-wrong-type.xlsx", idvar(id)
+	assert _rc == 109	
 	
 	********************************************************
 	* Did not specify number of observations to be dropped *
