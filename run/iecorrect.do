@@ -75,7 +75,7 @@
 	
 	********************************************
 	* Incorrectly filling ids				   *
-	*******************************************F*
+	********************************************
 	
 	cap iecorrect apply using "run/output/iecorrect/iecorrect-stringid.xlsx", idvar(id make) sheet(numeric) debug
 	assert _rc == 109
