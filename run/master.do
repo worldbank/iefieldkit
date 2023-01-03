@@ -14,10 +14,18 @@ qui {
 *******************************************************************************/
 
 	* Set root paths
-	if inlist(c(username), "WB501238", "wb501238") {
-		global GitHub		"C:\Users\wb501238\Documents\GitHub"
-		global AnalyticsDB	"C:\Users\wb501238\Dropbox\WB\Analytics\DIME Analytics"
-	}
+		
+	*Kbjarkefur
+	if lower(c(username)) == "wb462869" { 
+		global GitHub		"C:\Users\wb462869\github" 
+		global AnalyticsDB	"C:\Users\wb462869\Dropbox\DIME Analytics" 
+	} 
+	
+	* Luiza work PC
+	if lower(c(username)) == "luizaandrade" { 
+		global GitHub		"C:\Users\luizaandrade\Documents\GitHub" 
+		global AnalyticsDB	"C:\Users\luizaandrade\Dropbox\WB\Analytics\DIME Analytics" 
+	} 
 	
 	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
@@ -27,11 +35,11 @@ qui {
 	global codebook		"${output}/iecodebook"
 	
 	* Select commands to test
-	local ieduplicates	0
-	local iecompdup		0
-	local ietestform	0
-	local iecodebook	0
-	local iefieldkit	0
+	local ieduplicates	1
+	local iecompdup		1
+	local ietestform	1
+	local iecodebook	1
+	local iefieldkit	1
 	local iecorrect		1
 	
 /*******************************************************************************

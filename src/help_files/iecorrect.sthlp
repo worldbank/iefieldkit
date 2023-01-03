@@ -212,13 +212,13 @@ with corrections, those corrections are applied to the data set.{p_end}
 {title:Acknowledgements}
 
 {phang}We would like to acknowledge the help in testing and proofreading we received in relation to this command and help file from (in alphabetic order):{p_end}
-{pmore}Timo Kapelari{break}Matteo Ruzzante{break}Ankriti Singh{break}
+{pmore}Benjamin Daniels{break}Timo Kapelari{break}Matteo Ruzzante{break}Ankriti Singh{break}
 
 {title:Author}
 
 {phang}All commands in iefieldkit are developed by DIME Analytics at the World Bank's Development Impact Evaluations department.
 
-{phang}Main author: Luiza Cardoso de Andrade, DIME Analytics, The World Bank Group
+{phang}Main authors: Luiza Cardoso de Andrade and Denisse Orozco Pereira, DIME Analytics, The World Bank Group
 
 {phang}Please send bug-reports, suggestions and requests for clarifications
 		 writing "iefieldkit iecorrect" in the subject line to:{break}
