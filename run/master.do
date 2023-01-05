@@ -14,15 +14,17 @@ qui {
 *******************************************************************************/
 
 	* Set root paths
-	if inlist(c(username), "WB501238", "wb501238") {
-		global GitHub		"C:\Users\wb501238\Documents\GitHub"
-		global AnalyticsDB	"C:\Users\wb501238\Dropbox\WB\Analytics\DIME Analytics"
-	}
-	
+		
 	*Kbjarkefur
 	if lower(c(username)) == "wb462869" { 
 		global GitHub		"C:\Users\wb462869\github" 
 		global AnalyticsDB	"C:\Users\wb462869\Dropbox\DIME Analytics" 
+	} 
+	
+	* Luiza work PC
+	if lower(c(username)) == "luizaandrade" { 
+		global GitHub		"C:\Users\luizaandrade\Documents\GitHub" 
+		global AnalyticsDB	"C:\Users\luizaandrade\Dropbox\WB\Analytics\DIME Analytics" 
 	} 
 	
 	* Set up folder globals
