@@ -25,7 +25,12 @@ qui {
 	if lower(c(username)) == "luizaandrade" { 
 		global GitHub		"C:\Users\luizaandrade\Documents\GitHub" 
 		global AnalyticsDB	"C:\Users\luizaandrade\Dropbox\WB\Analytics\DIME Analytics" 
-	} 
+	}
+	
+	if lower(c(username)) == "luiza" { 
+		global GitHub		"/home/luiza/github" 
+		global AnalyticsDB	"/home/luiza/Dropbox/WB/Analytics/DIME Analytics" 
+	}
 	
 	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
@@ -37,7 +42,7 @@ qui {
 	* Select commands to test
 	local iecorrect		1
 	local ietestform	1
-	local iecodebook	1
+	local iecodebook	0
 	local iefieldkit	1
 	local ieduplicates	1
 	local iecompdup		1
@@ -69,13 +74,14 @@ qui {
 	if `iecodebook' 	do "${run}/iecodebook.do"	
 
 	* Test iecorrect
-	if `iecorrect' 		do "${run}/iecorrect.do"	
+	if `iecorrect' 		do "${run}/iecorrect.do"
+	
+	* Test iecompdup
+	if `iecompdup' 		do "${run}/iecompdup.do"
 	
 	* Test ieduplicates
 	if `ieduplicates' 	do "${run}/ieduplicates.do"
 	
-	* Test iecompdup
-	if `iecompdup' 		do "${run}/iecompdup.do"	
 	
 
 	
