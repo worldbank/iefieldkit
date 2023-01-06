@@ -35,12 +35,13 @@ qui {
 	global codebook		"${output}/iecodebook"
 	
 	* Select commands to test
-	local ieduplicates	1
-	local iecompdup		1
+	local iecorrect		1
 	local ietestform	1
 	local iecodebook	1
 	local iefieldkit	1
-	local iecorrect		1
+	local ieduplicates	1
+	local iecompdup		1
+	
 	
 /*******************************************************************************
 	Part II: Test inputs
@@ -61,12 +62,6 @@ qui {
 	Part III: Test commands
 *******************************************************************************/
 	
-	* Test ieduplicates
-	if `ieduplicates' 	do "${run}/ieduplicates.do"
-	
-	* Test iecompdup
-	if `iecompdup' 		do "${run}/ieduplicates.do"	
-	
 	* Test ietestform
 	if `ietestform' 	do "${run}/ietestform.do"	
 	
@@ -75,6 +70,13 @@ qui {
 
 	* Test iecorrect
 	if `iecorrect' 		do "${run}/iecorrect.do"	
+	
+	* Test ieduplicates
+	if `ieduplicates' 	do "${run}/ieduplicates.do"
+	
+	* Test iecompdup
+	if `iecompdup' 		do "${run}/iecompdup.do"	
+	
 
 	
 *************************** End of Master Do-File ******************************
