@@ -292,6 +292,7 @@ qui {
   // Prepare to save data copy if requested
   if ("`save'" != "") | (`"`saveas'"' != "") {
     if `"`saveas'"' != ""  local savedta = `saveas'
+    if !strpos("`savedta'",".dta") local savedta "`savedta'.dta"
     tempfile outdata
     save `outdata'
   }
