@@ -1,5 +1,5 @@
 {smcl}
-{* 13 Aug 2020}{...}
+{* 7 Jan 2023}{...}
 {hline}
 help for {hi:iecorrect}
 {hline}
@@ -44,8 +44,7 @@ A do-file implementing the complete set of corrections may optionally be generat
 
 {phang2}
 {cmdab:iecorrect template}
-{help using} {it:"/path/to/corrections/file.xlsx"}, {cmdab:idvar(}{it:varlist}{cmd:)} {break}
-  [{cmdab:other}]
+{help using} {it:"/path/to/corrections/file.xlsx"}, {cmdab:idvar(}{it:varlist}{cmd:)} 
 {p_end}
 
 {phang2}
@@ -54,17 +53,16 @@ A do-file implementing the complete set of corrections may optionally be generat
 [
 {cmdab:sheet:s(}{it:string}{cmd:)}
 {cmdab:noi:sily}
-{cmdab:other}
-{cmdab:gen:erate} 
 {cmdab:save(}{it:/path/to/do_file.do}{cmd:)} 
 {cmdab:replace}
+{cmdab:break}
 ]{p_end}
 
 {marker opts}{...}
 {synoptset 28}{...}
 {synopthdr:Options}
 {synoptline}
-{phang} {it:Corrections} {p_end}{break}
+{phang} {it:Corrections} {p_end}
 {synopt :{cmdab:idvar(}{it:varlist}{cmd:)}}
   Specify the variable list that uniquely identifies the dataset. 
   Values from these variables will be used to select the observations to be changed. 
@@ -85,17 +83,12 @@ A do-file implementing the complete set of corrections may optionally be generat
 {synopt :{cmdab:noi:sily}}
   Print the code and list of modifications as they run.{p_end}
 {break}
-{phang} {it:Advanced Corrections} {p_end}
-{synopt :{cmdab:other}}
-  Include the "other" correction sheet to categorize open-ended responses. 
-  This is an advanced option. It must be specified at the template subcommand 
-  and at the apply subcommand to implement.
-  See {help iecorrect##CatCorrections:corrections to categorical variables} below for more details.{p_end}
-{synopt :{cmdab:gen:erate}}
-  Specify this option along with with option {cmdab:other} 
-  to add new variables to the datasets when making corrections to categorical variables. 
-  Use with caution and read the full documentation for this option. 
-
+{phang} {it:Error handling} {p_end}
+{synopt :{cmdab:break}}
+  Throw an error if inconsistencies are found in how the template was filled. By default,
+  if the variables listed in {cmdab:idvar(}{it:varlist}{cmd:)} do not uniquely identify the data
+  or any lines filled in the template do not match any observation, only a warning message will be printed.{p_end}
+  
 {marker IntendedWokflow}{...}
 {title:Intended workflow}
 
@@ -116,19 +109,9 @@ Do not delete any of the sheets or the headers in the template form, or the comm
 {marker TypeCorrections}{...}
 {title:Types of corrections}
 
-{dlgtab:Columns for documentation:}
-
-{pstd}The columns {it:initials} and {it:notes} are included in all tabs, and should be used to document the changes made to the code.{p_end}
-
-{phang2}{it:initials} allows the team working with this data to keep track of {bf:who}
-decided on corrections.{p_end}
-
-{phang2}{it:notes} allows the team working with this data to document {bf:how} the 
-issue and the correct value were identified.{p_end}
-
 {dlgtab:Corrections to string and numeric variables:}
 
-{pstd} String and numeric variable correction can be made through the {bf:string} and {bf:numeric} tabs of the Excel spreadsheet. 
+{pstd} String and numeric variable corrections can be made through the {bf:string} and {bf:numeric} tabs of the Excel spreadsheet. 
 
 {phang2}First, one column will appear for each specified {it:idvar}. 
 These must be filled with the value of the ID variable in the observation to be corrected.
@@ -175,50 +158,30 @@ the value entered in this column.
 It will also return the number of observations that were detected matching the ID pattern,
 so that you can check your expectations against the data.{p_end}
 
+{marker Documentation}{...}
+{title:Creating documentation}
 
-{marker CatCorrections}{...}
-{dlgtab:Corrections involving categorical variables:}
+{pstd}The columns {it:initials} and {it:notes} are included in all tabs created by {bf:iecorrect template}, 
+and should be filled by the user to document the changes made to the code
+when indicating which corrections should be made.{p_end}
 
-{pstd} 
-In Stata, categorical variables are represented by numbers with associated value labels.
-This tab allows string variables, such as the "Other, Specify" variables
-that accompany categorical responses in many surveys, to be incorporated into categorical variables.
-If the {bf:other} option is specified during the {bf:template} subcommand,
-the spreadsheet template will have a sheet called {bf:other}.
-If the {bf:other} option is specified during the {bf:apply} subcommand,
-the modifications requested in the {bf:other} sheet will be applied to the data.
-{p_end}
+{phang2}{it:initials} allows the team working with this data to keep track of {bf:who}
+decided on corrections.{p_end}
 
-{pstd}
-To use the {bf:other} sheet with categorical variables, do the following.
-You will identify the string variable which is intended to be incorporated,
-the value which you want to incorporate, the categorical variable that should
-be modified, and the numerical value that the categorical variable should take.
-You will then request changes through the {bf:other} sheet, using the following columns:{p_end}
+{phang2}{it:notes} allows the team working with this data to document {bf:how} the 
+issue and the correct value were identified.{p_end}
 
-{phang2}{it:strvar}, which must be filled with the name of the string variable representing 
-the variable that needs to be encoded.  Filling this column 
-is {bf:required} for this type of correction to run properly.{p_end}
+{pstd}The columns {it:date_last_changed} and {it:n_changes} are included by {bf:iecorrect apply}
+when corrections are made to the data. This columns should not be manually edited by users.{p_end}
 
-{phang2}{it:strvaluecurrent}, which should be filled with the value of the 
-string variable in the observation to be corrected. 
-Filling this column is {bf:required} for this type of correction to run properly.{p_end}
+{phang2}{it:date_last_changed} documents the date when each correction was last
+applied to the data. It is meant to allow users to identify any corrections that
+have been included in the workbook, but not applied to the data.{p_end}
 
-{phang2}{it:catvar}, which should be filled with the {bf:name of the categorical variable to be corrected}. 
-Filling this column is {bf:required} for this type of correction to run properly.
-If this variable does not yet exist, the option {cmdab:gen:erate} can be used to create it. {p_end}
-
-{phang2}{it:catvalue}, which should be filled with the {bf:correct value} of the categorical variable.
-This value will replace the current value of the categorical variable
-once {cmd:iecorrect apply} is run. (If the variable is already labeled,
-those value labels will still work; but new labels for new values will need to be created separately.)
-Filling this column is {bf:required} for this type of correction to run properly.{p_end}
-
-{pstd}If the variable listed under the {bf:catvar} column does not exist, 
-then the command will return an error indicating so. 
-To have {cmd:iecorrect apply} create the specified variable,
-use the option {cmdab:gen:erate}.
-Any requested categorical variables that do not exist will be created.{p_end}
+{phang2}{it:n_changes} documents the number of observations changed by each correction.
+When a filled row in the filled workbook does make any actual changes to the data,
+for example because it was filled incorrectly, this column will show {it:0} and
+the command will return a warning.{p_end}
 
 {pstd}{p_end}
 
