@@ -47,7 +47,7 @@ qui {
 	* Select commands to test
 	local iecorrect		1
 	local ietestform	1
-	local iecodebook	0
+	local iecodebook	1
 	local iefieldkit	1
 	local ieduplicates	1
 	local iecompdup		1
