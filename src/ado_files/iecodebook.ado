@@ -1,4 +1,4 @@
-*! version 2.0 07JUL2020 DIME Analytics dimeanalytics@worldbank.org
+*! version 3.1 7JAN2023  DIME Analytics dimeanalytics@worldbank.org
 
 // Main syntax ---------------------------------------------------------------------------------
 
@@ -9,11 +9,12 @@ cap program drop iecodebook
 
   cap syntax [anything] using/ , [*]
   if _rc == 100 {
-    di "    _                     __     __                __     "
-    di "   (_)__  _________  ____/ /__  / /_  ____  ____  / /__   "
-    di "  / / _ \/ ___/ __ \/ __  / _ \/ __ \/ __ \/ __ \/ //_/   "
-    di " / /  __/ /__/ /_/ / /_/ /  __/ /_/ / /_/ / /_/ / ,<      "
-    di "/_/\___/\___/\____/\__,_/\___/_.___/\____/\____/_/|_|     "
+    di "  __   _______   ______    ______    _______   _______ .______     ______     ______    __  ___  "
+    di " |  | |   ____| /      |  /  __  \  |       \ |   ____||   _  \   /  __  \   /  __  \  |  |/  /  "
+    di " |  | |  |__   |  .----' |  |  |  | |  .--.  ||  |__   |  |_)  | |  |  |  | |  |  |  | |  '  /   "
+    di " |  | |   __|  |  |      |  |  |  | |  |  |  ||   __|  |   _  <  |  |  |  | |  |  |  | |    <    "
+    di " |  | |  |____ |  '----. |  '--'  | |  '--'  ||  |____ |  |_)  | |  '--'  | |  '--'  | |  .  \   "
+    di " |__| |_______| \______|  \______/  |_______/ |_______||______/   \______/   \______/  |__|\__\  "
     di " "
     di "Welcome to {bf:iecodebook}!"
     di "It seems you have left out something important – the codebook!"
@@ -171,7 +172,7 @@ qui {
   // Store current data
   tempfile allData
     save `allData' , emptyok replace
-      
+
   // Template Setup
     // Load dataset if argument
     if `"`anything'"' != "" {
@@ -198,14 +199,14 @@ qui {
 
     // Stack up all the lines of code from all the dofiles in a dataset
     foreach dofile in `trim' {
-      
+
       // Check for dofile
-      if (`"`=substr("`dofile'",-3,.)'"' != ".do") {
+      if !strpos(`"`dofile'"',".do") {
         di as err "The specified file does not include a .do extension." ///
           "Make sure it is a Stata .do-file and you include the file extension."
         error 610
       }
-      
+
       // Load dofile contents as data
       import delimited "`dofile'" , clear varnames(nonames)
 
@@ -290,25 +291,26 @@ qui {
     noi di `"Data signature can be found at at {browse `"`signloc'"':`signloc'}"'
   }
 
-  // Save data copy if requested
+  // Prepare to save data copy if requested
   if ("`save'" != "") | (`"`saveas'"' != "") {
-	if `"`saveas'"' != ""  local savedta = `saveas'
-  
-    save "`savedta'", `replace'
-    noi di `"Copy of data saved at {browse `"`savedta'"':`savedta'}"'
+    if `"`saveas'"' != ""  local savedta = `saveas'
+    if !strpos("`savedta'",".dta") local savedta "`savedta'.dta"
+    tempfile outdata
+    save `outdata'
   }
 
-	if !missing("`verify'") & !missing("`excel'") { 
+  // Error if attempting to verify without Excel codebook
+	if !missing("`verify'") & !missing("`excel'") {
 		di as err "The [noexcel] and [verify] options cannot be combined."
 		err 184
 	}
-	
+
   // Write text codebook ONLY if requested
   if !missing("`plaintext'") {
 
 	noisily {
 
-		if "`plaintext'" == "compact" { 
+		if "`plaintext'" == "compact" {
 			local compact 	 , compact
 		}
 		else if "`plaintext'" == "detailed" {
@@ -317,21 +319,21 @@ qui {
 			di as err "Option [plaintext] was incorrectly specified. Please select one of the following formats: [compact] or [detailed]."
 			err 198
 		}
-		
+
 		local theTextFile = subinstr(`"`using'"',".xls",".txt",.)
-		local theTextFile = subinstr(`"`using'"',".xlsx",".txt",.)	
-				
+		local theTextFile = subinstr(`"`using'"',".xlsx",".txt",.)
+
 		local old_linesize `c(linesize)'
 		set linesize 75
-		
+
 		cap log close signdata
 			log using "`theTextFile'" , nomsg text `replace' name(signdata)
 			noisily : codebook `compact'
 		log close signdata
-		
+
 		set linesize `old_linesize'
 		noi di `"Codebook in plaintext created using {browse "`theTextFile'":`theTextFile'}
-		
+
 		if !missing("`excel'") exit
 	}
   }
@@ -341,7 +343,7 @@ qui {
 		noi error 198
 	}
   }
- 
+
 
 
   // Otherwise, write XLSX file and VERIFY if requested
@@ -426,10 +428,11 @@ qui {
           keep if name == "`theVariable'"
 
           local theOldType = type[1]
-          if "`theOldType'" != "`theType'" {
-            local QUITFLAG = 1
-            di as err "The type of {bf:`theVariable'} has changed:"
-            di as err `"  it was `theOldType' and is now `theType'."'
+          if ("`theOldType'" != "`theType'") & ///
+            !(strpos("`theOldType'","str") & strpos("`theType'","str")) {
+              local QUITFLAG = 1
+              di as err "The type of {bf:`theVariable'} has changed:"
+              di as err `"  it was `theOldType' and is now `theType'."'
           }
           local theOldLabel = label[1]
           if "`theOldLabel'" != "`theLabel'" {
@@ -548,7 +551,7 @@ qui {
         merge m:1 name`template' using `newdata' , nogen
         replace name`template' = "" if type`template' == ""
 
-        sort `order'
+        sort `order' , stable
         drop `order'
       }
 
@@ -564,12 +567,12 @@ qui {
             keep in `i'
             local faultLab  = label[1]
             local faultName = name[1]
-            
+
             cap export excel label using `test'  , replace
               if _rc != 0 di as err `"  `faultName' {tab} [`faultLab']"'
             restore
           }
-        } 
+        }
         else forvalues i = 1/10 {
           if `rc' != 0 {
             sleep `i'000
@@ -593,12 +596,12 @@ qui {
               keep in `i'
               local faultLab  = label[1]
               local faultName = lname[1]
-              
+
               cap export excel label using `test'  , replace
                 if _rc != 0 di as err `"  `faultName' {tab} [`faultLab']"'
               restore
             }
-          } 
+          }
           else forvalues i = 1/10 {
             if `rc' != 0 {
               sleep `i'000
@@ -622,6 +625,13 @@ qui {
         noi di "Existing codebook and data structure verified to match."
       }
   use `allData' , clear
+
+  // Save data copy if requested
+  if ("`save'" != "") | (`"`saveas'"' != "") {
+    copy `outdata' "`savedta'", `replace'
+    noi di `"Copy of data saved at {browse `"`savedta'"':`savedta'}"'
+  }
+
 } // end qui
 
 end
@@ -659,16 +669,17 @@ qui {
   }
 
   // Apply codebook
+  unab allVars : *
   preserve
   import excel "`using'" , clear first sheet(survey) allstring
 
-  // Confirm survey names match codebook 
+  // Confirm survey names match codebook
   cap confirm variable name`survey'
     if _rc {
       di as err "The survey name `survey' does not appear in the codebook."
       error 111
     }
-  
+
     // Check for broken things, namely quotation marks
     foreach var of varlist name`survey' name label choices recode`survey' {
       cap confirm string variable `var'
@@ -680,6 +691,11 @@ qui {
       }
     }
 
+    // Remove leading/trailing spaces
+    replace choices = trim(choices)
+    replace name    = trim(name)
+    replace label   = trim(label)
+
     // Check for duplicate names and return informative error
     local theNameList ""
     count
@@ -687,11 +703,25 @@ qui {
       local theName = name`survey'[`i']
       local theNameList "`theNameList' `theName'"
     }
+    if "`: list allVars - theNameList'" != "" {
+      if "`drop'" != "" {
+        pause
+        local firstDrop  "drop `: list allVars - theNameList'"
+      }
+      else {
+        di as err "The following variables in the `survey' data are not handled in the codebook:"
+          foreach item in `: list allVars - theNameList' {
+            di as err "  `item'"
+          }
+        di as err "Add them to the codebook to be managed, or use [drop] to remove all unused variables."
+        di as err "If you are getting this message from [iecodebook append], remove [keepall] to drop variables."
+        error 198
+      }
+    }
     if "`: list dups theNameList'" != "" {
       di as err "You have multiple entries for the same original variable in name:`survey'."
       di as err "The duplicates are: `: list dups theNameList'"
       di as err "This will cause conflicts. {bf:iecodebook} will now quit."
-      error 198
     }
 
     // Loop over survey sheet and accumulate rename, relabel, recode, vallab
@@ -699,25 +729,35 @@ qui {
     local QUITFLAG = 0
     forvalues i = 2/`r(N)' {
       local theName    = name`survey'[`i']
-        local theRename   = name[`i']
-        local theRename = trim("`theRename'")
-        if strtoname("`theRename'") != "`theRename'" & "`theRename'" != "." {
-          di as err "Error: [`theRename'] on line `i' is not a valid Stata variable name."
-          local QUITFLAG = 1
-        }
+      local theRename   = name[`i']
+      local theRename = trim("`theRename'")
       local theLabel    = label[`i']
       local theChoices  = choices[`i']
-        if strtoname("`theChoices'") != "`theChoices'" & "`theChoices'" != "." {
-          di as err "Error: [`theChoices'] on line `i' is not a valid Stata choice list name."
+      local theRecode   = recode`survey'[`i']
+        // Check new name validity
+        if strtoname("`theRename'") != "`theRename'" & "`theRename'" != "." {
+          di as err "Error: [`theRename'] on line `=`i'+1' is not a valid Stata variable name."
           local QUITFLAG = 1
         }
-      local theRecode   = recode`survey'[`i']
+        // Check choice list validity
+        if strtoname("`theChoices'") != "`theChoices'" & "`theChoices'" != "." {
+          di as err "Error: [`theChoices'] on line `=`i'+1' is not a valid Stata choice list name."
+          local QUITFLAG = 1
+        }
 
-      if "`theName'"   != "" {
-        // Drop if requested
+      if "`theName'" != "" {
+
+        // Report error when variable is missing from original data
+        if !regex(" `allVars' ", " `theName' ") {
+          di as error "Error: You requested changes to variable [`theName'] on line `=`i'+1', but it was not found in the data."
+          local QUITFLAG = 1
+        }
+
+        // Prepare to drop any variable that is renamed "." ; or left blank if [drop] option
         if ("`drop'" != "" & "`theRename'" == "") | ("`theRename'" == ".") {
           local allDrops "`allDrops' `theName'"
         }
+
         // Otherwise process requested changes as long as there is something specified
         else {
           if "`theRename'"  != "" local allRenames1 = `"`allRenames1' `theName'"'
@@ -728,6 +768,23 @@ qui {
         }
       }
     }
+
+    gen badlabel = (strpos(type,"str") & choices!="")
+      qui su badlabel
+      if `r(max)' != 0 {
+        di as err "You are trying to label the following non-numeric variables:"
+        di as err " "
+        di as err "{col 4} Line {col 11} Name {col 24} Label"
+        forv i = 1/`c(N)' {
+            local mi = badlabel[`i']
+            local li = name[`i']
+            local la = label[`i']
+            if "`mi'" == "1" di as err "{col 4} `=`i'+1' {col 11} `li' {col 24} `la'"
+          }
+          di as err " "
+          error 100
+      }
+
     if `QUITFLAG' error 198
 
     // Loop over choices sheet and accumulate vallab definitions
@@ -737,7 +794,24 @@ qui {
 
       // Prepare list of values for each value label.
       import excel "`using'" , first clear sheet(choices) allstring
-
+        replace list_name = trim(list_name)
+        drop if list_name == ""
+      // Catch undefined levels
+      count if missing(value)
+      if r(N) > 0 {
+        di as err "You have specified value labels without corresponding values."
+        di as err "{bf:iecodebook} will exit. Complete the following value labels and re-run the command to continue:"
+        di as err " "
+        di as err "{col 4} Line {col 11} List {col 24} Label"
+          forv i = 1/`c(N)' {
+            local mi = value[`i']
+            local li = list_name[`i']
+            local la = label[`i']
+            if "`mi'" == "" di as err "{col 4} `=`i'+1' {col 11} `li' {col 24} `la'"
+          }
+          di as err " "
+          error 100
+      }
       // Catch any labels called on choices that are not defined in choice sheet
       levelsof list_name , local(theListedLabels)
       local period "."
@@ -748,7 +822,7 @@ qui {
         di as err "{bf:iecodebook} will exit. Define the following value labels and re-run the command to continue:"
         di as err " "
         foreach element in `leftovers' {
-          di as err "  `element'"
+          di as err "  [`element']"
         }
         di as err " "
         error 100
@@ -791,13 +865,13 @@ qui {
       }
 
     // Drop leftovers if requested
-    unab allVars : *
     local toKeep : list allVars - allDrops
     if "`toKeep'" == "" {
       noi di as err "You are dropping all the variables in a dataset. This is not allowed. {bf:iecodebook} will exit."
       error 102
     }
     keep `toKeep'
+    `firstDrop'
 
 
     // Apply all recodes, choices, and labels
@@ -909,6 +983,21 @@ qui {
     use "`dataset'" , clear
 
     iecodebook apply using "`using'" , survey(`survey') `drop' `options'
+
+    cap confirm variable `generate'
+      if _rc==0 {
+        di as err "There is a variable called `generate' in your dataset."
+        di as err "This conflicts with using that name to identify the data source."
+        di as err "Please specify a different name for the new variable in the [generate()] option."
+        error 110
+      }
+    cap labelbook `generate'
+      if _rc==0 {
+        di as err "There is a value label called `generate' in your dataset."
+        di as err "This conflicts with using that name to identify the data source."
+        di as err "Please specify a different name for the new variable in the [generate()] option."
+        error 110
+      }
 
     gen `generate' = `x'
     tempfile next_data

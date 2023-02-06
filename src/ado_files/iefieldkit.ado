@@ -1,11 +1,11 @@
-*! version 2.0 07JUL2020  DIME Analytics dimeanalytics@worldbank.org
+*! version 3.1 7JAN2023  DIME Analytics dimeanalytics@worldbank.org
 
 capture program drop iefieldkit
 program iefieldkit, rclass
 
 	* UPDATE THESE LOCALS FOR EACH NEW VERSION PUBLISHED
-	local version "2.0"
-	local versionDate "07JUL2020"
+	local version "3.1"
+	local versionDate "7JAN2023"
 
 	syntax [anything]
 

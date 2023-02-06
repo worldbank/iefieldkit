@@ -6,7 +6,7 @@
 	* Add the path to your local clone of the iefieldkit repo
 	do 	"${iefieldkit}/src/ado_files/ieduplicates.ado"
 
-	local iedup_output "${testouput}/ieduplicates_output"
+	local iedup_output "${output}/ieduplicates"
 
 	** Test if output folder exists, if not create it
 	mata : st_numscalar("r(dirExist)", direxists("`iedup_output'"))
@@ -86,4 +86,17 @@
 	use `duplicates', clear
 	cap ieduplicates uuid using "foo", uniquevars(make) force
 	di _rc
+	assert _rc == 198
+
+	*Weird character included in the idvar
+	sysuse auto, clear
+	encode make, gen(uuid)
+	replace make = "oi'1'" in 1/2
+	ieduplicates make using "${output}/ieduplicates/foo2.xlsx", uniquevars(uuid) force
+	
+	*invalid characters included in the idvar
+	sysuse auto, clear
+	encode make, gen(uuid)
+	replace make = "oi`1" in 1/2
+	cap ieduplicates make using "${output}/ieduplicates/foo2.xlsx", uniquevars(uuid) force
 	assert _rc == 198

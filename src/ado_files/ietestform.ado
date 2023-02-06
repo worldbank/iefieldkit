@@ -1,4 +1,4 @@
-*! version 2.0 07JUL2020  DIME Analytics dimeanalytics@worldbank.org
+*! version 3.1 7JAN2023  DIME Analytics dimeanalytics@worldbank.org
 
 capture program drop ietestform
 		program ietestform , rclass
@@ -746,7 +746,7 @@ qui {
 
 	foreach od_var of local outdatedsyntaxvars {
 		*Test that the list name does not have outdated syntax
-		gen out_`od_var' = 1 if regexm(`od_var', "position(|jr:choice-name(")
+		gen out_`od_var' = 1 if regexm(`od_var', "position\(|jr:choice-name\(")
 		replace out_`od_var' = 0 if missing(out_`od_var')
 		*Add item to report for any row with missing label in the label vars
 		count if out_`od_var' != 0

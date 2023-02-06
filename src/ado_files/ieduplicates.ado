@@ -1,4 +1,4 @@
-*! version 2.0 07JUL2020  DIME Analytics dimeanalytics@worldbank.org
+*! version 3.1 7JAN2023  DIME Analytics dimeanalytics@worldbank.org
 
 	capture program drop ieduplicates
 	program ieduplicates , rclass
@@ -60,6 +60,19 @@
 				error 198
 				exit
 			}
+
+			* Test that the idvar does not contain the character `
+			cap confirm string variable `idvar'
+			if !_rc {
+				cap assert !strpos(`idvar', "`")
+				if _rc {
+					noi di as error "{phang}The data set contains one or more observations that has the character `=char(96)' in the ID variable [`idvar']. This is the only character {inp:ieduplicates} cannot handle that is otherwise allowed in a variable in your version of Stata.{p_end}"
+					noi di ""
+					error 198
+					exit
+				}
+			}
+
 
 			** Making one macro with all variables that will be
 			*  imported and exported from the Excel file
@@ -559,7 +572,7 @@
 				*Add list of variables that are different between the two duplicated id value in excel report in 'listofdiffs' variable
 				levelsof `idvar', local(list_dup_ids)
 				foreach id of local list_dup_ids {
-					
+
 					*reset list of differing vars between each loop
 					local difflist ""
 

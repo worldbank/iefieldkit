@@ -1,11 +1,10 @@
 /*******************************************************************************
-	
+
 							MASTER RUN FILE
-							
+
 	This file is meant to be used to test the commands before a new release.
 	It should not be merged to the Master branch, just kept on develop so it
 	can be used before making a new PR.
-
 *******************************************************************************/
 
 
@@ -15,26 +14,45 @@ qui {
 *******************************************************************************/
 
 	* Set root paths
-	global GitHub		"C:/Users/wb501238/Documents/GitHub"
-	global AnalyticsDB	"C:/Users/wb501238/Dropbox/WB/Analytics/DIME Analytics"
+
+	*Kbjarkefur
+	if lower(c(username)) == "wb462869" {
+		global GitHub		"C:\Users\wb462869\github"
+		global AnalyticsDB	"C:\Users\wb462869\Dropbox\DIME Analytics"
+	}
+
+	* Luiza work PC
+	if lower(c(username)) == "luizaandrade" {
+		global GitHub		"C:\Users\luizaandrade\Documents\GitHub"
+		global AnalyticsDB	"C:\Users\luizaandrade\Dropbox\WB\Analytics\DIME Analytics"
+	}
+
+	if lower(c(username)) == "luiza" {
+		global GitHub		"/home/luiza/github"
+		global AnalyticsDB	"/home/luiza/Dropbox/WB/Analytics/DIME Analytics"
+	}
+
+	if lower(c(username)) == "bbdaniels" {
+		global GitHub		"/users/bbdaniels/github"
+		global AnalyticsDB	"/Users/bbdaniels/Library/CloudStorage/Dropbox/Work/DIME/DIME Analytics"
+	}
 
 	* Set up folder globals
 	global iefieldkit	"${GitHub}/iefieldkit"
+	global run 			"${iefieldkit}/run"
+	global output		"${run}/output"
 	global form			"${AnalyticsDB}/Data Coordinator/iefieldkit/ietestform"
-	global codebook		"${AnalyticsDB}/Data Coordinator/iefieldkit/iecodebook"
-	global testouput	"${iefieldkit}/run/output"
-	
-	** Test if output folder exists, if not create it
-	mata : st_numscalar("r(dirExist)", direxists("${testouput}"))
-	if `r(dirExist)' == 0  mkdir "${testouput}"
-	
+	global codebook		"${output}/iecodebook"
+
 	* Select commands to test
-	local ieduplicates	0
-	local iecompdup		0
-	local ietestform	0
-	local iecodebook	0
-	local iefieldkit	0
-	
+	local iecorrect		1
+	local ietestform	1
+	local iecodebook	1
+	local iefieldkit	1
+	local ieduplicates	1
+	local iecompdup		1
+
+
 /*******************************************************************************
 	Part II: Test inputs
 *******************************************************************************/
@@ -43,30 +61,33 @@ qui {
 		noi di as error "Add the folder path to your GitHub folder to the Master run file."
 		exit
 	}
-	if !inlist(1, `ieduplicates', `iecompdup', `ietestform', `iecodebook', `iefieldkit') {
+	if !inlist(1, `ieduplicates', `iecompdup', `ietestform', `iecodebook', `iefieldkit', `iecorrect') {
 		noi di as error "No commands to test"
 		exit
 	}
-	
-	** Test if output folder exists, if not create it
-	mata : st_numscalar("r(dirExist)", direxists("${testouput}"))
-	if `r(dirExist)' == 0  mkdir "${testouput}"
-}	
+
+}
 
 /*******************************************************************************
 	Part III: Test commands
 *******************************************************************************/
-	
-	* Test ieduplicates
-	if `ieduplicates' do "${iefieldkit}/run/ieduplicates.do"
-	
+
+	* Test ietestform
+	if `ietestform' 	do "${run}/ietestform.do"
+
+	* Test iecodebook
+	if `iecodebook' 	do "${run}/iecodebook.do"
+
+	* Test iecorrect
+	if `iecorrect' 		do "${run}/iecorrect.do"
+
 	* Test iecompdup
-	if `iecompdup' do "${iefieldkit}/run/ieduplicates.do"	
-	
-	* Test ietestform
-	if `ietestform' do "${iefieldkit}/run/ietestform.do"	
-	
-	* Test ietestform
-	if `iecodebook' do "${iefieldkit}/run/iecodebook.do"	
-	
+	if `iecompdup' 		do "${run}/iecompdup.do"
+
+	* Test ieduplicates
+	if `ieduplicates' 	do "${run}/ieduplicates.do"
+
+
+
+
 *************************** End of Master Do-File ******************************
