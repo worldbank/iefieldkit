@@ -1,4 +1,4 @@
-*! version 3.0 21JUL2022  DIME Analytics dimeanalytics@worldbank.org
+*! version 3.1 7JAN2023  DIME Analytics dimeanalytics@worldbank.org
 
 cap program drop iecorrect
 	program 	 iecorrect
@@ -6,13 +6,12 @@ cap program drop iecorrect
 	syntax [anything] using/, ///
 		idvar(varlist) 						 ///
 		[ 									 ///
-			GENerate 						 ///
 			NOIsily 						 ///
 			save(string) 					 ///
 			replace 						 ///
-			other 							 ///
 			SHEETs(string) 					 ///
 			debug 							 ///
+			break							 ///
 		]
 		
 	preserve
@@ -28,7 +27,7 @@ cap program drop iecorrect
 ==============================================================================*/
 
 	* Test if idvar uniquely identifies the dataset
-	_testid `idvar'
+	_testid `idvar', `break'
 		
 	tempfile 	 data
 	qui save	`data'
@@ -37,11 +36,8 @@ cap program drop iecorrect
                 PROCESS OPTIONS
 ==============================================================================*/
 	
-	if !missing("`sheets'") 	 local corrSheets	`sheets'
-	else {
-								 local corrSheets	numeric string drop
-	}
-	if "`other'" != "" 		 	 local corrSheets "`corrSheets' other"
+	if !missing("`sheets'") local corrSheets	`sheets'
+	else					local corrSheets	numeric string drop
 	
 	_testsheets, sheets("`corrSheets'") debug
 
@@ -50,14 +46,13 @@ cap program drop iecorrect
 ==============================================================================*/
 
   // Standardize file path
-  local using = subinstr(`"`using'"',"\","/",.)  
+  local using = subinstr(`"`using'"', "\", "/", .)  
   
   // Get the file extension       
-    local fileext = substr(`"`using'"',strlen(`"`using'"')-strpos(strreverse(`"`using'"'),".")+1,.)
+    local fileext = substr(`"`using'"', strlen(`"`using'"') - strpos(strreverse(`"`using'"'), ".") + 1, .)
 
   // If no fileextension was used, then add .xslx to "`using'"
-  if "`fileext'" == "" {
-      
+  if "`fileext'" == "" {     
     local using  "`using'.xlsx"
   }
 
@@ -70,10 +65,9 @@ cap program drop iecorrect
   //   Confirm the file path is correct
   cap confirm new file `using'
   if (_rc == 603) {
-    noi di as error `"{phang} The file path used {bf:`using'} does not exist.{p_end}"'
-      error 601  
+		noi di as error `"{phang} The file path used {bf:`using'} does not exist.{p_end}"'
+		error 601  
   }  
-  
   
 /*==============================================================================
               TEMPLATE SUBCOMMAND
@@ -85,22 +79,14 @@ cap program drop iecorrect
 		
 		// Check if file already exists and check if the "other" tab is included
 		cap confirm new file `using'
-		if (_rc == 602) {
-			if "`other'" != "" {
-				cap import excel "`using'", sheet("other") clear
-				if _rc == 601 local addother 	1
-				else 		  local errorfile 	1
-				
-			}
-			if ("`other'" == "") | ("`errorfile'" == "1") {
-				noi di as error `"{phang}File {bf:`using'} already exists. Template was not created.{p_end}"'
-			error 602 
-				
-			}
-		}		
 		
+		if (_rc == 602) {
+			noi di as error `"{phang}File {bf:`using'} already exists. Template was not created.{p_end}"'
+			error 602 
+		}
+
 		// Create the template -----------------------------------------------------
-		templateworkbook using "`using'" , idvar(`idvar') `other' addother("`addother'")
+		templateworkbook using "`using'" , idvar(`idvar') `debug'
 	}
 
 /*==============================================================================
@@ -136,9 +122,7 @@ else if "`subcommand'" == "apply" {
 		_checksheets using "`using'", type("`type'") ///
 			originalvars(`original_vars') stringvars(`string_vars') ///
 			floatvars(`float_vars') doublevars(`double_vars') ///
-			idvar(`idvar') `debug' `generate' data(`data')
-
-		if !missing("`r(genvars)'")	local genvars "`r(genvars)'"
+			idvar(`idvar') `debug' data(`data')
 		
 		* Prepare inputs if there are corrections
 		if "`r(correct)'" == "1" {
@@ -170,15 +154,6 @@ else if "`subcommand'" == "apply" {
 	* If the do file will be saved for later reference, add a header
     if ("`save'" != "") qui _doheader , doname("`doname'") dofile("`dofile'")
  
-	if !missing("`genvars'") & !missing("`generate'") {
-		foreach var in `genvars' {
-			cap  file close   `doname'
-			qui  file open    `doname' using "`dofile'", text write append
-				 file write   `doname' `"gen `var' = .  "' _n     										 // <---- Writing in do file here
-				 file close   `doname'	
-		}
-	}
-
 	* Write correction do-file
     foreach type of local corrections {
         
@@ -194,7 +169,7 @@ else if "`subcommand'" == "apply" {
 			idvar("`idvar'") ///
 			stringvars(`string_vars') floatvars(`float_vars') doublevars(`double_vars')  ///
 			originalvars(`original_vars') ///
-			`debug' `generate'
+			`debug'
 		
 		* Add an extra space before the next set of corrections
 		file close   `doname'	
@@ -210,11 +185,14 @@ else if "`subcommand'" == "apply" {
     
     * Don't run if there are no corrections to be made
     if !missing("`any_corrections'") {
-		_dorun , doname("`doname'") dofile("`dofile'") data("`data'") `debug' `noisily' 
+		_dorun using "`using'", ///
+			doname("`doname'") dofile("`dofile'") ///
+			data("`data'") sheets("`corrections'") ///
+			idvar(`idvar') `debug' `noisily'  `break'
     }
-	if regex("`corrSheets'", "other") {
-		noi di as result "{phang}{bf:iecorrect} has made changes to categorical variables, but it did not apply value labels. To apply value labels, use the command {bf:iecodebook}{p_end}"
-	}
+	
+	* Return the corrected dataset
+	qui use `data', clear
   
   }
 
@@ -236,12 +214,17 @@ else if "`subcommand'" == "apply" {
 cap program drop _testid
 	program 	 _testid
 	
-	syntax varlist
+	syntax varlist, [break]
 	
 	cap isid `varlist'
 		
 	if _rc == 459 {
 			noi di as error `"{phang}The ID variables listed in option {bf:idvar} do not uniquely and fully identify the data. This may cause unintended changes to the data when applying corrections.{p_end}"'
+			if !missing("`break'") {
+				error 111
+				exit
+			}
+			
 			noi di 			""
 	}
 	
@@ -265,11 +248,13 @@ cap program drop _testsheets
 		
 		local sheetname : word `sheet' of `sheets'
 		
-		if !inlist("`sheetname'", "string", "numeric", "drop", "other") {
+		if !inlist("`sheetname'", "string", "numeric", "drop") {
 			noi di as error `"{phang}`sheetname' is not a valid sheet name to be selected in option {bf:sheets}. This option only accepts a combination of the words "string", "numeric", and "drop", separated by space.{p_end}"'
 			error 198
 		}
 	}
+	
+	if !missing("`debug'") noi di as result "Exiting testsheets subcommand"
 end
 
 **********************************************************************
@@ -314,30 +299,21 @@ cap program drop _parsesheet
 			* Check that all relevant variables are in the sheet ---------------
 			_fillmissingcol, idvar(`idvar') type(`type') `debug'
 				
-			* Prepare ID values ------------------------------------------------
-			if "`type'" != "other" {
-				foreach var of varlist `idvar' {
-					replace  `var'  = ".v" if `var' == "*"
-					count if `var' != ".v"
-					if ((r(N) > 0) | !regex(" `stringvars' ", " `var' ")) destring `var', replace					
-				}
+			* Prepare ID values ------------------------------------------------			
+			foreach var of varlist `idvar' {
+				replace  `var'  = ".v" if `var' == "*"
+				count if `var' != ".v"
+				if ((r(N) > 0) | !regex(" `stringvars' ", " `var' ")) destring `var', replace					
 			}
 						
 			* Destring numeric columns -----------------------------------------
-			if 	inlist("`type'", "numeric", "string") {
-				replace  valuecurrent = ".v" if valuecurrent == "*"
-			}
+			if 	inlist("`type'", "numeric") 			replace  valuecurrent = ".v" if valuecurrent == "*"
+			if 	inlist("`type'", "numeric", "string")   cap destring value valuecurrent, replace
+			if 	inlist("`type'", "string") 				replace  valuecurrent = ".v" if valuecurrent == "*"
 			
-			if "`type'" == "numeric" {
-				destring value valuecurrent, replace
-			}
 			else if "`type'" == "drop" {
 				replace  n_obs = ".v" if n_obs == "*"
 				destring n_obs, replace
-			}
-			else if "`type'" == "other" {
-				replace  strvaluecurrent = ".v" if strvaluecurrent == "*"
-				destring catvalue, replace
 			}
 		}
 	}
@@ -358,7 +334,7 @@ cap program drop _checksheets
 	syntax using/, ///
 		type(string) idvar(string) ///
 		originalvars(string) data(string) ///
-		[debug generate ///
+		[debug ///
 		stringvars(string) floatvars(string) doublevars(string)]
   
     if !missing("`debug'") noi di as result "Entering checksheets subcommand"
@@ -377,13 +353,10 @@ cap program drop _checksheets
 			idvar(`idvar') ///
 			originalvars(`originalvars') stringvars(`stringvars') ///
 			floatvars(`floatvars') doublevars(`doublevars') ///
-			`debug' `generate' data(`data') 
+			`debug' data(`data') 
 		
 			 if !missing("`r(errorfill)'")	error 198
 		else if !missing("`r(errortype)'")  error 109
-		else if !missing("`r(errorgen)'") 	error 111
-
-			 if !missing("`r(genvars)'")	return local genvars	"`r(genvars)'"
 
 		return local correct  	1
     }
@@ -403,7 +376,7 @@ cap program drop _checkcolnumeric
 	syntax, ///
 		idvar(string) originalvars(string) ///
 		[stringvars(string) floatvars(string) doublevars(string) ///
-		data(string)  debug generate]
+		data(string) debug]
 	
 	if !missing("`debug'") noi di as result "Entering checkcolnumeric subcommand"
 	
@@ -430,7 +403,7 @@ cap program drop _checkcolnumeric
 		_fillrequired, type(numeric) varlist(value valuecurrent) vartype(numeric) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
-		* Check that varname column is string
+		* Check that varname column is numeric
 		foreach var in value valuecurrent {
 			_fillvartype, type(numeric) vartype(numeric) var(`var') `debug'
 			if "`r(errortype)'" == "1" local errortype 1
@@ -442,8 +415,6 @@ cap program drop _checkcolnumeric
 		* Check that variables to be corrected exist
 		qui levelsof varname, local(numericvars)
 		foreach var of local numericvars {
-			_vargen,  type(numeric) vartype(numeric) column(varname) var(`var') originalvars(`originalvars') `debug'
-			if "`r(errorgen)'" == "1" local errorgen 1
 				
 			_vartype, type(numeric) vartype(numeric) column(varname) var(`var') stringvars(`stringvars')  `debug'
 			if "`r(errortype)'" == "1" local errortype 1
@@ -454,7 +425,6 @@ cap program drop _checkcolnumeric
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
 	return local errorfill	`errorfill'
-	return local errorgen 	`errorgen'
 	return local errortype 	`errortype'
 
 end		
@@ -469,7 +439,7 @@ cap program drop _checkcolstring
 	syntax, ///
 		idvar(string) originalvars(string) ///
 		[stringvars(string) floatvars(string) doublevars(string) ///
-		data(string) debug generate]
+		data(string) debug]
 
 	if !missing("`debug'") noi di as result "Entering checkcolstring subcommand"
 	
@@ -500,9 +470,6 @@ cap program drop _checkcolstring
 		* Check that variables to be corrected exist
 		qui levelsof varname, local(stringvars)
 		foreach var of local stringvars {
-			_vargen,  type(string) vartype(string) column(varname) var(`var') originalvars(`originalvars') `debug'
-			if "`r(errorgen)'" == "1" local errorgen 1
-			
 			_vartype, type(string) vartype(string) column(varname) var(`var') stringvars(`stringvars')  `debug'
 			if "`r(errortype)'" == "1" local errortype 1
 		}
@@ -519,78 +486,10 @@ cap program drop _checkcolstring
 		if "`r(errorfill)'" == "1" local errorfill 1
 		
 		return local errorfill	`errorfill'
-		return local errorgen 	`errorgen'
 		return local errortype 	`errortype'
 		
 end		
 	
-***********************************
-* Check variables in other sheet
-***********************************
-
-cap program drop _checkcolother
-  program   	 _checkcolother, rclass
-  
- 	syntax, ///
-		idvar(string) originalvars(string) ///
-		[stringvars(string) floatvars(string) doublevars(string) ///
-		data(string) debug generate]
-
-	if !missing("`debug'") noi di as result "Entering checkcolother subcommand"
-  
-	  
-		* Keep only relevant variables -- the user may have added notes that are not relevant for the command
-		keep strvar strvaluecurrent catvar catvalue
-		
-		* Check that strvar and catvar contain strings
-		foreach var in strvar catvar strvaluecurrent {
-			_fillvartype, type(other) vartype(string) var(`var') `debug'
-			if "`r(errortype)'" == "1" local errortype 1
-		}
-		
-		_fillvartype, type(other) vartype(numeric) var(catvalue) `debug'
-		if "`r(errortype)'" == "1" local errortype 1
-		
-		* Check that variables listed in column strvar are string variables
-		qui levelsof strvar, local(stringvars)
-		foreach var of local stringvars {
-			_vargen,  type(categorical) vartype(string) column(strvar) var(`var') originalvars(`originalvars') `debug'
-			if "`r(errorgen)'" == "1" local errorgen 1
-			
-			_vartype, type(categorical) vartype(string) column(strvar) var(`var') stringvars(`stringvars')  `debug'
-			if "`r(errortype)'" == "1" local errortype 1
-		}
-		
-		* Check that variables listed in column catvar are numeric variables
-		qui levelsof catvar, local(catvars)
-		foreach var of local catvars {
-			_vargen,  type(categorical) vartype(numeric) column(catvar) var(`var') originalvars(`originalvars') `debug' `generate'
-			if "`r(errorgen)'" == "1" 	 local errorgen 1
-			if !missing("`r(genvars)'")  local genvars 	"`genvars' `r(genvars)'"
-			
-			_vartype, type(categorical) vartype(numeric) column(catvar) var(`var') stringvars(`stringvars')  `debug'
-			if "`r(errortype)'" == "1" local errortype 1
-		}
-
-		* All columns in this sheet must be specified
-		_fillrequired, type(other) varlist(strvar strvaluecurrent catvar) vartype(string) `debug'
-		if "`r(errorfill)'" == "1" local errorfill 1
-		
-		_fillrequired, type(other) varlist(catvalue) vartype(numeric) `debug'
-		if "`r(errorfill)'" == "1" local errorfill 1
-		
-		* Check if the string columns have extra whitespaces and special characters
-		foreach var in strvar strvaluecurrent {
-		  _valstrings `var', location(Column)         
-		}
-    
-    return local errorfill	`errorfill'
-	return local errorgen 	`errorgen'
-	return local errortype 	`errortype'
-	return local genvars 	`genvars'
-    
-end  
-
 ********************************
 * Check variables in drop sheet
 ********************************
@@ -601,7 +500,7 @@ cap program drop 	_checkcoldrop
 	syntax, ///
 		idvar(string) originalvars(string) ///
 		[stringvars(string) floatvars(string) doublevars(string) ///
-		data(string) debug generate]
+		data(string) debug]
  
 	* Keep only relevant variables -- the user may have added notes that are not relevant for the command
 	keep `idvar' n_obs
@@ -637,7 +536,6 @@ cap program drop 	_checkcoldrop
 	if "`r(errorfill)'" == "1" local errorfill 1
 	
 	return local errorfill	`errorfill'
-	return local errorgen 	`errorgen'
 	return local errortype 	`errortype'
       
 end  
@@ -769,9 +667,9 @@ cap program drop _fillvartype
 	
 	syntax, type(string) vartype(string) var(string) [debug]
 	
-	if !missing("`debug'")	noi di as result "Entering fillvartype subcommand"
+	if !missing("`debug'")	noi di as result "Entering fillvartype subcommand: testing column `var'"
 
-		qui count if missing(`var')
+		qui count if !missing(`var')
 		if r(N) != 0 {
 			cap confirm `vartype' var `var'
 			if _rc {
@@ -797,7 +695,6 @@ cap program drop _fillmissingcol
 
 	if inlist("`type'", "string", "numeric") 	local columns	`idvar' varname value valuecurrent
 	else if   "`type'" == "drop"				local columns	`idvar' n_obs
-	else if   "`type'" == "other"				local columns	strvar strvaluecurrent catvar catvalue
 	
 		foreach col in `columns' {
 			
@@ -1029,31 +926,6 @@ cap program drop _vartype
 	return local errortype `errortype'
 	
 end
-
-*************************
-* Check if variable exits
-*************************
-
-cap program drop _vargen
-	program    	 _vargen, rclass
-	
-	syntax, type(string) vartype(string) column(string) var(string) originalvars(string) [generate debug]
-
-	if !missing("`debug'")	noi di as result "Entering vargen subcommand"
-
-		if "`type'" == "other" local message " Check the variable name or use option {bf:generate} to create the variable."
-		if !regex(" `originalvars' ", " `var' ") & missing("`generate'") {
-			noi di as error `"{phang} The variable {bf:`var'} listed in column {bf:`column'} of sheet {bf:`type'} does not exist in the dataset.`message'{p_end}"'
-			local errorgen	1
-		}
-		else if !regex(" `originalvars' ", " `var' ") & !missing("`generate'") {
-			local genvars	`var'
-		}
-
-	return local errorgen	`errorgen'
-	return local genvars	`genvars'
-
-end
   
 }
 /*******************************************************************************  
@@ -1120,7 +992,7 @@ cap program drop _donumeric
 				idvar(`idvar') row(`row') `debug' ///
 				stringvars(`stringvars') floatvars(`floatvars') doublevars(`doublevars') 
 				
-			if !missing("`r(idcond)'") 	local line `"`line'`r(idcond)'"'
+			if !missing(`"`r(idcond)'"') 	local line `"`line'`r(idcond)'"'	
 			local line = substr(`"`line'"', 1, length(`"`line'"') - 3)
 			
 			** Write the line to the do file
@@ -1207,40 +1079,6 @@ cap program drop 	_dodrop
 		
 end
 
-***************************
-* Write 'other' corrections
-***************************
-
-cap program drop 	_doother
-	program    		_doother
-  
-	syntax , ///
-		doname(string) idvar(string) ///
-		[originalvars(string) floatvars(string) doublevars(string) stringvars(string) ///
-		debug generate] 
-
-	if !missing("`debug'") noi di as result "Entering doother subcommand"
-  
-		file write  `doname'      "** Adjust categorical variables to include 'other' values " _n
-
-		qui count
-		forvalues row = 1/`r(N)' {
-
-			local strvar      		= strvar[`row']
-			local strvaluecurrent 	= strvaluecurrent[`row']
-			local strvaluecurrent 	= `""`strvaluecurrent'""'
-			local catvar       		= catvar[`row']
-			local catvalue       	= catvalue[`row']
-		
-			file write `doname'    `"replace `catvar' = `catvalue'"'
-
-			if `"`strvaluecurrent'"' != ".v"  {
-			  file write `doname'    `" if `strvar' == `strvaluecurrent'"' _n
-			}
-		}
-
-end
-
 ************************************
 * Write code to create new variables
 ************************************
@@ -1267,7 +1105,9 @@ cap program drop _idcond
 			}
 		}
 
-	  return local idcond `"`idcond'"'
+	if !missing("`debug'") noi di as result "Exiting idcond subcommand"
+	 
+	return local idcond `"`idcond'"'
 
 end
 
@@ -1295,16 +1135,117 @@ cap program drop 	_dofooter
 cap program drop _dorun
 	program      _dorun
   
-	syntax , doname(string) dofile(string) data(string) [NOIsily debug]
+	syntax using/, doname(string) dofile(string) data(string) sheets(string) idvar(string) [NOIsily debug break]
 
-	if !missing("`debug'")     noi di as result "Entering dorun subcommand"
-
+	if !missing("`debug'")    noi di as result "Entering dorun subcommand"
+	if !missing("`noisily'")  noi di ""
+	
 	if !missing("`noisily'")  local display noi
 	else					  local display qui
-
-	 `display' do "`dofile'"
 	
+	
+	* Read do-file line by line
+	tempname file
+	file open `doname' using "`dofile'", read
+	file read `doname' line
+	
+	while r(eof)==0 {
+		
+		* If the line is starting a new type of correction, 
+		* start a new matrix to store the number of changes caused by this
+		* type of corrections
+		if (substr(`"`line'"', 1, 3) == "** ") {
+			
+			if regex(`"`line'"', "numeric") local matrix numeric
+			if regex(`"`line'"', "string") 	local matrix string
+			if regex(`"`line'"', "Drop") 	local matrix drop
+			
+			local row 1
+			
+		}
+		* If the line is actually making a correction, make that correction and
+		* count the number of changes
+		else if ((substr(`"`line'"', 1, 7) == "replace") | (substr(`"`line'"', 1, 4) == "drop")) {
+			
+			local ++row
+			
+			* Count number of changes and store in a local
+			local  		if_start 	= strpos(`"`line'"'," if (")
+			local  		condition 	= substr(`"`line'"', `if_start', .)
+			qui count  `condition'
+			local obs = r(N)
+			
+			* Throw a warning if there are no changes
+			if (`obs' == 0) {
+				local nochange 1
+			}
+			
+			* Run line with changes
+			`display' di `"`line'"'
+			`display' `line'
+			
+			* Write number of changes in matrix with this type of changes
+			if (`row' == 2) {
+				mat `matrix' = `obs'
+			}
+			else {
+				mat `matrix' = `matrix' , `obs'
+			}
+		}
+		
+		* Read next line
+		file read `doname' line
+	}
+
+	file close `doname'
+	
+	if ("`nochange'" == "1") {
+		noi di as  error `"{phang}At least one of the lines in the spreadsheet did not create any modifications in the data. Refer to column [n_changes] in the spreadsheet for details on which lines caused this error.{p_end}"'
+		if !missing("`break'") {
+			noi di as  error `"{phang}No corrections were applied to the data.{p_end}"'
+			error 111 
+			exit
+		}
+	}
+	
+	* Save changes to the data
 	qui save `data', replace
+
+	* Update information on the workbook to include last date when changes were made
+	foreach sheet of local sheets {
+		
+		qui import excel "`using'", sheet("`sheet'") firstrow allstring clear
+		
+		* Update records from last time the file was run
+		qui ds
+		if regex(r(varlist),  "date_last_changed")  local changes_applied 1
+		else										local changes_applied 0
+		
+									local keep `idvar' initials notes
+		if ("`sheet'" != "drop")	local keep `keep' varname  valuecurrent value 
+		else						local keep `keep' n_obs
+		if (`changes_applied' == 1)	local keep `keep' date_last_changed
+										  keep `keep'
+		
+		* Add new column to template with number of changes for corrections other than "drop" type
+		* (drop type already has a check for number of observations dropped)
+		if ("`sheet'"  != "drop") {
+			
+			matrix `sheet' = `sheet''
+			svmat  `sheet' , names("n_changes")
+			
+			rename n_changes1  n_changes
+			local  keep `keep' n_changes
+		}
+		
+		* Add a column with the date when changes were last applied
+		if (`changes_applied' == 1)	replace date_last_changed = "`c(current_date)'"
+		else 						gen		date_last_changed = "`c(current_date)'"
+
+		* Export Excel
+		qui export excel "`using'", sheet("`sheet'", replace) firstrow(variables)
+
+	}
   
 end
 }
@@ -1315,16 +1256,18 @@ end
 cap program drop templateworkbook
 	program		 templateworkbook
 	
-	syntax using/ , idvar(string) [other addother(string)]
+	syntax using/ , idvar(string) [debug]
+	
+	if !missing("`debug'")     noi di as result "Entering templateworkbook subcommand"
 	
 	preserve
-	    if "`addother'" == "" { 
+		
 		* String variables
 		templatesheet using "`using'", ///
 			varlist("`idvar' varname value valuecurrent initials notes") ///
 			sheetname("string") ///
 			current("value")
-					
+
 		* Numeric variables
 		templatesheet using "`using'", ///
 			varlist("`idvar' varname value valuecurrent initials notes") ///
@@ -1335,16 +1278,6 @@ cap program drop templateworkbook
 		templatesheet using "`using'", ///
 			varlist("`idvar' n_obs initials notes") ///
 			sheetname("drop")
-		}	
-
-		* Other variables
-		if "`other'" != "" {
-			templatesheet using "`using'", ///
-				varlist("strvar strvaluecurrent catvar catvalue initials notes") ///
-				sheetname("other") ///
-				current("strvalue")
-		}
-			
 
 		noi di as result `"{phang}Template spreadsheet saved to: {browse "`using'":`using'}{p_end}"'
 			
@@ -1358,7 +1291,8 @@ cap program drop 	templatesheet
   syntax using/, varlist(string) sheetname(string) [current(string)]
   
   qui {
-      clear
+      
+	  clear
       set obs 1
       
       foreach var of local varlist {
@@ -1370,9 +1304,8 @@ cap program drop 	templatesheet
       }
       
       export excel using "`using'", sheet("`sheetname'") firstrow(varlabels)
-    
-
-    }    
+ }    
+ 
  end
 }
 
@@ -1430,10 +1363,9 @@ cap program drop 	_printaction
 	 	if !missing("`debug'")	noi di as result "Entering printaction subcommand"
 
 		if ("`present'" == "yes") {
-			if inlist("`type'", "string", "numeric", "other") {
-				if 		inlist("`type'", "numeric", "string") 	local mainvar	varname
-				else if ("`type'" == "other") 					local mainvar	strvar
-		
+			if inlist("`type'", "string", "numeric") {
+				local mainvar	varname
+				
 				qui levelsof `mainvar', clean local(vars)
 				noi di as text `"{phang}Variables for corrections of type `type': `vars'{p_end}"'
 			}
@@ -1444,13 +1376,16 @@ cap program drop 	_printaction
 			}
 		}
 		else if ("`present'" == "no") {
-		    if inlist("`type'", "string", "numeric", "other") {
+		    if inlist("`type'", "string", "numeric") {
 				noi di as text `"{phang}No corrections of type `type'.{p_end}"'
 			}
 			else if ("`type'" == "drop") {
 				noi di as text `"{phang}No observations to be dropped.{p_end}"'
 			}
 		}
+		
+		if !missing("`debug'")	noi di as result "Exiting printaction subcommand"
+
 end         
  
     
