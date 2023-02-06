@@ -1,5 +1,5 @@
 {smcl}
-{* 07 Jul 2020}{...}
+{* 7 Jan 2023}{...}
 {hline}
 help for {hi:iecodebook}
 {hline}
@@ -66,7 +66,7 @@ and optionally reduces the dataset to only the variables used in a set of specif
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
 {help using} {it:"/path/to/codebook.xlsx"} {break}{p_end}
 {p 2 3}, {bf:surveys(}{it:Survey1Name} {it:Survey2Name} [...]{bf:)}
-{break} [{bf:match}] [{opth gen:erate(varname)}] [{bf:replace}]{p_end}
+{break} [{bf:match}] [{bf:replace}]{p_end}
 
 {p 2 4}{cmdab:iecodebook append} {break}
 {it:"/path/to/survey1.dta" "/path/to/survey2.dta" [...]} {break}
@@ -122,8 +122,7 @@ When importing, this will also be used to create a variable identifying the sour
 If specified, it will cause any variables in later datasets with the same original name as a variable in the first dataset
 to appear in the same row of the Excel sheet.{p_end}
 {break}
-{synopt:{opt gen:erate()}}This option names the variable identifying the source of each observation. If left blank, the default is "survey".
-This must be specified during both the template and append steps.{p_end}
+{synopt:{opt gen:erate()}}This option names the variable identifying the source of each observation. If left blank, the default is "survey".{p_end}
 {break}
 {synopt:{opt miss:ingvalues()}}This option specifies standardized "extended missing values" to add to every value label definition in the "choices" column.
 For example, specifying {bf:missingvalues(}{it:.d "Don't Know" .r "Refused" .n "Not Applicable"}{bf:)} will add those codes to every value-labeled answer.{p_end}
