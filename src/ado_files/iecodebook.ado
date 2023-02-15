@@ -4,6 +4,8 @@
 
 cap program drop iecodebook
   program def  iecodebook
+  
+  qui do "${GitHub}\iefieldkit\src\ado_files/iefieldkit_aux.do"
 
   version 13 // Requires 13.0 due to use of long macros
 
@@ -29,49 +31,24 @@ cap program drop iecodebook
   // Select subcommand
   noi di " "
   gettoken subcommand anything : anything
+  
+  // Test that the folder exists
+	ieutil_folderpath using `using',  description("in the file")
+	
+	
+  // Test the form file: xls or xlsx
+	ieutil_fileext using `using', allowed_exts(.xlsx .xls) default_ext(.xlsx)
+	local using  "`r(file_path)'"	
 
-  // Check folder exists
-
-  // Start by standardize all slashes to forward slashes, and get the position of the last slash
-  local using = subinstr("`using'","\","/",.)
-  local r_lastslash = strlen(`"`using'"') - strpos(strreverse(`"`using'"'),"/")
-  if strpos(strreverse(`"`using'"'),"/") == 0 local r_lastslash -1 // Set to -1 if there is no slash
-
-  // Get the full folder path and the file name
-  local r_folder = substr(`"`using'"',1,`r_lastslash')
-  local r_file = substr(`"`using'"',`r_lastslash'+2,.)
-
-  // Test that the folder for the report file exists
-  mata : st_numscalar("r(dirExist)", direxists("`r_folder'"))
-  if `r(dirExist)' == 0  {
-    noi di as error `"{phang}The folder [`r_folder'/] does not exist.{p_end}"'
-    error 601
-  }
-
-  // Find the position of the last dot in the file name and get the file format extension
-  local r_lastsdot = strlen(`"`r_file'"') - strpos(strreverse(`"`r_file'"'),".")
-  local r_fileextension = substr(`"`r_file'"',`r_lastsdot'+1,.)
-
-  // If no fileextension was used, then add .xslx to "`using'"
-  if "`r_fileextension'" == "" {
-    local using  "`using'.xlsx"
-  }
-  // Throw an error if user input uses any extension other than the allowed
-  else if !inlist("`r_fileextension'",".xlsx",".xls") & !regexm(`"`options'"',"tempfile") {
-    di as error "The codebook may only have the file extension [.xslx] or [.xls]. The format [`r_fileextension'] is not allowed."
-    error 601
-  }
-
-
+	
   // Throw error on [template] if codebook cannot be created
    if inlist("`subcommand'","template","export") & !regexm(`"`options'"',"replace") & !regexm(`"`options'"',"verify") {
-
+     
     cap confirm file "`using'"
     if (_rc == 0) & (!strpos(`"`options'"',"replace")) {
       di as err "That codebook already exists. {bf:iecodebook} will only overwrite it if you specify the [replace] option."
       error 602
     }
-
     cap confirm new file "`using'"
     if (_rc != 0) & (!strpos(`"`options'"',"replace")) {
       di as error "{bf:iecodebook} could not create file `using'. Check that the file path is correctly specified."
