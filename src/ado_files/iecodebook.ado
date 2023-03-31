@@ -703,7 +703,6 @@ qui {
     }
     if "`: list allVars - theNameList'" != "" {
       if "`drop'" != "" {
-        pause
         local firstDrop  "drop `: list allVars - theNameList'"
       }
       else {
