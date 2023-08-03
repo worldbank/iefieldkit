@@ -1,4 +1,4 @@
-*! version 3.1 7JAN2023  DIME Analytics dimeanalytics@worldbank.org
+*! version 3.2 31JUL2023  DIME Analytics dimeanalytics@worldbank.org
 
 // Main syntax ---------------------------------------------------------------------------------
 
@@ -158,7 +158,8 @@ cap program drop iecodebook_export
   program    iecodebook_export
 
   syntax [anything] [using/]  ///
-    , [replace] [save] [saveas(string asis)] [trim(string asis)]     /// User-specified options
+    , [replace] [save] [saveas(string asis)] /// User-specified options
+      [trim(string asis)] [trimkeep(string asis)]  /// User-specified options
       [SIGNature] [reset] [PLAINtext(string)] [noexcel] [verify]      /// Signature and verify options
       [match] [template(string asis)] [tempfile]    // Programming options
 
@@ -274,7 +275,7 @@ qui {
         di as err "You are dropping all variables. This is not allowed. {bf:iecodebook} will now exit."
         error 198
       }
-      keep `theKeepList' // Keep only variables mentioned in the dofiles
+      keep `theKeepList' `trimkeep' // Keep only variables mentioned in the dofiles
   } // End [trim] option
 
   // Prepare to save and sign
@@ -703,7 +704,6 @@ qui {
     }
     if "`: list allVars - theNameList'" != "" {
       if "`drop'" != "" {
-        pause
         local firstDrop  "drop `: list allVars - theNameList'"
       }
       else {

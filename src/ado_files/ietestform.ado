@@ -1,4 +1,4 @@
-*! version 3.1 7JAN2023  DIME Analytics dimeanalytics@worldbank.org
+*! version 3.2 31JUL2023  DIME Analytics dimeanalytics@worldbank.org
 
 capture program drop ietestform
 		program ietestform , rclass
@@ -232,9 +232,17 @@ qui {
 		TEST - Encryption key not included/errors
 	***********************************************/
 
-	*converting public_key to string to convert from numeric incase of missing public_key
-	tostring public_key, replace
-	local public_key = public_key[1]
+	*Testing if a variable pulbic_key at all exists
+	cap confirm variable public_key
+	if _rc {
+		local public_key = ""
+	}
+	*If varialbe exists, convert whatever value (or missing) to string
+	else {
+		tostring public_key, replace
+		local public_key = public_key[1]
+	}
+
 
 	cap assert !missing("`public_key'")
 

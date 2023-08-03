@@ -1,5 +1,5 @@
 {smcl}
-{* 7 Jan 2023}{...}
+{* 31 Jul 2023}{...}
 {hline}
 help for {hi:iecodebook}
 {hline}
@@ -83,7 +83,7 @@ and optionally reduces the dataset to only the variables used in a set of specif
 {p 2 4}, [{bf:replace}] [{opt save}] [{bf:verify}] {break}
     [{opt sign:ature}] [{opt reset}] {break}
 	[{opt plain:text}({it:compact} | {it:detailed})] [{opt noexcel}] {break}
-    [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}]{p_end}
+    [{bf:trim(}{it:"/path/to/dofile1.do"} [{it:"/path/to/dofile2.do"}] [...]{bf:)}] [{opth trimkeep(varlist)}]{p_end}
 
 {hline}
 
@@ -157,7 +157,7 @@ It will break with an error and describe all changes if there are any difference
 A new codebook will not be written in this case.{p_end}
 {break}
 {synopt:{opt plain:text}({it:compact} | {it:detailed})}This option requests that the codebook be created as a plaintext file.
-This file contains the default output of {help codebook} if argument {it:detailed}} is used, 
+This file contains the default output of {help codebook} if argument {it:detailed}} is used,
 and the compact output of {help codebook} if argument {it:compact} is used.
 Only one of the arguments can be used}.{p_end}
 {synopt:{opt noexcel}}This option requests that the codebook be created as a plaintext file.
@@ -174,6 +174,8 @@ or overwrite an existing datasignature.{p_end}
 {break}
 {synopt:{opt trim()}}This option takes one or more dofiles as inputs, and trims the current dataset to only include variables used in those dofiles,
 before executing any of the other {bf: export} tasks requested.{p_end}
+{synopt:{opt trimkeep()}}This option adjusts {opt trim()} to retain additional
+variables (such as ID variables) that are desired, but not used in code.{p_end}
 {synoptline}
 
 {marker example}
