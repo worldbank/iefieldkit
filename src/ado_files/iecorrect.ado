@@ -419,7 +419,7 @@ cap program drop _checkcolnumeric
 			_vartype, type(numeric) vartype(numeric) column(varname) var(`var') stringvars(`stringvars')  `debug'
 			if "`r(errortype)'" == "1" local errortype 1
 		}
-		
+
 		* Check that value current was correctly filled
 		_fillcurrent, type(numeric) `debug'
 		if "`r(errorfill)'" == "1" local errorfill 1
@@ -475,10 +475,8 @@ cap program drop _checkcolstring
 		}
 		
 		* Check if the string variables to be corrected don't have extra white spaces and special characters
-		foreach var in value valuecurrent { 
-			if !_rc {
-				_valstrings `var', location(Variable)
-			}	
+		foreach var in value valuecurrent { 	
+			_valstrings `var', location(Variable) `debug'
 		}
 		
 		* Check that value current was correctly filled
@@ -789,8 +787,10 @@ end
 cap program drop _valstrings
 	program    	 _valstrings, rclass
   
-  syntax varname, location(string)
+  syntax varname, location(string) [debug]
 
+  if !missing("`debug'") noi di as result "Entering valstrings subcommand"
+  
     *******************
     * Extra whitespaces
     *******************
@@ -808,7 +808,6 @@ cap program drop _valstrings
   
     cap assert `varlist' == `validation'
     if _rc {
-		qui drop `validation'
 		_strerror, var(`varlist') type(whitespace) location(`location')  
     }
   
@@ -825,8 +824,7 @@ cap program drop _valstrings
         
 		capture assert index(`validation', char(`i')) == 0 
 		if _rc {
-			qui drop `validation'
-			_strerror, var(`varlist') type(specialchar) location(`location')
+			_strerror, var(`varlist') type(specialchar) location(`location') `debug'
 		}
       }
     }
@@ -842,7 +840,9 @@ end
 cap program drop _strerror
 	program      _strerror
   
-  syntax , var(string) type(string) location(string)
+  syntax , var(string) type(string) location(string) [debug]
+  
+	if !missing("`debug'") noi di as result "Entering strerror subcommand"
   
 	  if "`type'" == "specialchar" {
 		local issue   special characters
@@ -850,11 +850,11 @@ cap program drop _strerror
 	  }
 	  else if "`type'" == "whitespace" {
 		local issue   extra whitespaces
-		local details   (leading, trailing or consecutive spaces, tabs or new lines)
+		local details  " (leading, trailing or consecutive spaces, tabs or new lines)"
 	  }
   
-	  noi di as error `"{phang}`location' {bf:`var'} contains `issue' `details'. {bf:iecorrect} will run, but this may cause mismatches between the template spreadsheet and the content of the data, in which case the corrections will not be applied. It is recommended to remove `issue' from the data and the template spreadsheet before running {bf:iecorrect}.{p_end}"'
-    
+	  noi di as error `"{phang}`location' {bf:`var'} contains `issue'`details'. {bf:iecorrect} will run, but this may cause mismatches between the template spreadsheet and the content of the data, in which case the corrections will not be applied. It is recommended to remove `issue' from the data and the template spreadsheet before running {bf:iecorrect}.{p_end}"'
+
 end
 
 ***********************
