@@ -1,16 +1,41 @@
-v 3.2
-d iefieldkit. DIME Analytics iefieldkit
-d DIME Analytics, World Bank Group, Development Economics Research
-f /ado_files/iefieldkit.ado
-f /ado_files/ietestform.ado
-f /ado_files/iecodebook.ado
-f /ado_files/iecompdup.ado
-f /ado_files/iecorrect.ado
-f /ado_files/ieduplicates.ado
-f /help_files/iefieldkit.sthlp
-f /help_files/ietestform.sthlp
-f /help_files/iecodebook.sthlp
-f /help_files/iecompdup.sthlp
-f /help_files/iecorrect.sthlp
-f /help_files/ieduplicates.sthlp
+* This package file is generated in the adodown workflow.
+* Do not edit manually - instead, use the command ad_update in the adodown package
+*** version
+v 0.0
+*** title
+d 'IEFIELDKIT': 
+*** description
+d module providing Stata commands for primary data collection and cleaning
+d
+*** stata
+d Requires: Stata version 0.0
+d
+*** author
+d Author: DIME Analytics
+*** contact
+d Contact: dimeanalytics@worldbank.org
+*** url
+d URL: https://github.com/worldbank/iefieldkit
+d
+*** date
+d Distribution-Date: 20240404
+*** adofiles
+f ado/ietestform.ado
+f ado/ieduplicates.ado
+f ado/iecorrect.ado
+f ado/iecompdup.ado
+f ado/iecodebook.ado
+f ado/iefieldkit.ado
+
+*** helpfiles
+f sthlp/ietestform.sthlp
+f sthlp/ieduplicates.sthlp
+f sthlp/iecorrect.sthlp
+f sthlp/iecompdup.sthlp
+f sthlp/iecodebook.sthlp
+f sthlp/iefieldkit.sthlp
+
+*** ancillaryfiles
+
+*** end
 e

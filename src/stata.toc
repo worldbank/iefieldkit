@@ -1,3 +1,6 @@
-v 3.2
-d DIME Analytics, World Bank Group, Development Economics Research
-p iefieldkit DIME Analytics iefieldkit
+* This package file is generated in the adodown workflow. Do not edit directly.
+*** version
+v 0.0
+*** packages
+p iefieldkit
+

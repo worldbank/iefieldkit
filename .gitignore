@@ -1,11 +1,7 @@
 ########################################################################
 #
-# Based on DIME .gitignore template. Follow the instructions in the URL
-# below to set up this template in your own repository
-# https://github.com/worldbank/dime-github-trainings/tree/master/GitHub-resources/DIME-GitHub-Templates
-#
-# Note that if you are using GitKraken, you need to use version 5.x or more
-# recent for this template to work properly
+# Created using adodown https://lsms-worldbank.github.io/adodown/, based on DIME .gitignore template:
+# https://github.com/worldbank/dime-github-trainings/tree/main/GitHub-resources/DIME-GitHub-Templates
 #
 ########################################################################
 
@@ -21,11 +17,18 @@
 # These files include GitHub settings
 !.gitignore
 !.gitattributes
+!.github/**/*.yaml
+
+# Git placeholder file (to commit empty folders)
+!/**/*.gitkeep
 
 # Keep markdown files used for documentation on GitHub
 !README.md
 !CONTRIBUTING.md
 !LICENSE*
+
+* Unignore reproot files
+!reproot*.yaml
 
 #######################
 # For performance reasons, if a folder is already ignored, then
@@ -43,31 +46,22 @@
 # Stata
 !/**/*.do
 !/**/*.ado
-!/**/*.dta
-!/**/*.stpr
+!/**/sthlp/*.sthlp
+!src/stata.toc
+!src/*.pkg
 
-# R
-!/**/*.R
-!/**/*.Rmd
-
-# LaTeX
-!/**/*.tex
-!/**/*.bib
-
-# Python
-!/**/*.py
-!/**/*.ipynb
-# Still ignore .ipynb files in checkpoint folders
-.ipynb_checkpoints
-
-# Matlab
-!/**/*.m
-
-# Markdown
+# Markdown and web docs files
 !/**/*.md
+!src/dev/**/*.png
+!src/dev/**/*.css
 
-# Julia
-!/**/*.jl
+####################################
+# Ignore ssc outputs
+src/dev/ssc
 
-# Binary files used for run tests
-!/run/output/**/*.xlsx
+# Ignore test inputs and outputs
+src/tests/**/inputs/
+src/tests/**/outputs/
+
+* Ignore the local dev env set up by repado
+src/tests/dev-env/
