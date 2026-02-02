@@ -1,0 +1,20 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: iefieldkit
+message: Stata package of commands for impact evaluation primary data collection
+type: software
+authors:
+  - name: 'DIME Analytics, The World Bank'
+    address: 1818 H St NW
+    city: 'Washington, DC'
+    country: US
+    post-code: '20433'
+    email: dimeanalytics@worldbank.org
+repository-code: 'https://github.com/worldbank/iefieldkit'
+keywords:
+  - impact-evaluations
+  - stata
+  - primary-data-collection
+license: MIT
