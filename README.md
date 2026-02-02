@@ -72,6 +72,10 @@ If you have installed a package from multiple sources, then you might get the er
 
 This project is licensed under the MIT License together with the [World Bank IGO Rider](https://github.com/worldbank/.github/blob/main/WB-IGO-RIDER.md). The Rider is purely procedural: it reserves all privileges and immunities enjoyed by the World Bank, without adding restrictions to the MIT permissions. Please review both files before using, distributing or contributing.
 
+## Citation
+
+Please use the citation suggested in [CITATION.cff](CITATION.cff). Find the `APA` and `BIBTeX` formats in the right hand side menu of the [landing page](https://github.com/worldbank/iefieldkit) of this project's repository.
+
 ## Contact
 
 For questions, issues, or suggestions, please [open an issue](https://github.com/worldbank/iefieldkit/issues). Feel free to notify us directly at <dimeanalytics@worldbank.org> after opening the issues as we are sometimes not monitoring new issues regularly.
