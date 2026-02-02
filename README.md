@@ -68,6 +68,10 @@ If you have installed a package from multiple sources, then you might get the er
 
 ![multiple-package-source-error](https://user-images.githubusercontent.com/15911801/52809664-cadc3900-305e-11e9-863f-bff31f07a9ef.png)
 
+## Contributing
+
+We welcome your contributions to this project! Please read our [Contributing Guide](https://github.com/worldbank/.github/blob/main/CONTRIBUTING.md) for details on our [Code of Conduct](https://github.com/worldbank/.github/blob/main/CODE_OF_CONDUCT.md) and the process for submitting pull requests.
+
 ## License
 
 This project is licensed under the MIT License together with the [World Bank IGO Rider](https://github.com/worldbank/.github/blob/main/WB-IGO-RIDER.md). The Rider is purely procedural: it reserves all privileges and immunities enjoyed by the World Bank, without adding restrictions to the MIT permissions. Please review both files before using, distributing or contributing.
