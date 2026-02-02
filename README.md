@@ -64,3 +64,6 @@ After you have done the contributions or testing that you intended to do, you ha
 If you have installed a package from multiple sources, then you might get the error below. If you get that error, follow the instructions [here](https://github.com/worldbank/iefieldkit/blob/main/admin/multiple-package-source-error.md).
 
 ![multiple-package-source-error](https://user-images.githubusercontent.com/15911801/52809664-cadc3900-305e-11e9-863f-bff31f07a9ef.png)
+
+## License
+This project is licensed under the MIT License together with the [World Bank IGO Rider](https://github.com/worldbank/.github/blob/main/WB-IGO-RIDER.md). The Rider is purely procedural: it reserves all privileges and immunities enjoyed by the World Bank, without adding restrictions to the MIT permissions. Please review both files before using, distributing or contributing.
