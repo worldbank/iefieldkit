@@ -4,7 +4,7 @@
 	program ieduplicates , rclass
 
 
-	qui {
+	qui {	
 
 		syntax  varname [using/] , UNIQUEvars(varlist) ///
             [force ///
@@ -17,7 +17,9 @@
             duplistid(string) datelisted(string) datefixed(string) correct(string) drop(string) newid(string) initials(string) notes(string) listofdiffs(string)]
 
 		version 11.0
-
+		
+		qui do "${GitHub}\iefieldkit\src\ado_files/iefieldkit_aux.do"
+		
 		*Add version of Stata fix
 		//Make sure that keepvars are still saved if saved if the duplicates file
 		*	is generated on a subset of the data. For example, duplicates from
@@ -30,7 +32,6 @@
 		* message to this that is more informative.
 
 		preserve
-
 			/***********************************************************************
 			************************************************************************
 				Section 1 - Set up locals needed in data
@@ -867,7 +868,7 @@
 		*  the orignal data set in case of error.
 		use `dataToReturn', clear
 
-	}
+	}			
 end
 
 
@@ -932,68 +933,31 @@ cap program drop testpath
 	Prepare file name if option using was specified
 *******************************************************************************/
 
-	* Parse using option to get (1) the folder path (2) the name of the report and
-	* (3) the format selected
 	else if "`using'" != "" {
-
-		* Replace any backslashes with forward slashes so it's compatible with
-		* different OS and so we know what to look for as separators when parsing
-		local using = subinstr("`using'", "\", "/", .)
-
-		* Separate the folder name from the file name
-		strlast, expression("`using'") character("/")
-
-		* If a folder was specified, get the folder path
-		if `r(lastpos)' > 0 {
-			local folder	 = substr("`using'", 1, `r(lastpos)')
-		}
-		else {
+		
+		* Check if the folder exist
+		ieutil_parse_filepath using  `using'
+		local folder	             `r(folderpath)'
+		if missing("`folder'") {
 			noi di as error	"{phang}You have not specified a folder path to the duplicates report. An absolute folder path is required.{p_end}"
 			noi di as error `"{phang}This command will not work if you are trying to use {inp:cd} to set the directory and open or save files. To know more about why this practice is not allowed, {browse "https://dimewiki.worldbank.org/wiki/Stata_Coding_Practices#File_paths":see this article in the DIME Wiki}.{p_end}"'
 			noi di as error	""
 			error 198
-			exit
 		}
-
-		* Everything that comas after the folder path is the file name and format
-		local file	 	 = substr("`using'", `r(lastpos)' + 1, .)
-
-		* If a filename was specified, separate the file name from the file format
-		if "`file'" != "" {
-
-			* Get index of separation between file name and file format
-			strlast, expression("`file'") character(".")
-
-			* If a format was specified, separate name and format
-			if `r(lastpos)' > 0 {
-				local ext 		= substr("`file'", `r(lastpos)', .)				// File format starts at the last period and ends at the end of the string
-				local name		= substr("`file'", 1, `r(lastpos)' - 1)				// File name starts at the beginning and ends at the last period
-			}
-			* If a format was not specified, the name is everything that follows the
-			* folder path
-			else {
-				local name 	`file'
-			}
-		}
-		* Check that a folder name was specified and through an error if it wasn't
-		if ("`file'" == "" | ( "`file'" != "" & "`name'" == "")) {
-			noi di as error "{phang}`using' not a valid filename.{p_end}"
-			noi di ""
-			error 198
-			exit
-		}
-
-		* The default format is xlsx. Other possible formats are xls
-		if "`ext'" == "" {
-			local	ext	.xlsx
-		}
-		else if !inlist("`ext'", ".xls", ".xlsx") {
-			noi di ""
-			noi di as error `"{phang}`ext' is not currently supported as a format for the duplicates report. Supported formats are: xls, xslx. If you have a suggestion of a different format to support, please e-mail dimeanalytics@worldbank.org or {browse "https://github.com/worldbank/iefieldkit/issues":create an issue on the iefieldkit GitHub repository.}{p_end}"'
-			noi di ""
-			error 198 //TODO: check error code
-			exit
-		}
+		
+		* Check if the file extension is the correct. 
+		ieutil_fileext using `using', allowed_exts(.xlsx .xls) default_ext(.xlsx)
+		local using "`r(file_path)'"
+		
+		* Test that the folder exists
+		ieutil_folderpath using `using'
+	
+        * Get the folder path, the name of the report and, the format selected
+	    ieutil_parse_filepath using  `using'
+		local folder	             `r(folderpath)'/
+		local name                   `r(filename)'
+		local ext                    `r(fileext)'
+		
 	}
 
 	* Create file name if using was not specified
@@ -1004,24 +968,11 @@ cap program drop testpath
 		if "`suffix'" != "" 	local name		`name'_`suffix'
 								local ext		.xlsx
 	}
-
-	* Test that the folder indicated existes
-	mata : st_numscalar("r(dirExist)", direxists("`folder'"))
-
-	** If the folder does not exist, throw an error
-	if `r(dirExist)' == 0  {
-
-		*Variable exist, output error
-		noi di as error "{phang}The folder specified does not exist :`folder'.{p_end}"
-		noi di ""
-		error 198 // TODO: check error code
-		exit
-	}
-
+	
 	return local name 	`name'
 	return local ext	`ext'
-	return local folder	`folder'
-
+	return local folder	`folder' 
+	
 end
 
 /*******************************************************************************
